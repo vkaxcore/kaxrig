@@ -348,16 +348,11 @@ static std::mutex vm_pool_mutex;
 extern "C" {
 #include "panthera/yespower.h"
 #include "panthera/KangarooTwelve.h"
+  static yespower_params_t YESPOWER_CONFIG = { YESPOWER_1_0, 2048, 8, nullptr };
+	
   int yespower_hash(const void *data, size_t length, void *hash)
   {
-    yespower_params_t params = {
-      .version = YESPOWER_1_0,
-      .N = 2048,
-      .r = 8,
-      .pers = NULL
-    };
-
-    int finale_yespower = yespower_tls((const uint8_t *) data, length, &params, (yespower_binary_t *) hash);
+    int finale_yespower = yespower_tls((const uint8_t *) data, length, &YESPOWER_CONFIG, (yespower_binary_t *) hash);
     return finale_yespower; //0 for success
   }
 
