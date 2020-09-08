@@ -596,24 +596,6 @@ extern "C" {
 		machine->hashAndFill(output, RANDOMX_HASH_SIZE, tempHash);
 	}
 
-  void panthera_calculate_hash(randomx_vm *machine, const void *input, size_t inputSize, void *output) {
-    assert(machine != nullptr);
-    assert(inputSize == 0 || input != nullptr);
-    assert(output != nullptr);
-    alignas(16) uint64_t tempHash[8];
-    rx_blake2b(tempHash, sizeof(tempHash), input, inputSize, 0, 0);
-    yespower_hash(tempHash, sizeof(tempHash), tempHash);
-    k12(tempHash, sizeof(tempHash), tempHash);
-    machine->initScratchpad(&tempHash);
-    machine->resetRoundingMode();
-    for (uint32_t chain = 0; chain < RandomX_CurrentConfig.ProgramCount - 1; ++chain) {
-      machine->run(&tempHash);
-      rx_blake2b(tempHash, sizeof(tempHash), machine->getRegisterFile(), sizeof(randomx::RegisterFile), nullptr, 0);
-    }
-    machine->run(&tempHash);
-    machine->getFinalResult(output, RANDOMX_HASH_SIZE);
-  }
-
   void panthera_calculate_hash_first(randomx_vm* machine, uint64_t (&tempHash)[8], const void* input, size_t inputSize) {
     rx_blake2b(tempHash, sizeof(tempHash), input, inputSize, 0, 0);
     yespower_hash(tempHash, sizeof(tempHash), tempHash);
