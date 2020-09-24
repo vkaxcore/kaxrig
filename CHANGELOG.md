@@ -1,3 +1,6 @@
+# 2.8.1
+* Improved autodetect for rx/panthera (runs best on real cores)
+* Added pool user/pass to the dashboard #316
 # 2.8.0
 * Integrated Randomx variant "Panthera" used by Scala[XLA] algo (`panthera` or `rx/panthera`)
 * Removed obsolete PengolinCoin chukwa variant 
