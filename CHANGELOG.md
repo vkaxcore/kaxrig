@@ -1,3 +1,5 @@
+# 2.8.3
+* Fixed potential crash when pool user/pass is not initialized
 # 2.8.2
 * Added turtlecoin Chukwa v2 algo (`chukwav2`) or coin (`turtle` for autoswitch) for upcoming hard fork at block 3,000,000
 * Removed obsolete rx/loki randomx variant (Loki switched to PoS)
