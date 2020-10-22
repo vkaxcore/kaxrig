@@ -26,6 +26,7 @@ Full Windows/Linux compatible, and you can mix Linux and Windows miner on one XM
 
 ## Last integrated algos in XMRigCC:
 
+* **Turtlecoin** argon2 chukwa variant 2 (algo: "argon2/chukwav2")
 * **Panthera (XLA)** variant (algo: "panthera")
 * **ninjacoin** variant (algo: "ninja")
 * **AstroBWT** variant (algo: "astrobwt")
