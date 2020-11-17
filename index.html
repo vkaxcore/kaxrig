@@ -285,12 +285,7 @@
                         className: 'btn-danger',
                         enabled: false,
                         action: function () {
-                            table.rows({selected: true}).eq(0).each(function (index) {
-                                var row = table.row(index);
-                                var data = row.data();
-
-                                sendAction("SHUTDOWN", data.client_status.client_id);
-                            });
+                            $('#commandDialogStop').modal('show');
                         }
                     },
                     {
@@ -613,6 +608,15 @@
                 var templateId = $('#templateSelector').val();
 
                 deleteTemplateConfig(templateId, template);
+            });
+
+            $('#commandStop').click(function (event) {
+                table.rows({selected: true}).eq(0).each(function (index) {
+                    var row = table.row(index);
+                    var data = row.data();
+
+                    sendAction("SHUTDOWN", data.client_status.client_id);
+                });
             });
 
             $('#clientStatusList tbody').on('click', 'button#LOG', function () {
@@ -1379,6 +1383,26 @@
                 <div class="modal-footer">
                     <button id="templateEditorDelete" type="button" class="btn btn-danger" data-dismiss="modal">Delete
                     </button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="commandDialogStop" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Stop Command</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="templateName">Do you really want to stop the selected miner? They will require a manual restart of the daemon.</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="commandStop" type="button" class="btn btn-danger" data-dismiss="modal">Stop</button>
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                 </div>
             </div>
