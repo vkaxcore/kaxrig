@@ -1,3 +1,5 @@
+# 2.8.4
+* 
 # 2.8.3
 * Fixed potential crash when pool user/pass is not initialized
 * Changed mvc build from VS2017 to VS2019 to improve hashrate on argon2/chukwav2
