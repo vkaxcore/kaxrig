@@ -38,7 +38,8 @@
 #include <unistd.h>
 #include <uv.h>
 #include <thread>
-
+#include <map>
+#include <base/tools/Chrono.h>
 
 #include "base/kernel/Platform.h"
 #include "version.h"
@@ -52,6 +53,12 @@
 typedef cpuset_t cpu_set_t;
 #endif
 
+namespace xmrig {
+
+static thread_local uint64_t m_threadUsageTime = {0};
+static thread_local uint64_t m_systemTime = {0};
+
+}
 
 char *xmrig::Platform::createUserAgent()
 {
@@ -165,4 +172,25 @@ void xmrig::Platform::setThreadPriority(int priority)
         }
     }
 #   endif
+}
+
+uint64_t xmrig::Platform::getThreadSleepTimeToLimitMaxCpuUsage(uint8_t maxCpuUsage)
+{
+  struct rusage usage;
+  getrusage(RUSAGE_THREAD, &usage);
+  uint64_t currentThreadUsageTime = usage.ru_utime.tv_usec + (usage.ru_utime.tv_sec * 1000000)
+                                  + usage.ru_stime.tv_usec + (usage.ru_stime.tv_sec * 1000000);
+
+  uint64_t threadTimeToSleep = {0};
+  uint64_t currentSystemTime = Chrono::highResolutionMicroSecs();
+
+  if (m_threadUsageTime > 0 || m_systemTime > 0) {
+    threadTimeToSleep = (((currentThreadUsageTime - m_threadUsageTime)*100) / maxCpuUsage)
+                      - (currentSystemTime - m_systemTime);
+  }
+
+  m_threadUsageTime = currentThreadUsageTime;
+  m_systemTime = currentSystemTime;
+
+  return threadTimeToSleep;
 }

@@ -27,8 +27,6 @@
 
 
 #include <cstdint>
-
-
 #include "base/tools/String.h"
 
 
@@ -53,13 +51,14 @@ public:
     static void restoreTimerResolution();
     static void setProcessPriority(int priority);
     static void setThreadPriority(int priority);
+    static uint64_t getThreadSleepTimeToLimitMaxCpuUsage(uint8_t maxCpuUsage);
 
-    static inline const char *userAgent() { return m_userAgent; }
+    static inline const char* userAgent() { return m_userAgent; }
 
 private:
     static char *createUserAgent();
-
     static String m_userAgent;
+
 };
 
 

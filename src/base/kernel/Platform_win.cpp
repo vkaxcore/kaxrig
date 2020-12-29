@@ -42,6 +42,12 @@
 static uint32_t timerResolution = 0;
 #endif
 
+namespace xmrig {
+
+static thread_local LARGE_INTEGER m_threadUsageTime = {0};
+static thread_local LARGE_INTEGER m_systemTime = {0};
+
+}
 
 static inline OSVERSIONINFOEX winOsVersion()
 {
@@ -205,3 +211,9 @@ void xmrig::Platform::setThreadPriority(int priority)
     SetThreadPriority(GetCurrentThread(), prio);
 }
 
+uint64_t xmrig::Platform::getThreadSleepTimeToLimitMaxCpuUsage(uint8_t maxCpuUsage)
+{
+
+
+  return 0;
+}

@@ -82,6 +82,7 @@ public:
         m_threads   = threads.size();
         m_ways      = 0;
         m_ts        = Chrono::steadyMSecs();
+        m_maxCpuUsage = threads.data()->maxCpuUsage;
     }
 
     inline bool started(IWorker *worker, bool ready)
@@ -107,7 +108,7 @@ public:
             return;
         }
 
-        LOG_INFO("%s" GREEN_BOLD(" READY") " threads %s%zu/%zu (%zu)" CLEAR " huge pages %s%1.0f%% %zu/%zu" CLEAR " memory " CYAN_BOLD("%zu KB") BLACK_BOLD(" (%" PRIu64 " ms)"),
+        LOG_INFO("%s" GREEN_BOLD(" READY") " threads %s%zu/%zu (%zu)" CLEAR " huge pages %s%1.0f%% %zu/%zu" CLEAR " memory " CYAN_BOLD("%zu KB") BLACK_BOLD(" (%" PRIu64 " ms)" "%s%s"),
                  tag,
                  m_errors == 0 ? CYAN_BOLD_S : YELLOW_BOLD_S,
                  m_started, m_threads, m_ways,
@@ -115,18 +116,21 @@ public:
                  m_hugePages.percent(),
                  m_hugePages.allocated, m_hugePages.total,
                  memory() / 1024,
-                 Chrono::steadyMSecs() - m_ts
+                 Chrono::steadyMSecs() - m_ts,
+                 (m_maxCpuUsage > 0 ? YELLOW_BOLD_S " - CPU usage limited to " : ""),
+                 (m_maxCpuUsage > 0 ? std::to_string(m_maxCpuUsage).append("%").c_str() : "")
                  );
     }
 
 private:
     HugePagesInfo m_hugePages;
-    size_t m_errors       = 0;
-    size_t m_memory       = 0;
-    size_t m_started      = 0;
-    size_t m_threads      = 0;
-    size_t m_ways         = 0;
-    uint64_t m_ts         = 0;
+    size_t m_errors       = {0};
+    size_t m_memory       = {0};
+    size_t m_started      = {0};
+    size_t m_threads      = {0};
+    size_t m_ways         = {0};
+    uint64_t m_ts         = {0};
+    int m_maxCpuUsage     = {0};
 };
 
 
