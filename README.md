@@ -78,7 +78,7 @@ Full Windows/Linux compatible, and you can mix Linux and Windows miner on one XM
 ## Usage
 ### Basic example XMRigCCServer
 ```
-xmrigServer --port=3344 --user=admin --pass=pass --access-token=SECRET_TOKEN_TO_ACCESS_CC_SERVER
+xmrigServer --port=3344 --user=admin --pass=pass --token=SECRET_TOKEN_TO_ACCESS_CC_SERVER
 ```
 
 ### Options XMRigCCServer
@@ -243,7 +243,6 @@ ETH:  `0x799611a12F196848967E9002B7bF1d01872D88F8`
 
 ## Contact
 * ben [at] graef.in
-* [telegram](https://telegram.me/bendr0id)
-* [telegram-channel](https://t.me/XMRigCC)
+* [telegram](https://t.me/XMRigCC)
 * [discord](https://discord.gg/r3rCKTB)
 * [reddit](https://www.reddit.com/user/BenDr0id/)
