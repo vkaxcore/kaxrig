@@ -2,6 +2,7 @@
 
 Since version 2.8.5 the new option `max-cpu-usage` is added. 
 It will limit the usage of XMRigCC on all configured threads to the given percentage.
+This results in much better performance and CPU temperature than mining 100% on fewer cores.
 
 Valid range is `1-100`, everything else including `null` will set it to 100%.
 
