@@ -107,6 +107,7 @@ if (WIN32)
     set(SOURCES_OS
         src/base/io/json/Json_win.cpp
         src/base/kernel/Platform_win.cpp
+        src/3rdparty/win_ports/getrusage.c
         )
 elseif (APPLE)
     set(SOURCES_OS

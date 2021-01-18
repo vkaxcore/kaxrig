@@ -24,7 +24,7 @@
 #include <utility>
 
 #ifdef WIN32
-#include "win_dirent.h"
+#include "win_ports/dirent.h"
 #else
 #include <dirent.h>
 #endif

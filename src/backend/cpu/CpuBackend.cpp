@@ -24,7 +24,7 @@
 
 
 #include <mutex>
-
+#include <string>
 
 #include "backend/common/Hashrate.h"
 #include "backend/common/interfaces/IWorker.h"

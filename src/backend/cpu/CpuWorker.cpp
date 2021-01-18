@@ -302,9 +302,9 @@ void xmrig::CpuWorker<N>::start()
                 m_count += N;
             }
 
-            if (m_maxCpuUsage > 0 && m_maxCpuUsage < 100) {
-                auto sleepTime = xmrig::Platform::getThreadSleepTimeToLimitMaxCpuUsage(m_maxCpuUsage);
-                std::this_thread::sleep_for(std::chrono::microseconds(sleepTime));
+            if ((m_count & storeStatsMask) == 0 && m_maxCpuUsage > 0 && m_maxCpuUsage < 100) {
+              auto sleepTime = xmrig::Platform::getThreadSleepTimeToLimitMaxCpuUsage(m_maxCpuUsage);
+              std::this_thread::sleep_for(std::chrono::microseconds(sleepTime));
             }
 
             if (m_yield) {
