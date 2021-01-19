@@ -25,27 +25,10 @@
 #ifndef XMRIG_PLATFORM_H
 #define XMRIG_PLATFORM_H
 
-
 #include <cstdint>
 #include "base/tools/String.h"
-#include "base/tools/Chrono.h"
-
-#ifdef WIN32
-#include "win_ports/ressource.h"
-#else
-#include <sys/times.h>
-#include <sys/resource.h>
-#include <cstdio>
-#include <thread>
-#include <string>
-
-#endif
 
 namespace xmrig {
-
-static thread_local uint64_t m_threadTimeToSleep = {0};
-static thread_local uint64_t m_threadUsageTime = {0};
-static thread_local uint64_t m_systemTime = {0};
 
 class Platform
 {
@@ -59,43 +42,24 @@ public:
         return setThreadAffinity(static_cast<uint64_t>(cpu_id));
     }
 
-    static inline uint64_t getThreadSleepTimeToLimitMaxCpuUsage(uint8_t maxCpuUsage)
-    {
-      uint64_t currentSystemTime = Chrono::highResolutionMicroSecs();
-
-      struct rusage usage {};
-      if (getrusage(RUSAGE_THREAD, &usage) == 0) {
-        uint64_t currentThreadUsageTime = usage.ru_utime.tv_usec + (usage.ru_utime.tv_sec * 1000000)
-                                        + usage.ru_stime.tv_usec + (usage.ru_stime.tv_sec * 1000000);
-
-        if (m_threadUsageTime > 0 || m_systemTime > 0)
-        {
-          m_threadTimeToSleep = ((currentThreadUsageTime - m_threadUsageTime) * 100 / maxCpuUsage)
-                              - (currentSystemTime - m_systemTime - m_threadTimeToSleep);
-        }
-
-        m_threadUsageTime = currentThreadUsageTime;
-        m_systemTime = currentSystemTime;
-      }
-
-      return m_threadTimeToSleep;
-    }
-
     static bool setThreadAffinity(uint64_t cpu_id);
     static uint32_t setTimerResolution(uint32_t resolution);
     static void init(const char *userAgent);
     static void restoreTimerResolution();
     static void setProcessPriority(int priority);
     static void setThreadPriority(int priority);
+    static uint64_t getThreadSleepTimeToLimitMaxCpuUsage(uint8_t maxCpuUsage);
     static inline const char* userAgent() { return m_userAgent; }
 
 private:
     static char *createUserAgent();
     static String m_userAgent;
+
+    static thread_local uint64_t m_threadTimeToSleep;
+    static thread_local uint64_t m_threadUsageTime;
+    static thread_local uint64_t m_systemTime;
 };
 
-
 } // namespace xmrig
-
 
 #endif /* XMRIG_PLATFORM_H */

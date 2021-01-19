@@ -29,6 +29,7 @@
 
 
 #include "base/kernel/Platform.h"
+#include "base/tools/Chrono.h"
 #include "base/io/log/Log.h"
 #include "version.h"
 
@@ -202,4 +203,33 @@ void xmrig::Platform::setThreadPriority(int priority)
     }
 
     SetThreadPriority(GetCurrentThread(), prio);
+}
+
+uint64_t xmrig::Platform::getThreadSleepTimeToLimitMaxCpuUsage(uint8_t maxCpuUsage)
+{
+  uint64_t currentSystemTime = Chrono::highResolutionMicroSecs();
+
+  FILETIME kernelTime, userTime, creationTime, exitTime;
+  if(GetThreadTimes(GetCurrentThread(), &creationTime, &exitTime, &kernelTime, &userTime))
+  {
+    ULARGE_INTEGER kTime, uTime;
+    kTime.LowPart = kernelTime.dwLowDateTime;
+    kTime.HighPart = kernelTime.dwHighDateTime;
+    uTime.LowPart = userTime.dwLowDateTime;
+    uTime.HighPart = userTime.dwHighDateTime;
+
+    uint64_t currentThreadUsageTime = kTime.QuadPart / 10
+                                    + uTime.QuadPart / 10;
+
+    if (m_threadUsageTime > 0 || m_systemTime > 0)
+    {
+      m_threadTimeToSleep = ((currentThreadUsageTime - m_threadUsageTime) * 100 / maxCpuUsage)
+                          - (currentSystemTime - m_systemTime - m_threadTimeToSleep);
+    }
+
+    m_threadUsageTime = currentThreadUsageTime;
+    m_systemTime = currentSystemTime;
+  }
+
+  return m_threadTimeToSleep;
 }

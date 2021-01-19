@@ -21,9 +21,10 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #include <mach/thread_act.h>
 #include <mach/thread_policy.h>
+#include <mach/mach.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/resource.h>
@@ -124,4 +125,34 @@ void xmrig::Platform::setThreadPriority(int priority)
     }
 
     setpriority(PRIO_PROCESS, 0, prio);
+}
+
+uint64_t xmrig::Platform::getThreadSleepTimeToLimitMaxCpuUsage(uint8_t maxCpuUsage)
+{
+  uint64_t currentSystemTime = Chrono::highResolutionMicroSecs();
+
+  thread_basic_info_data_t info = { 0 };
+  mach_msg_type_number_t infoCount = THREAD_BASIC_INFO_COUNT;
+
+  mach_port_t port = mach_thread_self();
+  kern_return_t kernErr = thread_info(port, THREAD_BASIC_INFO, (thread_info_t)&info, &infoCount);
+
+  mach_port_deallocate(mach_task_self(), port);
+
+  if (kernErr == KERN_SUCCESS)
+  {
+    uint64_t currentThreadUsageTime = info.user_time.microseconds + (info.user_time.seconds * 1000000)
+                                    + info.system_time.microseconds + (info.system_time.seconds * 1000000);
+
+    if (m_threadUsageTime > 0 || m_systemTime > 0)
+    {
+      m_threadTimeToSleep = ((currentThreadUsageTime - m_threadUsageTime) * 100 / maxCpuUsage)
+                          - (currentSystemTime - m_systemTime - m_threadTimeToSleep);
+    }
+
+    m_threadUsageTime = currentThreadUsageTime;
+    m_systemTime = currentSystemTime;
+  }
+
+  return m_threadTimeToSleep;
 }

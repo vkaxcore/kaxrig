@@ -28,7 +28,6 @@
 #   include <pthread_np.h>
 #endif
 
-
 #include <pthread.h>
 #include <sched.h>
 #include <stdio.h>
@@ -38,8 +37,10 @@
 #include <uv.h>
 #include <thread>
 #include <map>
+#include <sys/resource.h>
 
 #include "base/kernel/Platform.h"
+#include "base/tools/Chrono.h"
 #include "version.h"
 
 #ifdef XMRIG_NVIDIA_PROJECT
@@ -50,12 +51,6 @@
 #ifdef __FreeBSD__
 typedef cpuset_t cpu_set_t;
 #endif
-
-namespace xmrig {
-
-
-
-}
 
 char *xmrig::Platform::createUserAgent()
 {
@@ -169,4 +164,27 @@ void xmrig::Platform::setThreadPriority(int priority)
         }
     }
 #   endif
+}
+
+uint64_t xmrig::Platform::getThreadSleepTimeToLimitMaxCpuUsage(uint8_t maxCpuUsage)
+{
+  uint64_t currentSystemTime = Chrono::highResolutionMicroSecs();
+
+  struct rusage usage {};
+  if (getrusage(RUSAGE_THREAD, &usage) == 0)
+  {
+    uint64_t currentThreadUsageTime = usage.ru_utime.tv_usec + (usage.ru_utime.tv_sec * 1000000)
+                                    + usage.ru_stime.tv_usec + (usage.ru_stime.tv_sec * 1000000);
+
+    if (m_threadUsageTime > 0 || m_systemTime > 0)
+    {
+      m_threadTimeToSleep = ((currentThreadUsageTime - m_threadUsageTime) * 100 / maxCpuUsage)
+                          - (currentSystemTime - m_systemTime - m_threadTimeToSleep);
+    }
+
+    m_threadUsageTime = currentThreadUsageTime;
+    m_systemTime = currentSystemTime;
+  }
+
+  return m_threadTimeToSleep;
 }
