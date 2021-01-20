@@ -48,16 +48,16 @@ public:
     static void restoreTimerResolution();
     static void setProcessPriority(int priority);
     static void setThreadPriority(int priority);
-    static uint64_t getThreadSleepTimeToLimitMaxCpuUsage(uint8_t maxCpuUsage);
+    static int64_t getThreadSleepTimeToLimitMaxCpuUsage(uint8_t maxCpuUsage);
     static inline const char* userAgent() { return m_userAgent; }
 
 private:
     static char *createUserAgent();
     static String m_userAgent;
 
-    static thread_local uint64_t m_threadTimeToSleep;
-    static thread_local uint64_t m_threadUsageTime;
-    static thread_local uint64_t m_systemTime;
+    static thread_local int64_t m_threadTimeToSleep;
+    static thread_local int64_t m_threadUsageTime;
+    static thread_local int64_t m_systemTime;
 };
 
 } // namespace xmrig

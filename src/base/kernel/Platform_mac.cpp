@@ -127,7 +127,7 @@ void xmrig::Platform::setThreadPriority(int priority)
     setpriority(PRIO_PROCESS, 0, prio);
 }
 
-uint64_t xmrig::Platform::getThreadSleepTimeToLimitMaxCpuUsage(uint8_t maxCpuUsage)
+int64_t xmrig::Platform::getThreadSleepTimeToLimitMaxCpuUsage(uint8_t maxCpuUsage)
 {
   uint64_t currentSystemTime = Chrono::highResolutionMicroSecs();
 
@@ -136,13 +136,12 @@ uint64_t xmrig::Platform::getThreadSleepTimeToLimitMaxCpuUsage(uint8_t maxCpuUsa
 
   mach_port_t port = mach_thread_self();
   kern_return_t kernErr = thread_info(port, THREAD_BASIC_INFO, (thread_info_t)&info, &infoCount);
-
   mach_port_deallocate(mach_task_self(), port);
 
   if (kernErr == KERN_SUCCESS)
   {
-    uint64_t currentThreadUsageTime = info.user_time.microseconds + (info.user_time.seconds * 1000000)
-                                    + info.system_time.microseconds + (info.system_time.seconds * 1000000);
+    int64_t currentThreadUsageTime = info.user_time.microseconds + (info.user_time.seconds * 1000000)
+                                   + info.system_time.microseconds + (info.system_time.seconds * 1000000);
 
     if (m_threadUsageTime > 0 || m_systemTime > 0)
     {
@@ -152,6 +151,14 @@ uint64_t xmrig::Platform::getThreadSleepTimeToLimitMaxCpuUsage(uint8_t maxCpuUsa
 
     m_threadUsageTime = currentThreadUsageTime;
     m_systemTime = currentSystemTime;
+  }
+
+  // Something went terrible wrong, reset everything
+  if (m_threadTimeToSleep > 10000000 || m_threadTimeToSleep < 0)
+  {
+    m_threadTimeToSleep = 0;
+    m_threadUsageTime = 0;
+    m_systemTime = 0;
   }
 
   return m_threadTimeToSleep;
