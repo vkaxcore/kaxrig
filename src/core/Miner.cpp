@@ -573,10 +573,10 @@ void xmrig::Miner::onUpdateRequest(ClientStatus& clientStatus)
 
     if (!d_ptr->job.isDonate()) {
         double t[3] = { 0.0 };
-        int ways = 0;
-        int threads = 0;
-        int totalPages = 0;
-        int totalHugepages = 0;
+        int ways = {0};
+        int threads = {0};
+        int totalPages = {0};
+        int totalHugepages = {0};
 
         for (IBackend *backend : d_ptr->backends) {
             const Hashrate *hr = backend->hashrate();
@@ -614,6 +614,7 @@ void xmrig::Miner::onUpdateRequest(ClientStatus& clientStatus)
         clientStatus.setHugepages(VirtualMemory::isHugepagesAvailable());
         clientStatus.setCurrentThreads(threads);
         clientStatus.setCurrentWays(ways);
+        clientStatus.setMaxCpuUsage(d_ptr->controller->config()->cpu().maxCpuUsage());
         clientStatus.setHashFactor(threads > 0 ? ways/threads : 0);
         clientStatus.setHashrateShort(t[0]);
         clientStatus.setHashrateMedium(t[1]);
