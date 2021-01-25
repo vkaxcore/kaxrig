@@ -169,13 +169,13 @@ void xmrig::Platform::setThreadPriority(int priority)
 int64_t xmrig::Platform::getThreadSleepTimeToLimitMaxCpuUsage(uint8_t maxCpuUsage)
 {
   uint64_t currentSystemTime = Chrono::highResolutionMicroSecs();
-  if (currentSystemTime - m_systemTime > 500000)
+  if (currentSystemTime - m_systemTime > MIN_RECALC_THRESHOLD_USEC)
   {
     struct rusage usage{};
     if (getrusage(RUSAGE_THREAD, &usage) == 0)
     {
       int64_t currentThreadUsageTime = usage.ru_stime.tv_usec + (usage.ru_stime.tv_sec * 1000000)
-                                       + usage.ru_utime.tv_usec + (usage.ru_utime.tv_sec * 1000000);
+                                     + usage.ru_utime.tv_usec + (usage.ru_utime.tv_sec * 1000000);
 
       if (m_threadUsageTime > 0 || m_systemTime > 0)
       {

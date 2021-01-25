@@ -130,7 +130,7 @@ void xmrig::Platform::setThreadPriority(int priority)
 int64_t xmrig::Platform::getThreadSleepTimeToLimitMaxCpuUsage(uint8_t maxCpuUsage)
 {
   uint64_t currentSystemTime = Chrono::highResolutionMicroSecs();
-  if (currentSystemTime - m_systemTime > 500000)
+  if (currentSystemTime - m_systemTime > MIN_RECALC_THRESHOLD_USEC)
   {
     thread_basic_info_data_t info = {0};
     mach_msg_type_number_t infoCount = THREAD_BASIC_INFO_COUNT;

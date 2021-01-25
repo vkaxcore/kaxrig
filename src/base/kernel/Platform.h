@@ -25,6 +25,8 @@
 #ifndef XMRIG_PLATFORM_H
 #define XMRIG_PLATFORM_H
 
+constexpr int MIN_RECALC_THRESHOLD_USEC = 100000;
+
 #include <cstdint>
 #include "base/tools/String.h"
 
