@@ -30,6 +30,7 @@
         "yield": true,
         "force-autoconfig": false,
         "max-threads-hint": 100,
+        "max-cpu-usage": null,
         "asm": true,
         "argon2-impl": null,
         "astrobwt-max-size": 550,
