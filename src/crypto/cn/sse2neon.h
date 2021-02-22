@@ -4020,6 +4020,12 @@ inline __m128i _mm_aesenc_si128(__m128i a, __m128i b)
         vaesmcq_u8(vaeseq_u8(vreinterpretq_u8_m128i(a), vdupq_n_u8(0))) ^
         vreinterpretq_u8_m128i(b));
 }
+#else
+static inline __attribute__((always_inline)) __m128i _mm_aesenc_si128(__m128i v, __m128i rkey)
+{
+    alignas(16) const __m128i zero = { 0 };
+    return zero;
+}
 #endif
 
 /* Streaming Extensions */
