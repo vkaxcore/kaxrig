@@ -119,7 +119,7 @@ void xmrig::CCClient::updateClientInfo()
   std::string clientId;
   if (m_base->config()->ccClient().workerId())
   {
-    clientId = m_base->config()->ccClient().workerId();
+    clientId = Env::expand(m_base->config()->ccClient().workerId());
   }
   else
   {
