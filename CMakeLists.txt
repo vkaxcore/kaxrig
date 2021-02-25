@@ -137,7 +137,7 @@ set(SOURCES_CRYPTO
     src/crypto/common/MemoryPool.cpp
     src/crypto/common/Nonce.cpp
     src/crypto/common/VirtualMemory.cpp
-        src/base/crypto/Algorithm.cpp
+    src/base/crypto/Algorithm.cpp
    )
 
 if (WITH_HWLOC)
@@ -240,6 +240,8 @@ if (WITH_CC_SERVER)
             src/base/io/json/JsonChain.cpp
             src/base/io/Console.cpp
             src/base/kernel/Env.cpp
+            src/base/kernel/Process.cpp
+            src/base/tools/Arguments.cpp
             src/base/kernel/Signals.cpp
             src/base/tools/String.cpp
             src/cc/CCCServerConfig.cpp
