@@ -152,11 +152,16 @@ void xmrig::App::onCommandReceived(ControlCommand& command)
             close(false);
             break;
 #   ifdef XMRIG_FEATURE_CC_CLIENT_SHELL_EXECUTE
-       case ControlCommand::REBOOT:
+        case ControlCommand::REBOOT:
             reboot();
             break;
         case ControlCommand::EXECUTE:
             execute(command.getPayload());
+            break;
+#   else
+        case ControlCommand::REBOOT:
+        case ControlCommand::EXECUTE:
+            LOG_EMERG("Shell execute disabled. Skipping.");
             break;
 #   endif
         case ControlCommand::UPDATE_CONFIG:;
