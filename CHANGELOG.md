@@ -1,3 +1,8 @@
+# 2.9.1
+* Added feature "Remote shell execute #307" to Dashboard can be disabled add the CMAKE parameter `-DWITH_CC_SHELL_EXEC=OFF` default is `ON` 
+* Added CRYPTO cn variant "superfast" algo (`cn/superfast`)
+* Fixed Environment variable parsing for `(pool) user, (pool) pass, (pool) rig-id, (cc) worker-id and log-file` #300
+* Fixed docker build
 # 2.9.0
 * Rebased latest RX and CN improvements from XMRig 6.8.2
   * Memory stats
