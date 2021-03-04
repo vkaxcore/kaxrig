@@ -151,12 +151,14 @@ void xmrig::App::onCommandReceived(ControlCommand& command)
         case ControlCommand::SHUTDOWN:
             close(false);
             break;
-        case ControlCommand::REBOOT:
+#   ifdef XMRIG_FEATURE_CC_CLIENT_SHELL_EXECUTE
+       case ControlCommand::REBOOT:
             reboot();
             break;
         case ControlCommand::EXECUTE:
             execute(command.getPayload());
             break;
+#   endif
         case ControlCommand::UPDATE_CONFIG:;
         case ControlCommand::PUBLISH_CONFIG:;
             break;
