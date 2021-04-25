@@ -3,6 +3,8 @@
 /.idea
 /src/3rdparty
 /cmake-build-*
+/scripts/build
+/scripts/deps
 CMakeCache.txt
 cmake_install.cmake
 Makefile
