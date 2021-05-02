@@ -57,6 +57,7 @@ public:
 
 
     inline bool contains(const char *str) const { return isNull() ? false : strstr(m_data, str) != nullptr; }
+    inline char *strpos(const char *str) const { return strstr(m_data, str); }
 
 
     inline bool isEmpty() const          { return size() == 0; }

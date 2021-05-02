@@ -187,7 +187,7 @@ int64_t xmrig::Client::submit(const JobResult &result)
     }
 #   endif
 
-    if (result.diff == 0) {
+    if (result.diff == 0 && result.algorithm != Algorithm::RX_YADA) {
         close();
 
         return -1;
@@ -205,6 +205,9 @@ int64_t xmrig::Client::submit(const JobResult &result)
     Cvt::toHex(nonce, sizeof(uint32_t) * 2 + 1, reinterpret_cast<const uint8_t *>(&result.nonce), sizeof(uint32_t));
     Cvt::toHex(data, 65, result.result(), 32);
 #   endif
+    LOG_INFO("nonce %s", nonce);
+    LOG_INFO("data %s", data);
+    LOG_INFO("blob %s", result.headerHash());
 
     Document doc(kObjectType);
     auto &allocator = doc.GetAllocator();
@@ -365,6 +368,7 @@ bool xmrig::Client::isCriticalError(const char *message)
 
 bool xmrig::Client::parseJob(const rapidjson::Value &params, int *code)
 {
+    LOG_INFO("job id %s", params["job_id"].GetString());
     if (!params.IsObject()) {
         *code = 2;
         return false;
@@ -376,6 +380,9 @@ bool xmrig::Client::parseJob(const rapidjson::Value &params, int *code)
         *code = 3;
         return false;
     }
+
+    LOG_INFO("job id %s", params["job_id"].GetString());
+    LOG_INFO("nonce pos: %s", strstr(job.id(), "{"));
 
 #   ifdef XMRIG_FEATURE_HTTP
     if (m_pool.mode() == Pool::MODE_SELF_SELECT) {
@@ -426,6 +433,8 @@ bool xmrig::Client::parseJob(const rapidjson::Value &params, int *code)
     if (m_job != job) {
         m_jobs++;
         m_job = std::move(job);
+        return true;
+    } else {
         return true;
     }
 

@@ -31,6 +31,7 @@
 
 #include "base/net/stratum/Job.h"
 #include "crypto/common/Nonce.h"
+#include "base/io/log/Log.h"
 
 
 namespace xmrig {
@@ -45,6 +46,7 @@ public:
     inline uint64_t sequence() const        { return m_sequence; }
     inline uint8_t *blob()                  { return m_blobs[index()]; }
     inline uint8_t index() const            { return m_index; }
+    inline const String &id() const         { return m_id; }
 
 
     inline void add(const Job &job, uint32_t reserveCount, Nonce::Backend backend)
@@ -66,8 +68,8 @@ public:
 
     inline bool nextRound(uint32_t rounds, uint32_t roundSize)
     {
+        LOG_INFO("inline bool nextRound(uint32_t rounds, uint32_t roundSize)");
         m_rounds[index()]++;
-
         if ((m_rounds[index()] & (rounds - 1)) == 0) {
             for (size_t i = 0; i < N; ++i) {
                 if (!Nonce::next(index(), nonce(i), rounds * roundSize, nonceMask())) {
@@ -113,6 +115,7 @@ private:
     uint64_t m_nonce_mask[2] = { 0, 0 };
     uint64_t m_sequence  = 0;
     uint8_t m_index      = 0;
+    String m_id = "";
 };
 
 
@@ -126,19 +129,23 @@ inline uint32_t *xmrig::WorkerJob<1>::nonce(size_t)
 template<>
 inline bool xmrig::WorkerJob<1>::nextRound(uint32_t rounds, uint32_t roundSize)
 {
+    LOG_INFO("inline bool xmrig::WorkerJob<1>::nextRound(uint32_t rounds, uint32_t roundSize)");
     m_rounds[index()]++;
 
     uint32_t* n = nonce();
 
     if ((m_rounds[index()] & (rounds - 1)) == 0) {
+        LOG_INFO("inline bool 1");
         if (!Nonce::next(index(), n, rounds * roundSize, nonceMask())) {
             return false;
         }
         if (nonceSize() == sizeof(uint64_t)) {
+            LOG_INFO("inline bool 2");
             m_jobs[index()].nonce()[1] = n[1];
         }
     }
     else {
+        LOG_INFO("inline bool 3");
         *n += roundSize;
     }
 

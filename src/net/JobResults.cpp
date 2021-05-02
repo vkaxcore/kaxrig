@@ -209,7 +209,6 @@ public:
     {
         std::lock_guard<std::mutex> lock(m_mutex);
         m_results.push_back(result);
-
         m_async->send();
     }
 
