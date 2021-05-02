@@ -101,7 +101,7 @@ bool xmrig::DaemonClient::isTLS() const
 
 
 int64_t xmrig::DaemonClient::submit(const JobResult &result)
-{   
+{
     if (result.jobId != (m_blocktemplate.data() + m_blocktemplate.size() - 32)) {
         return -1;
     }
