@@ -23,11 +23,13 @@ option(WITH_PROFILING       "Enable developer profiling" OFF)
 option(WITH_TLS             "Enable OpenSSL support" ON)
 option(WITH_ZLIB            "Enabled gzip compression on CC (client/server)" OFF)
 option(WITH_ASM             "Enable ASM PoW implementations" ON)
+option(WITH_ENV_VARS        "Enable environment variables support in config file" ON)
 option(WITH_EMBEDDED_CONFIG "Enable internal embedded JSON config" OFF)
 option(WITH_MSR             "Enable MSR support" ON)
 option(WITH_SSE4_1          "Enable SSE 4.1 for Blake2" ON)
 option(WITH_SECURE_JIT      "Enable secure access to JIT memory" OFF)
 option(WITH_CC_CLIENT       "CC Client" ON)
+option(WITH_CC_SHELL_EXEC   "CC Client allow shell execute" ON)
 option(WITH_CC_SERVER       "CC Server" ON)
 option(WITH_HTTPLIB_POLL    "Use poll.h (recommended) instead of old plain sockets for HTTP" ON)
 
@@ -136,7 +138,6 @@ set(SOURCES_CRYPTO
     src/crypto/common/MemoryPool.cpp
     src/crypto/common/Nonce.cpp
     src/crypto/common/VirtualMemory.cpp
-        src/base/crypto/Algorithm.cpp
    )
 
 if (WITH_HWLOC)
@@ -239,6 +240,8 @@ if (WITH_CC_SERVER)
             src/base/io/json/JsonChain.cpp
             src/base/io/Console.cpp
             src/base/kernel/Env.cpp
+            src/base/kernel/Process.cpp
+            src/base/tools/Arguments.cpp
             src/base/kernel/Signals.cpp
             src/base/tools/String.cpp
             src/cc/CCCServerConfig.cpp
@@ -275,6 +278,10 @@ if (WITH_CC_CLIENT)
             src/cc/CCClient.cpp
             src/base/io/log/backends/RemoteLog.cpp)
     add_definitions("/DXMRIG_FEATURE_CC_CLIENT")
+
+    if (WITH_CC_SHELL_EXEC)
+        add_definitions("/DXMRIG_FEATURE_CC_CLIENT_SHELL_EXECUTE")
+    endif()
 
     if (WITH_TLS)
         add_definitions(/DCPPHTTPLIB_OPENSSL_SUPPORT)
