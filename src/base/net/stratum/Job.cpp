@@ -27,14 +27,11 @@
 
 #include <cassert>
 #include <cstring>
-#include <inttypes.h>
-#include <stdio.h>
 
 
 #include "base/net/stratum/Job.h"
 #include "base/tools/Buffer.h"
 #include "base/tools/Cvt.h"
-#include "base/io/log/Log.h"
 
 
 xmrig::Job::Job(bool nicehash, const Algorithm &algorithm, const String &clientId) :
@@ -63,7 +60,7 @@ bool xmrig::Job::setBlob(const char *blob)
     }
 
     m_size /= 2;
-    size_t minSize = nonceOffset() + nonceSize();
+    const size_t minSize = nonceOffset() + nonceSize();
     
     if (m_size < minSize || m_size >= sizeof(m_blob)) {
         return false;
@@ -113,7 +110,6 @@ bool xmrig::Job::setTarget(const char *target)
 
     if (algorithm() == Algorithm::RX_YADA) {
         m_target = 0x0000F00000000000ULL + strtoull(target, nullptr, 16);
-        LOG_INFO("%llu", m_target);
     }
     else if (size == 4) {
         m_target = 0xFFFFFFFFFFFFFFFFULL / (0xFFFFFFFFULL / uint64_t(*reinterpret_cast<const uint32_t *>(raw.data())));

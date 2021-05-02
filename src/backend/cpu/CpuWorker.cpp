@@ -25,7 +25,6 @@
 #include "backend/cpu/interfaces/ICpuInfo.h"
 #include "backend/cpu/CpuWorker.h"
 #include "base/tools/Chrono.h"
-#include "base/tools/Cvt.h"
 #include "core/config/Config.h"
 #include "core/Miner.h"
 #include "crypto/cn/CnCtx.h"
@@ -37,8 +36,6 @@
 #include "crypto/rx/RxDataset.h"
 #include "crypto/rx/RxVm.h"
 #include "net/JobResults.h"
-#include "base/io/log/Log.h"
-
 
 
 #ifdef XMRIG_ALGO_RANDOMX
@@ -262,8 +259,6 @@ void xmrig::CpuWorker<N>::start()
                 current_job_nonces[i] = *m_job.nonce(i);
             }
 
-
-                    
             bool valid = true;
 
 #           ifdef XMRIG_ALGO_RANDOMX
@@ -273,28 +268,18 @@ void xmrig::CpuWorker<N>::start()
                     if (job.algorithm() == Algorithm::RX_XLA) {
                       panthera_calculate_hash_first(m_vm, tempHash, m_job.blob(), job.size());
                     } else {
-                        LOG_INFO("blob first before %s", m_job.blob());
-                        LOG_INFO("nonce first before %s", m_job.nonce());
                       randomx_calculate_hash_first(m_vm, tempHash, m_job.blob(), job.size());
-                        LOG_INFO("blob first after %s", m_job.blob());
-                        LOG_INFO("nonce first after %s", m_job.nonce());
                     }
                 }
 
-                LOG_INFO("blob netRound before %s", m_job.blob());
                 if (!nextRound()) {
                     break;
                 }
-                LOG_INFO("blob netRound after %s", m_job.blob());
 
                 if (job.algorithm() == Algorithm::RX_XLA) {
                   panthera_calculate_hash_next(m_vm, tempHash, m_job.blob(), job.size(), m_hash);
                 } else {
-                        LOG_INFO("blob next before %s", m_job.blob());
-                        LOG_INFO("nonce next before %s", m_job.nonce());
                   randomx_calculate_hash_next(m_vm, tempHash, m_job.blob(), job.size(), m_hash);
-                        LOG_INFO("blob next after %s", m_job.blob());
-                        LOG_INFO("nonce next after %s", m_job.nonce());
                 }
             }
             else
@@ -319,12 +304,7 @@ void xmrig::CpuWorker<N>::start()
             if (valid) {
                 for (size_t i = 0; i < N; ++i) {
                     const uint64_t value = *reinterpret_cast<uint64_t*>(m_hash + (i * 32) + 24);
-                    char data[32 * 2 + 8];
-                    Cvt::toHex(data, 65, m_hash + (i * 32), 32);
-                    LOG_INFO("m_hash next after %s", data);
                     if (value < job.target()) {
-                        LOG_INFO("%s", m_job.blob());
-                        LOG_INFO("%s", m_job.nonce());
                         JobResults::submit(job, current_job_nonces[i], m_hash + (i * 32));
                     }
                 }
@@ -350,9 +330,7 @@ template<size_t N>
 bool xmrig::CpuWorker<N>::nextRound()
 {
     constexpr uint32_t count = kReserveCount;
-    LOG_INFO("bool xmrig::CpuWorker<N>::nextRound()");
     if (!m_job.nextRound(count, 1)) {
-        LOG_INFO("m_job.nextRound 1");
         JobResults::done(m_job.currentJob());
 
         return false;
