@@ -330,6 +330,7 @@ template<size_t N>
 bool xmrig::CpuWorker<N>::nextRound()
 {
     constexpr uint32_t count = kReserveCount;
+
     if (!m_job.nextRound(count, 1)) {
         JobResults::done(m_job.currentJob());
 
