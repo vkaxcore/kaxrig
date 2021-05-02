@@ -83,13 +83,7 @@ public:
             return 39;
         }
     }
-    inline size_t nonceSize() const                     { 
-        if (m_algorithm == Algorithm::RX_YADA) {
-            return 4;
-        } else {
-            return 4;
-        }
-    }
+    inline size_t nonceSize() const                     { return 4; }
     inline size_t size() const                          { return m_size; }
     inline uint32_t *nonce()                            { return reinterpret_cast<uint32_t*>(m_blob + nonceOffset()); }
     inline uint32_t backend() const                     { return m_backend; }
