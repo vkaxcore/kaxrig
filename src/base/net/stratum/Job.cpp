@@ -108,14 +108,14 @@ bool xmrig::Job::setTarget(const char *target)
     const auto raw    = Cvt::fromHex(target, strlen(target));
     const size_t size = raw.size();
 
-    if (algorithm() == Algorithm::RX_YADA) {
-        m_target = 0x0000F00000000000ULL + strtoull(target, nullptr, 16);
-    }
-    else if (size == 4) {
+    if (size == 4) {
         m_target = 0xFFFFFFFFFFFFFFFFULL / (0xFFFFFFFFULL / uint64_t(*reinterpret_cast<const uint32_t *>(raw.data())));
     }
     else if (size == 8) {
         m_target = *reinterpret_cast<const uint64_t *>(raw.data());
+    }
+    else if (algorithm() == Algorithm::RX_YADA) {
+      m_target = 0x0000F00000000000ULL + strtoull(target, nullptr, 16);
     }
     else {
         return false;

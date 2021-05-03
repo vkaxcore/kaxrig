@@ -134,7 +134,7 @@ RandomX_ConfigurationYada::RandomX_ConfigurationYada()
 
 RandomX_ConfigurationBase::RandomX_ConfigurationBase()
 	: SuperscalarLatency(170)
-  , ArgonMemory(262144)
+	, ArgonMemory(262144)
 	, CacheAccesses(8)
 	, DatasetBaseSize(2147483648)
 	, DatasetExtraSize(33554368)
