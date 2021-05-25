@@ -105,7 +105,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-colorschemes"></script>
 
     <script type="text/javascript">
-        var TRESHOLD_IN_MS = 60 * 1000;
+        var THRESHOLD_IN_MS = 60 * 1000;
         var RELOAD_INTERVAL_IN_MS = 10 * 1000;
         var CHART_RELOAD_INTERVAL_IN_MS = 60 * 1000;
 
@@ -128,7 +128,7 @@
                 var online = isOnline(lastStatus);
 
                 if (!online) {
-                    var threshold = currentServerTime - (TRESHOLD_IN_MS + RELOAD_INTERVAL_IN_MS);
+                    var threshold = currentServerTime - (THRESHOLD_IN_MS + RELOAD_INTERVAL_IN_MS);
                     if (lastStatus > threshold && showNotification) {
                         $("#notificationBar").after('<div class="alert alert-danger alert-dismissable fade in">' +
                             '<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>' +
@@ -182,6 +182,7 @@
                     {data: "client_status.hash_factor", className: "right", visible: false},
                     {data: "client_status.total_pages", className: "right", visible: false},
                     {data: "client_status.total_hugepages", className: "right", visible: false},
+                    {data: null, render: clientHPpercent, className: "right", visible: false},
                     {data: "client_status.free_memory", render: memory, className: "right", visible: false},
                     {data: "client_status.total_memory", render: memory, className: "right", visible: false},
                     {data: "client_status.current_threads", className: "right", visible: false},
@@ -404,7 +405,7 @@
                     var sumSharesGood = 0;
                     var sumSharedTotal = 0;
 
-                    var colOffset = 28;
+                    var colOffset = 29;
 
                     sumHashrateShort = api
                         .column(colOffset, {page: 'current'})
@@ -911,6 +912,11 @@
                 updateCharts(hashrateChart, minerChart);
             }, CHART_RELOAD_INTERVAL_IN_MS);
         });
+        
+        function clientHPpercent(data, type, row) {
+	    if (!row.client_status.hugepages_enabled || row.client_status.total_pages == 0) return 0;
+            return Math.round(1000 * row.client_status.total_hugepages / row.client_status.total_pages) / 10;
+        }
 
         function sendAction(action, clientId, payload) {
             $.ajax({
@@ -1088,7 +1094,7 @@
         }
 
         function isOnline(lastStatus) {
-            var threshold = currentServerTime - TRESHOLD_IN_MS;
+            var threshold = currentServerTime - THRESHOLD_IN_MS;
             if (lastStatus > threshold) {
                 return true;
             } else {
@@ -1185,7 +1191,7 @@
                     var hashrates = statistics[j].map(function(e) {
                         return {
                             x: new Date(e.timestamp),
-                            y: e.hashrate
+                            y: Math.round(e.hashrate * 100) / 100
                         }
                     });
 
@@ -1255,6 +1261,7 @@
             <th>Hashfactor</th>
             <th>Total Pages</th>
             <th>Total Hugepages</th>
+            <th>Hugepages %</th>
             <th>Free Memory (GB)</th>
             <th>Total Memory (GB)</th>
             <th>Used Threads</th>
@@ -1286,6 +1293,7 @@
         <tr>
             <th class="center" width="2%"><i class="fa fa-square-o" id="selectAllBottom"></i></th>
             <th class="left">Total:</th>
+            <th></th>
             <th></th>
             <th></th>
             <th></th>
