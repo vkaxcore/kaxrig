@@ -11,6 +11,8 @@ XMRigCC is a high performance RandomX, CryptoNight, Argon2 and AstroBWT CPU mine
 [![Github downloads latest](https://img.shields.io/github/downloads/bendr0id/xmrigCC/latest/total.svg)](https://github.com/bendr0id/xmrigCC/releases)
 [![Github downloads total](https://img.shields.io/github/downloads/bendr0id/xmrigCC/total.svg)](https://github.com/bendr0id/xmrigCC/releases)
 [![GitHub stars](https://img.shields.io/github/stars/bendr0id/xmrigCC.svg)](https://github.com/bendr0id/xmrigCC/stargazers)
+[![chat on Discord](https://img.shields.io/discord/454197671528366100?logo=discord)](https://discord.gg/r3rCKTB)
+
 
 ![XMRigCC Logo](https://i.imgur.com/7mi0WCe.png)
 
