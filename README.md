@@ -29,6 +29,7 @@ Full Windows/Linux compatible, and you can mix Linux and Windows miner on one XM
 
 ## Last integrated algos in XMRigCC:
 
+* **Graft** RX variant (Algo: "rx/graft")
 * **Yadacoin** RX variant (Algo: "rx/yada")
 * **CXCHE** CN variant (algo: "cn/cache_hash")
 * **Turtlecoin** argon2 chukwa variant 2 (algo: "argon2/chukwav2")
