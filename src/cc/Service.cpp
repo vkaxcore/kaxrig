@@ -695,9 +695,9 @@ void Service::sendMinerOfflinePush(uint64_t now)
       if (std::find(m_offlineNotified.begin(), m_offlineNotified.end(), clientStatus.first) == m_offlineNotified.end())
       {
         std::stringstream message;
-        message << "Miner: " << clientStatus.first << " just went offline!";
+        message << "Miner: " << httplib::detail::encode_url(clientStatus.first) << " just went offline!";
 
-        LOG_WARN("Send miner %s went offline push", clientStatus.first.c_str());
+        LOG_WARN("Send miner %s went offline push", httplib::detail::encode_url(clientStatus.first).c_str());
         triggerPush(APP_NAME " Onlinestatus Monitor", message.str());
 
         m_offlineNotified.push_back(clientStatus.first);
@@ -708,9 +708,9 @@ void Service::sendMinerOfflinePush(uint64_t now)
       if (std::find(m_offlineNotified.begin(), m_offlineNotified.end(), clientStatus.first) != m_offlineNotified.end())
       {
         std::stringstream message;
-        message << "Miner: " << clientStatus.first << " is back online!";
+        message << "Miner: " << httplib::detail::encode_url(clientStatus.first) << " is back online!";
 
-        LOG_WARN("Send miner %s back online push", clientStatus.first.c_str());
+        LOG_WARN("Send miner %s back online push", httplib::detail::encode_url(clientStatus.first).c_str());
         triggerPush(APP_NAME " Onlinestatus Monitor", message.str());
 
         m_offlineNotified.remove(clientStatus.first);
@@ -739,9 +739,9 @@ void Service::sendMinerZeroHashratePush(uint64_t now)
           if (m_zeroHashNotified[clientStatus.first] > 0 && m_zeroHashNotified[clientStatus.first] < now)
           {
             std::stringstream message;
-            message << "Miner: " << clientStatus.first << " reported 0 h/s for over a minute!";
+            message << "Miner: " << httplib::detail::encode_url(clientStatus.first) << " reported 0 h/s for over a minute!";
 
-            LOG_WARN("Send miner %s 0 hashrate push", clientStatus.first.c_str());
+            LOG_WARN("Send miner %s 0 hashrate push", httplib::detail::encode_url(clientStatus.first).c_str());
             triggerPush(APP_NAME " Hashrate Monitor", message.str());
 
             m_zeroHashNotified[clientStatus.first] = 0;
@@ -755,11 +755,11 @@ void Service::sendMinerZeroHashratePush(uint64_t now)
           if (m_zeroHashNotified[clientStatus.first] == 0)
           {
             std::stringstream message;
-            message << "Miner: " << clientStatus.first << " hashrate recovered. Reported "
+            message << "Miner: " << httplib::detail::encode_url(clientStatus.first) << " hashrate recovered. Reported "
                     << clientStatus.second.getHashrateMedium()
                     << " h/s within the last minute!";
 
-            LOG_WARN("Send miner %s hashrate recovered push", clientStatus.first.c_str());
+            LOG_WARN("Send miner %s hashrate recovered push", httplib::detail::encode_url(clientStatus.first).c_str());
             triggerPush(APP_NAME " Hashrate Monitor", message.str());
           }
 
@@ -837,36 +837,46 @@ void Service::triggerPush(const std::string& title, const std::string& message)
 void Service::sendViaPushover(const std::string& title, const std::string& message)
 {
   auto cli = std::make_shared<httplib::SSLClient>("api.pushover.net", 443);
+  cli->enable_server_certificate_verification(false);
 
   httplib::Params params;
   params.emplace("token", m_config->pushoverApiToken());
   params.emplace("user", m_config->pushoverUserKey());
   params.emplace("title", title);
-  params.emplace("message", httplib::detail::encode_url(message));
+  params.emplace("message", message);
 
   auto res = cli->Post("/1/messages.json", params);
   if (res)
   {
     LOG_WARN("Pushover response: %s", res->body.c_str());
   }
+  else
+  {
+    LOG_ERR("Failed to connect to the Pushover API");
+  }
 }
 
 void Service::sendViaTelegram(const std::string& title, const std::string& message)
 {
   auto cli = std::make_shared<httplib::SSLClient>("api.telegram.org", 443);
+  cli->enable_server_certificate_verification(false);
 
   std::string text = "<b>" + title + "</b>\n\n" + message;
   std::string path = std::string("/bot") + m_config->telegramBotToken() + std::string("/sendMessage");
 
   httplib::Params params;
   params.emplace("chat_id", m_config->telegramChatId());
-  params.emplace("text", httplib::detail::encode_url(text));
+  params.emplace("text", text);
   params.emplace("parse_mode", "HTML");
 
   auto res = cli->Post(path.c_str(), params);
   if (res)
   {
     LOG_WARN("Telegram response: %s", res->body.c_str());
+  }
+  else
+  {
+    LOG_ERR("Failed to connect to the Telegram API");
   }
 }
 
