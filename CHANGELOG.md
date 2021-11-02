@@ -1,3 +1,6 @@
+# 2.9.7
+* AstroBWT speedup (upstream 6.15.3 -> up to +35%)
+* Fixed corrupt Server Push messages
 # 2.9.6
 * Added rx variant GRAFT algo (`rx/graft`)
 * Fixed freeze in CC Server / CC communication
