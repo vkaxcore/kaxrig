@@ -19,7 +19,7 @@
 #ifndef XMRIG_CUDALAUNCHDATA_H
 #define XMRIG_CUDALAUNCHDATA_H
 
-
+#include "backend/cuda/wrappers/CudaDevice.h"
 #include "backend/cuda/CudaThread.h"
 #include "base/crypto/Algorithm.h"
 #include "crypto/common/Nonce.h"

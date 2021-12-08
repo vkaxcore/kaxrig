@@ -101,18 +101,6 @@ static const option options[] = {
     { "dns-ipv6",              0, nullptr, IConfig::DnsIPv6Key            },
     { "dns-ttl",               1, nullptr, IConfig::DnsTtlKey             },
     { "spend-secret-key",      1, nullptr, IConfig::SpendSecretKey        },
-#   ifdef XMRIG_FEATURE_BENCHMARK
-    { "stress",                0, nullptr, IConfig::StressKey             },
-    { "bench",                 1, nullptr, IConfig::BenchKey              },
-    { "benchmark",             1, nullptr, IConfig::BenchKey              },
-#   ifdef XMRIG_FEATURE_HTTP
-    { "submit",                0, nullptr, IConfig::BenchSubmitKey        },
-    { "verify",                1, nullptr, IConfig::BenchVerifyKey        },
-    { "token",                 1, nullptr, IConfig::BenchTokenKey         },
-#   endif
-    { "seed",                  1, nullptr, IConfig::BenchSeedKey          },
-    { "hash",                  1, nullptr, IConfig::BenchHashKey          },
-#   endif
 #   ifdef XMRIG_FEATURE_TLS
     { "tls",                   0, nullptr, IConfig::TlsKey                },
     { "tls-fingerprint",       1, nullptr, IConfig::FingerprintKey        },
@@ -166,6 +154,20 @@ static const option options[] = {
 #   endif
 #   ifdef XMRIG_FEATURE_DMI
     { "no-dmi",                0, nullptr, IConfig::DmiKey                },
+#   endif
+#   ifdef XMRIG_FEATURE_CC_CLIENT
+    { "daemonized",            0, nullptr, IConfig::CCDaemonizedKey       },
+    { "cc-disabled",           0, nullptr, IConfig::CCEnabledKey          },
+    { "cc-use-tls",            0, nullptr, IConfig::CCUseTLS              },
+    { "cc-use-remote-logging", 0, nullptr, IConfig::CCUseRemoteLog        },
+    { "cc-reboot-cmd",         1, nullptr, IConfig::CCRebootCmd           },
+    { "cc-url",                1, nullptr, IConfig::CCUrl                 },
+    { "cc-access-token",       1, nullptr, IConfig::CCAccessToken         },
+    { "cc-worker-id",          1, nullptr, IConfig::CCWorkerId            },
+    { "cc-update-interval-s",  1, nullptr, IConfig::CCUpdateInterval      },
+    { "cc-upload-config-on-start",    0, nullptr, IConfig::CCUploadConfigOnStartup },
+    { "cpu-force-autoconfig",  0, nullptr, IConfig::ForceAutoconfigKey    },
+    { "cpu-max-cpu-usage",     1, nullptr, IConfig::CPUMaxUsageKey        },
 #   endif
     { nullptr,                 0, nullptr, 0 }
 };

@@ -222,6 +222,10 @@ void xmrig::Summary::print(Controller *controller)
     print_threads(config);
     config->pools().print();
 
+#   ifdef XMRIG_FEATURE_CC_CLIENT
+    config->ccClient().print();
+#   endif
+
     print_commands(config);
 }
 

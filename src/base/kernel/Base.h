@@ -35,7 +35,7 @@ class BasePrivate;
 class Config;
 class IBaseListener;
 class Process;
-
+class CCClient;
 
 class Base : public IWatcherListener, public IApiListener
 {
@@ -51,6 +51,7 @@ public:
     virtual void stop();
 
     Api *api() const;
+    CCClient *ccClient() const;
     bool isBackground() const;
     bool reload(const rapidjson::Value &json);
     Config *config() const;

@@ -527,3 +527,10 @@ void xmrig::OclBackend::handleRequest(IApiRequest &)
 {
 }
 #endif
+
+#ifdef XMRIG_FEATURE_CC_CLIENT
+std::vector<xmrig::OclLaunchData> xmrig::OclBackend::getLaunchData() const
+{
+  return d_ptr->threads;
+}
+#endif

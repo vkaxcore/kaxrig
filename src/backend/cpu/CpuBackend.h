@@ -21,6 +21,7 @@
 
 
 #include "backend/common/interfaces/IBackend.h"
+#include "crypto/common/HugePagesInfo.h"
 #include "base/tools/Object.h"
 
 
@@ -43,6 +44,12 @@ public:
     CpuBackend(Controller *controller);
     ~CpuBackend() override;
 
+#   ifdef XMRIG_FEATURE_CC_CLIENT
+    const HugePagesInfo& hugePages() const;
+    size_t ways() const;
+#   endif
+
+
 protected:
     inline void execCommand(char) override {}
 
@@ -62,11 +69,6 @@ protected:
 #   ifdef XMRIG_FEATURE_API
     rapidjson::Value toJSON(rapidjson::Document &doc) const override;
     void handleRequest(IApiRequest &request) override;
-#   endif
-
-#   ifdef XMRIG_FEATURE_BENCHMARK
-    Benchmark *benchmark() const override;
-    void printBenchProgress() const override;
 #   endif
 
 private:

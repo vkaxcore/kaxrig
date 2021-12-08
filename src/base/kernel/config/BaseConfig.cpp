@@ -46,6 +46,7 @@
 
 namespace xmrig {
 
+const String BaseConfig::kDefaultConfigFilename = "config.json";
 
 const char *BaseConfig::kApi            = "api";
 const char *BaseConfig::kApiId          = "id";
@@ -62,7 +63,8 @@ const char *BaseConfig::kTitle          = "title";
 const char *BaseConfig::kUserAgent      = "user-agent";
 const char *BaseConfig::kVerbose        = "verbose";
 const char *BaseConfig::kWatch          = "watch";
-
+const char *BaseConfig::kCCClient       = "cc-client";
+const char *BaseConfig::kDaemonized     = "daemonized";
 
 #ifdef XMRIG_FEATURE_TLS
 const char *BaseConfig::kTls            = "tls";
@@ -85,6 +87,7 @@ bool xmrig::BaseConfig::read(const IJsonReader &reader, const char *fileName)
     m_dryRun            = reader.getBool(kDryRun, m_dryRun);
     m_syslog            = reader.getBool(kSyslog, m_syslog);
     m_watch             = reader.getBool(kWatch, m_watch);
+    m_daemonized        = reader.getBool(kDaemonized, m_daemonized);
     m_logFile           = reader.getString(kLogFile);
     m_userAgent         = reader.getString(kUserAgent);
     m_printTime         = std::min(reader.getUint(kPrintTime, m_printTime), 3600U);
@@ -108,7 +111,11 @@ bool xmrig::BaseConfig::read(const IJsonReader &reader, const char *fileName)
 
     Dns::set(reader.getObject(DnsConfig::kField));
 
+#   ifdef XMRIG_FEATURE_CC_CLIENT
+    return m_ccClient.load(reader.getObject(kCCClient)) || m_pools.active() > 0;
+#   else
     return m_pools.active() > 0;
+#   endif
 }
 
 
@@ -142,7 +149,7 @@ void xmrig::BaseConfig::printVersions()
     snprintf(buf, sizeof buf, "MSVC/%d", MSVC_VERSION);
 #   endif
 
-    Log::print(GREEN_BOLD(" * ") WHITE_BOLD("%-13s") CYAN_BOLD("%s/%s") WHITE_BOLD(" %s"), "ABOUT", APP_NAME, APP_VERSION, buf);
+    Log::print(GREEN_BOLD(" * ") WHITE_BOLD("%-13s") CYAN_BOLD("%s/%s") WHITE_BOLD(" %s") BLUE_BOLD(" (%s)"), "ABOUT", APP_NAME, APP_VERSION, buf, BUILD_TYPE);
 
     std::string libs;
 

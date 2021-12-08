@@ -56,17 +56,12 @@ public:
     };
 
     Pools();
-
-#   ifdef XMRIG_FEATURE_BENCHMARK
-    inline bool isBenchmark() const                     { return !!m_benchmark; }
-#   else
     inline constexpr static bool isBenchmark()          { return false; }
-#   endif
 
     inline const std::vector<Pool> &data() const        { return m_data; }
     inline int retries() const                          { return m_retries; }
     inline int retryPause() const                       { return m_retryPause; }
-    inline ProxyDonate proxyDonate() const              { return m_proxyDonate; }
+    inline ProxyDonate proxyDonate() const              { return PROXY_DONATE_NONE; }
 
     inline bool operator!=(const Pools &other) const    { return !isEqual(other); }
     inline bool operator==(const Pools &other) const    { return isEqual(other); }
@@ -92,10 +87,6 @@ private:
     int m_retryPause            = 5;
     ProxyDonate m_proxyDonate   = PROXY_DONATE_AUTO;
     std::vector<Pool> m_data;
-
-#   ifdef XMRIG_FEATURE_BENCHMARK
-    std::shared_ptr<BenchConfig> m_benchmark;
-#   endif
 };
 
 

@@ -557,3 +557,10 @@ void xmrig::CudaBackend::handleRequest(IApiRequest &)
 {
 }
 #endif
+
+#ifdef XMRIG_FEATURE_CC_CLIENT
+std::vector<xmrig::CudaLaunchData> xmrig::CudaBackend::getLaunchData() const
+{
+  return d_ptr->threads;
+}
+#endif

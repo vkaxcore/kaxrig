@@ -69,7 +69,6 @@ struct RandomX_ConfigurationBase
 	{
 		ArgonMemory = 262144,
 		CacheAccesses = 8,
-		SuperscalarLatency = 170,
 		DatasetBaseSize = 2147483648,
 		DatasetExtraSize = 33554368,
 		JumpBits = 8,
@@ -79,6 +78,7 @@ struct RandomX_ConfigurationBase
 		ConditionMask_Calculated = ((1 << JumpBits) - 1) << JumpOffset,
 	};
 
+  int64_t SuperscalarLatency;
 	uint32_t ArgonIterations;
 	uint32_t ArgonLanes;
 	const char* ArgonSalt;
@@ -147,6 +147,7 @@ struct RandomX_ConfigurationArqma : public RandomX_ConfigurationBase { RandomX_C
 struct RandomX_ConfigurationGraft : public RandomX_ConfigurationBase { RandomX_ConfigurationGraft(); };
 struct RandomX_ConfigurationSafex : public RandomX_ConfigurationBase { RandomX_ConfigurationSafex(); };
 struct RandomX_ConfigurationKeva : public RandomX_ConfigurationBase { RandomX_ConfigurationKeva(); };
+struct RandomX_ConfigurationYada : public RandomX_ConfigurationBase { RandomX_ConfigurationYada(); };
 
 extern RandomX_ConfigurationMonero RandomX_MoneroConfig;
 extern RandomX_ConfigurationWownero RandomX_WowneroConfig;
@@ -154,6 +155,7 @@ extern RandomX_ConfigurationArqma RandomX_ArqmaConfig;
 extern RandomX_ConfigurationGraft RandomX_GraftConfig;
 extern RandomX_ConfigurationSafex RandomX_SafexConfig;
 extern RandomX_ConfigurationKeva RandomX_KevaConfig;
+extern RandomX_ConfigurationYada RandomX_YadaConfig;
 
 extern RandomX_ConfigurationBase RandomX_CurrentConfig;
 
@@ -316,6 +318,9 @@ RANDOMX_EXPORT void randomx_calculate_hash(randomx_vm *machine, const void *inpu
 
 RANDOMX_EXPORT void randomx_calculate_hash_first(randomx_vm* machine, uint64_t (&tempHash)[8], const void* input, size_t inputSize);
 RANDOMX_EXPORT void randomx_calculate_hash_next(randomx_vm* machine, uint64_t (&tempHash)[8], const void* nextInput, size_t nextInputSize, void* output);
+
+RANDOMX_EXPORT void panthera_calculate_hash_first(randomx_vm* machine, uint64_t (&tempHash)[8], const void* input, size_t inputSize);
+RANDOMX_EXPORT void panthera_calculate_hash_next(randomx_vm* machine, uint64_t (&tempHash)[8], const void* nextInput, size_t nextInputSize, void* output);
 
 #if defined(__cplusplus)
 }

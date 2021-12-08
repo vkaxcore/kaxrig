@@ -32,11 +32,6 @@
 #include "donate.h"
 
 
-#ifdef XMRIG_FEATURE_BENCHMARK
-#   include "base/net/stratum/benchmark/BenchConfig.h"
-#endif
-
-
 namespace xmrig {
 
 
@@ -72,11 +67,7 @@ bool xmrig::Pools::isEqual(const Pools &other) const
 
 int xmrig::Pools::donateLevel() const
 {
-#   ifdef XMRIG_FEATURE_BENCHMARK
-    return benchSize() || (m_benchmark && !m_benchmark->id().isEmpty()) ? 0 : m_donateLevel;
-#   else
     return m_donateLevel;
-#   endif
 }
 
 
@@ -133,15 +124,6 @@ void xmrig::Pools::load(const IJsonReader &reader)
 {
     m_data.clear();
 
-#   ifdef XMRIG_FEATURE_BENCHMARK
-    m_benchmark = std::shared_ptr<BenchConfig>(BenchConfig::create(reader.getObject(BenchConfig::kBenchmark), reader.getBool("dmi", true)));
-    if (m_benchmark) {
-        m_data.emplace_back(m_benchmark);
-
-        return;
-    }
-#   endif
-
     const rapidjson::Value &pools = reader.getArray(kPools);
     if (!pools.IsArray()) {
         return;
@@ -167,11 +149,7 @@ void xmrig::Pools::load(const IJsonReader &reader)
 
 uint32_t xmrig::Pools::benchSize() const
 {
-#   ifdef XMRIG_FEATURE_BENCHMARK
-    return m_benchmark ? m_benchmark->size() : 0;
-#   else
     return 0;
-#   endif
 }
 
 
@@ -198,14 +176,6 @@ void xmrig::Pools::toJSON(rapidjson::Value &out, rapidjson::Document &doc) const
 {
     using namespace rapidjson;
     auto &allocator = doc.GetAllocator();
-
-#   ifdef XMRIG_FEATURE_BENCHMARK
-    if (m_benchmark) {
-        out.AddMember(StringRef(BenchConfig::kBenchmark), m_benchmark->toJSON(doc), allocator);
-
-        return;
-    }
-#   endif
 
     doc.AddMember(StringRef(kDonateLevel),      m_donateLevel, allocator);
     doc.AddMember(StringRef(kDonateOverProxy),  m_proxyDonate, allocator);

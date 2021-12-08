@@ -1,6 +1,5 @@
-/* XMRig
- * Copyright (c) 2018-2020 SChernykh   <https://github.com/SChernykh>
- * Copyright (c) 2016-2020 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+/* XMRigCC
+ * Copyright 2019-     BenDr0id    <https://github.com/BenDr0id>, <ben@graef.in>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,40 +15,28 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef XMRIG_BENCHMARK_H
-#define XMRIG_BENCHMARK_H
+#ifndef XMRIG_ICLIENTSTATUSLISTENER_H
+#define XMRIG_ICLIENTSTATUSLISTENER_H
 
-
-#include "base/tools/Object.h"
-
+#include "cc/ClientStatus.h"
 
 namespace xmrig {
 
 
-class IBackend;
+class String;
 
 
-class Benchmark
+class IClientStatusListener
 {
 public:
-    XMRIG_DISABLE_COPY_MOVE_DEFAULT(Benchmark)
-
-    Benchmark(size_t workers, const IBackend *backend);
-    ~Benchmark() = default;
-
-    bool finish(uint64_t totalHashCount);
-    void printProgress() const;
-    void start();
-
-private:
-    const IBackend *m_backend;
-    const size_t m_workers;
-    uint64_t m_current          = 0;
-    uint64_t m_startTime        = 0;
+    virtual ~IClientStatusListener() = default;
+#   ifdef XMRIG_FEATURE_CC_CLIENT
+    virtual void onUpdateRequest(ClientStatus& clientStatus) = 0;
+#   endif
 };
 
 
-} // namespace xmrig
+} /* namespace xmrig */
 
 
-#endif /* XMRIG_BENCHMARK_H */
+#endif // XMRIG_ICLIENTSTATUSLISTENER_H

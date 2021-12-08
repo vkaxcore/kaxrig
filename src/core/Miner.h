@@ -28,6 +28,7 @@
 #include "base/crypto/Algorithm.h"
 #include "base/kernel/interfaces/IBaseListener.h"
 #include "base/kernel/interfaces/ITimerListener.h"
+#include "base/cc/interfaces/IClientStatusListener.h"
 #include "base/tools/Object.h"
 
 
@@ -40,7 +41,7 @@ class MinerPrivate;
 class IBackend;
 
 
-class Miner : public ITimerListener, public IBaseListener, public IApiListener, public IRxListener
+class Miner : public ITimerListener, public IBaseListener, public IApiListener, public IRxListener, public IClientStatusListener
 {
 public:
     XMRIG_DISABLE_COPY_MOVE_DEFAULT(Miner)
@@ -65,6 +66,10 @@ protected:
 
 #   ifdef XMRIG_FEATURE_API
     void onRequest(IApiRequest &request) override;
+#   endif
+
+#   ifdef XMRIG_FEATURE_CC_CLIENT
+    void onUpdateRequest(ClientStatus& clientStatus) override;
 #   endif
 
 #   ifdef XMRIG_ALGO_RANDOMX

@@ -66,6 +66,7 @@ public:
     void setSigKey(const char *sig_key);
 
     inline bool isNicehash() const                      { return m_nicehash; }
+    inline bool isDonate() const                        { return m_donate; }
     inline bool isValid() const                         { return (m_size > 0 && m_diff > 0) || !m_poolWallet.isEmpty(); }
     inline bool setId(const char *id)                   { return m_id = id; }
     inline const Algorithm &algorithm() const           { return m_algorithm; }
@@ -76,7 +77,7 @@ public:
     inline const String &poolWallet() const             { return m_poolWallet; }
     inline const uint32_t *nonce() const                { return reinterpret_cast<const uint32_t*>(m_blob + nonceOffset()); }
     inline const uint8_t *blob() const                  { return m_blob; }
-    inline int32_t nonceOffset() const                  { auto f = algorithm().family(); return (f == Algorithm::KAWPOW) ? 32 : ((f == Algorithm::GHOSTRIDER) ? 76 : 39); }
+    inline int32_t nonceOffset() const                  { auto f = algorithm().family(); return (f == Algorithm::KAWPOW) ? 32 : ((f == Algorithm::GHOSTRIDER) ? 76 : (algorithm() == Algorithm::RX_YADA) ? 147 : 39); }
     inline size_t nonceSize() const                     { return (algorithm().family() == Algorithm::KAWPOW) ?  8 :  4; }
     inline size_t size() const                          { return m_size; }
     inline uint32_t *nonce()                            { return reinterpret_cast<uint32_t*>(m_blob + nonceOffset()); }
@@ -89,6 +90,7 @@ public:
     inline uint8_t fixedByte() const                    { return *(m_blob + 42); }
     inline uint8_t index() const                        { return m_index; }
     inline void reset()                                 { m_size = 0; m_diff = 0; }
+    inline void setDonate(bool donate)                  { m_donate = donate; }
     inline void setAlgorithm(const Algorithm::Id id)    { m_algorithm = id; }
     inline void setAlgorithm(const char *algo)          { m_algorithm = algo; }
     inline void setBackend(uint32_t backend)            { m_backend = backend; }
@@ -112,11 +114,6 @@ public:
     inline bool operator==(const Job &other) const      { return isEqual(other); }
     inline Job &operator=(const Job &other)             { copy(other); return *this; }
     inline Job &operator=(Job &&other) noexcept         { move(std::move(other)); return *this; }
-
-#   ifdef XMRIG_FEATURE_BENCHMARK
-    inline uint32_t benchSize() const                   { return m_benchSize; }
-    inline void setBenchSize(uint32_t size)             { m_benchSize = size; }
-#   endif
 
 #   ifdef XMRIG_PROXY_PROJECT
     void setSpendSecretKey(const uint8_t* key);
@@ -147,6 +144,7 @@ private:
 
     Algorithm m_algorithm;
     bool m_nicehash     = false;
+    bool m_donate       = false;
     Buffer m_seed;
     size_t m_size       = 0;
     String m_clientId;
@@ -184,10 +182,6 @@ private:
 #   endif
 
     bool m_hasMinerSignature = false;
-
-#   ifdef XMRIG_FEATURE_BENCHMARK
-    uint32_t m_benchSize = 0;
-#   endif
 };
 
 

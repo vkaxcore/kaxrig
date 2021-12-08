@@ -25,6 +25,7 @@
 
 #include "backend/common/interfaces/IBackend.h"
 #include "base/tools/Object.h"
+#include "OclLaunchData.h"
 
 
 namespace xmrig {
@@ -44,6 +45,11 @@ public:
 
     ~OclBackend() override;
 
+
+#ifdef XMRIG_FEATURE_CC_CLIENT
+  std::vector<xmrig::OclLaunchData> getLaunchData() const;
+#endif
+
 protected:
     bool isEnabled() const override;
     bool isEnabled(const Algorithm &algorithm) const override;
@@ -62,11 +68,6 @@ protected:
 #   ifdef XMRIG_FEATURE_API
     rapidjson::Value toJSON(rapidjson::Document &doc) const override;
     void handleRequest(IApiRequest &request) override;
-#   endif
-
-#   ifdef XMRIG_FEATURE_BENCHMARK
-    inline Benchmark *benchmark() const override        { return nullptr; }
-    inline void printBenchProgress() const override     {}
 #   endif
 
 private:

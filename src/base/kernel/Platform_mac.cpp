@@ -122,3 +122,44 @@ uint64_t xmrig::Platform::idleTime()
 
     return idle_time / 1000000U;
 }
+
+int64_t xmrig::Platform::getThreadSleepTimeToLimitMaxCpuUsage(uint8_t maxCpuUsage)
+{
+    uint64_t currentSystemTime = Chrono::highResolutionMicroSecs();
+    if (currentSystemTime - m_systemTime > MIN_RECALC_THRESHOLD_USEC)
+    {
+        thread_basic_info_data_t info = {0};
+        mach_msg_type_number_t infoCount = THREAD_BASIC_INFO_COUNT;
+
+        mach_port_t port = mach_thread_self();
+        kern_return_t kernErr = thread_info(port, THREAD_BASIC_INFO, (thread_info_t) & info, &infoCount);
+        mach_port_deallocate(mach_task_self(), port);
+
+        if (kernErr == KERN_SUCCESS)
+        {
+            int64_t currentThreadUsageTime = info.user_time.microseconds + (info.user_time.seconds * 1000000)
+                                             + info.system_time.microseconds + (info.system_time.seconds * 1000000);
+
+            if (m_threadUsageTime > 0 || m_systemTime > 0)
+            {
+                m_threadTimeToSleep = ((currentThreadUsageTime - m_threadUsageTime) * 100 / maxCpuUsage)
+                                      - (currentSystemTime - m_systemTime - m_threadTimeToSleep);
+            }
+
+            m_threadUsageTime = currentThreadUsageTime;
+            m_systemTime = currentSystemTime;
+        }
+
+        // Something went terrible wrong, reset everything
+        if (m_threadTimeToSleep > 10000000 || m_threadTimeToSleep < 0)
+        {
+            m_threadTimeToSleep = 0;
+            m_threadUsageTime = 0;
+            m_systemTime = 0;
+        }
+
+        return m_threadTimeToSleep;
+    }
+
+    return 0;
+}

@@ -30,6 +30,10 @@
 #   include "base/net/tls/TlsConfig.h"
 #endif
 
+#ifdef XMRIG_FEATURE_CC_CLIENT
+#   include "cc/CCClientConfig.h"
+#endif
+
 
 namespace xmrig {
 
@@ -40,6 +44,8 @@ class IJsonReader;
 class BaseConfig : public IConfig
 {
 public:
+    static const String kDefaultConfigFilename;
+
     static const char *kApi;
     static const char *kApiId;
     static const char *kApiWorkerId;
@@ -55,6 +61,8 @@ public:
     static const char *kUserAgent;
     static const char *kVerbose;
     static const char *kWatch;
+    static const char *kCCClient;
+    static const char *kDaemonized;
 
 #   ifdef XMRIG_FEATURE_TLS
     static const char *kTls;
@@ -66,6 +74,7 @@ public:
     inline bool isBackground() const                        { return m_background; }
     inline bool isDryRun() const                            { return m_dryRun; }
     inline bool isSyslog() const                            { return m_syslog; }
+    inline bool isDaemonized() const                        { return m_daemonized; }
     inline const char *logFile() const                      { return m_logFile.data(); }
     inline const char *userAgent() const                    { return m_userAgent.data(); }
     inline const Http &http() const                         { return m_http; }
@@ -75,12 +84,16 @@ public:
     inline const Title &title() const                       { return m_title; }
     inline uint32_t printTime() const                       { return m_printTime; }
 
+#   ifdef XMRIG_FEATURE_CC_CLIENT
+    inline const CCClientConfig& ccClient() const  { return m_ccClient; }
+#   endif
+
 #   ifdef XMRIG_FEATURE_TLS
     inline const TlsConfig &tls() const                     { return m_tls; }
 #   endif
 
     inline bool isWatch() const override                    { return m_watch && !m_fileName.isNull(); }
-    inline const String &fileName() const override          { return m_fileName; }
+    inline const String &fileName() const override          { return !m_fileName.isNull()? m_fileName : kDefaultConfigFilename; }
     inline void setFileName(const char *fileName) override  { m_fileName = fileName; }
 
     bool read(const IJsonReader &reader, const char *fileName) override;
@@ -95,6 +108,7 @@ protected:
     bool m_syslog           = false;
     bool m_upgrade          = false;
     bool m_watch            = true;
+    bool m_daemonized       = false;
     Http m_http;
     Pools m_pools;
     String m_apiId;
@@ -107,6 +121,10 @@ protected:
 
 #   ifdef XMRIG_FEATURE_TLS
     TlsConfig m_tls;
+#   endif
+
+#   ifdef XMRIG_FEATURE_CC_CLIENT
+    CCClientConfig m_ccClient;
 #   endif
 
 private:

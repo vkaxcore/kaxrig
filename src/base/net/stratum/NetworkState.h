@@ -23,7 +23,7 @@
 #include "base/crypto/Algorithm.h"
 #include "base/net/stratum/strategies/StrategyProxy.h"
 #include "base/tools/String.h"
-
+#include "cc/ClientStatus.h"
 
 #include <array>
 #include <string>
@@ -53,6 +53,11 @@ public:
     static const char *scaleDiff(uint64_t &diff);
     static std::string humanDiff(uint64_t diff);
 
+#   ifdef XMRIG_FEATURE_CC_CLIENT
+    void getConnection(ClientStatus& clientStatus) const;
+    void getResults(ClientStatus& clientStatus) const;
+#   endif
+
 protected:
     void onActive(IStrategy *strategy, IClient *client) override;
     void onJob(IStrategy *strategy, IClient *client, const Job &job, const rapidjson::Value &params) override;
@@ -72,6 +77,9 @@ private:
     std::array<uint64_t, 10> m_topDiff { { } };
     std::vector<uint16_t> m_latency;
     String m_fingerprint;
+    String m_user;
+    String m_pass;
+    String m_rigId;
     String m_ip;
     String m_tls;
     uint64_t m_accepted         = 0;

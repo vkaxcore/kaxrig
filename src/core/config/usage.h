@@ -44,7 +44,7 @@ static inline const std::string &usage()
 
     u += "Usage: " APP_ID " [OPTIONS]\n\nNetwork:\n";
     u += "  -o, --url=URL                 URL of mining server\n";
-    u += "  -a, --algo=ALGO               mining algorithm https://xmrig.com/docs/algorithms\n";
+    u += "  -a, --algo=ALGO               mining algorithm (https://github.com/Bendr0id/xmrigCC/blob/master/doc/ALGORITHMS.md)\n";
     u += "      --coin=COIN               specify coin instead of algorithm\n";
     u += "  -u, --user=USERNAME           username for mining server\n";
     u += "  -p, --pass=PASSWORD           password for mining server\n";
@@ -73,7 +73,6 @@ static inline const std::string &usage()
     u += "  -R, --retry-pause=N           time to pause between retries (default: 5)\n";
     u += "      --user-agent              set custom user-agent string for pool\n";
     u += "      --donate-level=N          donate level, default 1%% (1 minute in 100 minutes)\n";
-    u += "      --donate-over-proxy=N     control donate over xmrig-proxy feature\n";
 
     u += "\nCPU backend:\n";
 
@@ -82,9 +81,11 @@ static inline const std::string &usage()
     u += "      --cpu-affinity=N          set process affinity to CPU core(s), mask 0x3 for cores 0 and 1\n";
     u += "  -v, --av=N                    algorithm variation, 0 auto select\n";
     u += "      --cpu-priority=N          set process priority (0 idle, 2 normal to 5 highest)\n";
+    u += "      --cpu-max-cpu-usage=N     set maximum CPU usage (in percentage) on all used threads\n";
     u += "      --cpu-max-threads-hint=N  maximum CPU threads count (in percentage) hint for autoconfig\n";
     u += "      --cpu-memory-pool=N       number of 2 MB pages for persistent memory pool, -1 (auto), 0 (disable)\n";
     u += "      --cpu-no-yield            prefer maximum hashrate rather than system response/stability\n";
+    u += "      --cpu-force-autoconfig    force cpu autoconfig, but keeps disabled algos\n";
     u += "      --no-huge-pages           disable huge pages support\n";
 #   ifdef XMRIG_OS_LINUX
     u += "      --hugepage-size=N         custom hugepage size in kB\n";
@@ -156,6 +157,19 @@ static inline const std::string &usage()
     u += "      --tls-ciphersuites=S      set list of available TLSv1.3 ciphersuites\n";
 #   endif
 
+#   ifdef XMRIG_FEATURE_CC_CLIENT
+    u += "\nCC feature:\n";
+    u += "      --cc-disabled                 disable CC Client feature\n";
+    u += "      --cc-url=URL                  url of the CC Server\n";
+    u += "      --cc-access-token=T           access token for CC Server\n";
+    u += "      --cc-worker-id=ID             custom worker-id for CC Server\n";
+    u += "      --cc-update-interval-s=N      status update interval in seconds (default: 10 min: 1)\n";
+    u += "      --cc-use-tls                  enable tls encryption for CC communication\n";
+    u += "      --cc-use-remote-logging       enable remote logging on CC Server\n";
+    u += "      --cc-upload-config-on-start   upload current miner config to CC Server on startup\n";
+    u += "      --cc-reboot-cmd=CMD           command/bat to execute to Reboot miner machine\n";
+#   endif
+
     u += "\nLogging:\n";
 
 #   ifdef HAVE_SYSLOG_H
@@ -188,17 +202,6 @@ static inline const std::string &usage()
 #   endif
     u += "      --pause-on-battery        pause mine on battery power\n";
     u += "      --pause-on-active=N       pause mine when the user is active (resume after N seconds of last activity)\n";
-
-#   ifdef XMRIG_FEATURE_BENCHMARK
-    u += "      --stress                  run continuous stress test to check system stability\n";
-    u += "      --bench=N                 run benchmark, N can be between 1M and 10M\n";
-#   ifdef XMRIG_FEATURE_HTTP
-    u += "      --submit                  perform an online benchmark and submit result for sharing\n";
-    u += "      --verify=ID               verify submitted benchmark by ID\n";
-#   endif
-    u += "      --seed=SEED               custom RandomX seed for benchmark\n";
-    u += "      --hash=HASH               compare benchmark result with specified hash\n";
-#   endif
 
 #   ifdef XMRIG_FEATURE_DMI
     u += "      --no-dmi                  disable DMI/SMBIOS reader\n";

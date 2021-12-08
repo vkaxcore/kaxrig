@@ -48,12 +48,6 @@
 #endif
 
 
-#ifdef XMRIG_FEATURE_BENCHMARK
-#   include "backend/common/benchmark/Benchmark.h"
-#   include "backend/common/benchmark/BenchState.h"
-#endif
-
-
 namespace xmrig {
 
 
@@ -82,6 +76,7 @@ public:
         m_threads   = threads.size();
         m_ways      = 0;
         m_ts        = Chrono::steadyMSecs();
+        m_maxCpuUsage = threads.data()->maxCpuUsage;
     }
 
     inline bool started(IWorker *worker, bool ready)
@@ -110,7 +105,7 @@ public:
             return;
         }
 
-        LOG_INFO("%s" GREEN_BOLD(" READY") " threads %s%zu/%zu (%zu)" CLEAR " huge pages %s%1.0f%% %zu/%zu" CLEAR " memory " CYAN_BOLD("%zu KB") BLACK_BOLD(" (%" PRIu64 " ms)"),
+        LOG_INFO("%s" GREEN_BOLD(" READY") " threads %s%zu/%zu (%zu)" CLEAR " huge pages %s%1.0f%% %zu/%zu" CLEAR " memory " CYAN_BOLD("%zu KB") BLACK_BOLD(" (%" PRIu64 " ms)%s%s"),
                  Tags::cpu(),
                  m_errors == 0 ? CYAN_BOLD_S : YELLOW_BOLD_S,
                  m_totalStarted, std::max(m_totalStarted, m_threads), m_ways,
@@ -118,7 +113,9 @@ public:
                  m_hugePages.percent(),
                  m_hugePages.allocated, m_hugePages.total,
                  memory() / 1024,
-                 Chrono::steadyMSecs() - m_ts
+                 Chrono::steadyMSecs() - m_ts,
+                 (m_maxCpuUsage > 0 ? YELLOW_BOLD_S " - CPU usage limited to " : ""),
+                 (m_maxCpuUsage > 0 ? std::to_string(m_maxCpuUsage).append("%").c_str() : "")
                  );
     }
 
@@ -132,6 +129,7 @@ private:
     size_t m_threads      = 0;
     size_t m_ways         = 0;
     uint64_t m_ts         = 0;
+    int m_maxCpuUsage     = 0;
 };
 
 
@@ -153,11 +151,7 @@ public:
 
         status.start(threads, algo.l3());
 
-#       ifdef XMRIG_FEATURE_BENCHMARK
-        workers.start(threads, benchmark);
-#       else
         workers.start(threads);
-#       endif
     }
 
 
@@ -206,10 +200,6 @@ public:
     std::vector<CpuLaunchData> threads;
     String profileName;
     Workers<CpuLaunchData> workers;
-
-#   ifdef XMRIG_FEATURE_BENCHMARK
-    std::shared_ptr<Benchmark> benchmark;
-#   endif
 };
 
 
@@ -366,12 +356,6 @@ void xmrig::CpuBackend::setJob(const Job &job)
 
     stop();
 
-#   ifdef XMRIG_FEATURE_BENCHMARK
-    if (BenchState::size()) {
-        d_ptr->benchmark = std::make_shared<Benchmark>(threads.size(), this);
-    }
-#   endif
-
     d_ptr->threads = std::move(threads);
     d_ptr->start();
 }
@@ -477,17 +461,14 @@ void xmrig::CpuBackend::handleRequest(IApiRequest &request)
 #endif
 
 
-#ifdef XMRIG_FEATURE_BENCHMARK
-xmrig::Benchmark *xmrig::CpuBackend::benchmark() const
+#ifdef XMRIG_FEATURE_CC_CLIENT
+const xmrig::HugePagesInfo& xmrig::CpuBackend::hugePages() const
 {
-    return d_ptr->benchmark.get();
+  return d_ptr->status.hugePages();
 }
 
-
-void xmrig::CpuBackend::printBenchProgress() const
+size_t xmrig::CpuBackend::ways() const
 {
-    if (d_ptr->benchmark) {
-        d_ptr->benchmark->printProgress();
-    }
+  return d_ptr->status.ways();
 }
 #endif

@@ -79,15 +79,15 @@ const char *xmrig::Tags::randomx()
 }
 #endif
 
-
-#ifdef XMRIG_FEATURE_BENCHMARK
-const char *xmrig::Tags::bench()
+#ifdef XMRIG_FEATURE_CC_CLIENT
+const char *xmrig::Tags::cc()
 {
-    static const char *tag = GREEN_BG_BOLD(WHITE_BOLD_S " bench   ");
+  static const char *tag = YELLOW_BG_BOLD(WHITE_BOLD_S " cc      ") " ";
 
-    return tag;
+  return tag;
 }
 #endif
+
 #endif
 
 

@@ -59,6 +59,11 @@ static const char *kConfigPathV2 = "/2/config";
 #   include "core/config/Config_default.h"
 #endif
 
+#ifdef XMRIG_FEATURE_CC_CLIENT
+#   include "base/io/log/backends/RemoteLog.h"
+#   include "cc/CCClient.h"
+#endif
+
 
 namespace xmrig {
 
@@ -81,6 +86,10 @@ public:
     {
 #       ifdef XMRIG_FEATURE_API
         delete api;
+#       endif
+
+#       ifdef XMRIG_FEATURE_CC_CLIENT
+        delete ccClient;
 #       endif
 
         delete config;
@@ -112,6 +121,7 @@ public:
 
 
     Api *api            = nullptr;
+    CCClient *ccClient  = nullptr;
     Config *config      = nullptr;
     std::vector<IBaseListener *> listeners;
     Watcher *watcher    = nullptr;
@@ -130,7 +140,7 @@ private:
             return config.release();
         }
 
-        chain.addFile(Process::location(Process::DataLocation, "config.json"));
+        chain.addFile(Process::location(Process::DataLocation, BaseConfig::kDefaultConfigFilename));
         if (read(chain, config)) {
             return config.release();
         }
@@ -187,6 +197,10 @@ int xmrig::Base::init()
     d_ptr->api->addListener(this);
 #   endif
 
+#   ifdef XMRIG_FEATURE_CC_CLIENT
+    d_ptr->ccClient = new CCClient(this);
+#   endif
+
     Platform::init(config()->userAgent());
 
     if (isBackground()) {
@@ -199,6 +213,13 @@ int xmrig::Base::init()
     if (config()->logFile()) {
         Log::add(new FileLog(config()->logFile()));
     }
+
+#   ifdef XMRIG_FEATURE_CC_CLIENT
+    if (config()->ccClient().useRemoteLogging()) {
+        // 20 lines per second should be enough
+        Log::add(new RemoteLog(static_cast<size_t>(config()->ccClient().updateInterval() * 20)));
+    }
+#   endif
 
 #   ifdef HAVE_SYSLOG_H
     if (config()->isSyslog()) {
@@ -216,6 +237,18 @@ void xmrig::Base::start()
     api()->start();
 #   endif
 
+#   ifdef XMRIG_FEATURE_CC_CLIENT
+    if (d_ptr->config->ccClient().enabled()) {
+        if (d_ptr->config->ccClient().host() && d_ptr->config->ccClient().port() > 0) {
+            ccClient()->start();
+        } else {
+            LOG_WARN("Please configure CC-Url and restart. CC feature is now deactivated.");
+        }
+    } else {
+        LOG_WARN("CC feature is disabled.");
+    }
+#   endif
+
     if (config()->isShouldSave()) {
         config()->save();
     }
@@ -228,6 +261,13 @@ void xmrig::Base::start()
 
 void xmrig::Base::stop()
 {
+#   ifdef XMRIG_FEATURE_CC_CLIENT
+    ccClient()->stop();
+    delete d_ptr->ccClient;
+    d_ptr->ccClient = nullptr;
+#   endif
+
+
 #   ifdef XMRIG_FEATURE_API
     api()->stop();
 #   endif
@@ -242,6 +282,14 @@ xmrig::Api *xmrig::Base::api() const
     assert(d_ptr->api != nullptr);
 
     return d_ptr->api;
+}
+
+
+xmrig::CCClient *xmrig::Base::ccClient() const
+{
+    assert(d_ptr->ccClient != nullptr);
+
+    return d_ptr->ccClient;
 }
 
 

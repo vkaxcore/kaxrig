@@ -25,6 +25,7 @@
 
 #include "base/tools/String.h"
 
+constexpr int MIN_RECALC_THRESHOLD_USEC = 100000;
 
 namespace xmrig {
 
@@ -45,6 +46,7 @@ public:
     static void init(const char *userAgent);
     static void setProcessPriority(int priority);
     static void setThreadPriority(int priority);
+    static int64_t getThreadSleepTimeToLimitMaxCpuUsage(uint8_t maxCpuUsage);
 
     static inline bool isUserActive(uint64_t ms)    { return idleTime() < ms; }
     static inline const String &userAgent()         { return m_userAgent; }
@@ -56,6 +58,10 @@ private:
     static char *createUserAgent();
 
     static String m_userAgent;
+
+    static thread_local int64_t m_threadTimeToSleep;
+    static thread_local int64_t m_threadUsageTime;
+    static thread_local int64_t m_systemTime;
 };
 
 

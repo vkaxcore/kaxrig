@@ -165,6 +165,22 @@ public:
         CudaLoaderKey        = 1208,
         NvmlKey              = 1209,
         HealthPrintTimeKey   = 1210,
+
+        // xmrigCC CC-Client params
+        CCDaemonizedKey         = 9000,
+        CCEnabledKey            = 9001,
+        CCUseTLS                = 9002,
+        CCUseRemoteLog          = 9003,
+        CCUploadConfigOnStartup = 9004,
+        CCRebootCmd             = 9005,
+        CCUrl                   = 9006,
+        CCAccessToken           = 9007,
+        CCWorkerId              = 9008,
+        CCUpdateInterval        = 9009,
+
+        // xmrigCC added params
+        ForceAutoconfigKey   = 9100,
+        CPUMaxUsageKey       = 9101,
     };
 
     virtual ~IConfig() = default;

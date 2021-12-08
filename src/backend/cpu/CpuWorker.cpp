@@ -16,7 +16,6 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <cassert>
 #include <thread>
 #include <mutex>
 
@@ -36,6 +35,7 @@
 #include "crypto/rx/RxVm.h"
 #include "crypto/ghostrider/ghostrider.h"
 #include "net/JobResults.h"
+#include "base/kernel/Platform.h"
 
 
 #ifdef XMRIG_ALGO_RANDOMX
@@ -45,11 +45,6 @@
 
 #ifdef XMRIG_ALGO_ASTROBWT
 #   include "crypto/astrobwt/AstroBWT.h"
-#endif
-
-
-#ifdef XMRIG_FEATURE_BENCHMARK
-#   include "backend/common/benchmark/BenchState.h"
 #endif
 
 
@@ -77,6 +72,7 @@ xmrig::CpuWorker<N>::CpuWorker(size_t id, const CpuLaunchData &data) :
     m_yield(data.yield),
     m_av(data.av()),
     m_astrobwtMaxSize(data.astrobwtMaxSize * 1000),
+    m_maxCpuUsage(data.maxCpuUsage),
     m_miner(data.miner),
     m_threads(data.threads),
     m_ctx()
@@ -257,6 +253,8 @@ void xmrig::CpuWorker<N>::start()
             consumeJob();
         }
 
+        bool limitCpuUsage = m_maxCpuUsage > 0 && m_maxCpuUsage < 100;
+
 #       ifdef XMRIG_ALGO_RANDOMX
         bool first = true;
         alignas(16) uint64_t tempHash[8] = {};
@@ -273,19 +271,6 @@ void xmrig::CpuWorker<N>::start()
             for (size_t i = 0; i < N; ++i) {
                 current_job_nonces[i] = *m_job.nonce(i);
             }
-
-#           ifdef XMRIG_FEATURE_BENCHMARK
-            if (m_benchSize) {
-                if (current_job_nonces[0] >= m_benchSize) {
-                    return BenchState::done();
-                }
-
-                // Make each hash dependent on the previous one in single thread benchmark to prevent cheating with multiple threads
-                if (m_threads == 1) {
-                    *(uint64_t*)(m_job.blob()) ^= BenchState::data();
-                }
-            }
-#           endif
 
             bool valid = true;
 
@@ -350,19 +335,16 @@ void xmrig::CpuWorker<N>::start()
                 for (size_t i = 0; i < N; ++i) {
                     const uint64_t value = *reinterpret_cast<uint64_t*>(m_hash + (i * 32) + 24);
 
-#                   ifdef XMRIG_FEATURE_BENCHMARK
-                    if (m_benchSize) {
-                        if (current_job_nonces[i] < m_benchSize) {
-                            BenchState::add(value);
-                        }
-                    }
-                    else
-#                   endif
                     if (value < job.target()) {
                         JobResults::submit(job, current_job_nonces[i], m_hash + (i * 32), job.hasMinerSignature() ? miner_signature_saved : nullptr);
                     }
                 }
                 m_count += N;
+            }
+
+            if ((m_count & 7) == 0 && limitCpuUsage) {
+                auto sleepTime = xmrig::Platform::getThreadSleepTimeToLimitMaxCpuUsage(m_maxCpuUsage);
+                std::this_thread::sleep_for(std::chrono::microseconds(sleepTime));
             }
 
             if (m_yield) {
@@ -378,11 +360,7 @@ void xmrig::CpuWorker<N>::start()
 template<size_t N>
 bool xmrig::CpuWorker<N>::nextRound()
 {
-#   ifdef XMRIG_FEATURE_BENCHMARK
-    const uint32_t count = m_benchSize ? 1U : kReserveCount;
-#   else
     constexpr uint32_t count = kReserveCount;
-#   endif
 
     if (!m_job.nextRound(count, 1)) {
         JobResults::done(m_job.currentJob());
@@ -516,12 +494,7 @@ void xmrig::CpuWorker<N>::consumeJob()
 
     auto job = m_miner->job();
 
-#   ifdef XMRIG_FEATURE_BENCHMARK
-    m_benchSize          = job.benchSize();
-    const uint32_t count = m_benchSize ? 1U : kReserveCount;
-#   else
     constexpr uint32_t count = kReserveCount;
-#   endif
 
     m_job.add(job, count, Nonce::CPU);
 

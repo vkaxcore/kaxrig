@@ -37,6 +37,7 @@
 #include "base/kernel/Platform.h"
 #include "core/config/Config.h"
 #include "core/Controller.h"
+#include "cc/ControlCommand.h"
 #include "Summary.h"
 #include "version.h"
 
@@ -56,10 +57,17 @@ xmrig::App::~App()
 int xmrig::App::exec()
 {
     if (!m_controller->isReady()) {
-        LOG_EMERG("no valid configuration found, try https://xmrig.com/wizard");
+        LOG_EMERG("no valid configuration found.");
 
         return 2;
     }
+
+#   ifdef XMRIG_FEATURE_CC_CLIENT
+    if (!m_controller->config()->isDaemonized()) {
+        LOG_EMERG(APP_ID " is compiled with CC support, please start the daemon instead.\n");
+        return 2;
+    }
+#   endif
 
     m_signals = std::make_shared<Signals>(this);
 
@@ -87,10 +95,14 @@ int xmrig::App::exec()
 
     m_controller->start();
 
+#   if XMRIG_FEATURE_CC_CLIENT
+    m_controller->ccClient()->addCommandListener(this);
+#   endif
+
     rc = uv_run(uv_default_loop(), UV_RUN_DEFAULT);
     uv_loop_close(uv_default_loop());
 
-    return rc;
+    return m_restart ? EINTR : rc;
 }
 
 
@@ -98,7 +110,7 @@ void xmrig::App::onConsoleCommand(char command)
 {
     if (command == 3) {
         LOG_WARN("%s " YELLOW("Ctrl+C received, exiting"), Tags::signal());
-        close();
+        close(false);
     }
     else {
         m_controller->execCommand(command);
@@ -113,7 +125,7 @@ void xmrig::App::onSignal(int signum)
     case SIGHUP:
     case SIGTERM:
     case SIGINT:
-        return close();
+        return close(false);
 
     default:
         break;
@@ -121,12 +133,74 @@ void xmrig::App::onSignal(int signum)
 }
 
 
-void xmrig::App::close()
+void xmrig::App::onCommandReceived(ControlCommand& command)
 {
+#   ifdef XMRIG_FEATURE_CC_CLIENT
+    switch (command.getCommand()) {
+        case ControlCommand::START:
+            m_controller->execCommand('r');
+            break;
+        case ControlCommand::STOP:
+            m_controller->execCommand('p');
+            break;
+        case ControlCommand::RESTART:
+            close(true);
+            break;
+        case ControlCommand::SHUTDOWN:
+            close(false);
+            break;
+        case ControlCommand::REBOOT:
+            reboot();
+            break;
+        case ControlCommand::EXECUTE:
+            execute(command.getPayload());
+            break;
+        case ControlCommand::UPDATE_CONFIG:;
+        case ControlCommand::PUBLISH_CONFIG:;
+            break;
+    }
+#   endif
+}
+
+
+void xmrig::App::close(bool restart)
+{
+    m_restart = restart;
+
     m_signals.reset();
     m_console.reset();
 
     m_controller->stop();
+    m_controller.reset();
 
     Log::destroy();
+
+    uv_stop(uv_default_loop());
 }
+
+
+#   ifdef XMRIG_FEATURE_CC_CLIENT
+void xmrig::App::reboot()
+{
+#   ifdef XMRIG_FEATURE_CC_CLIENT_SHELL_EXECUTE
+  auto rebootCmd = m_controller->config()->ccClient().rebootCmd();
+  if (rebootCmd) {
+    system(rebootCmd);
+    close(false);
+  }
+#   else
+  LOG_EMERG("Shell execute disabled. Skipping REBOOT.");
+#   endif
+}
+
+void xmrig::App::execute(const std::string& command)
+{
+#   ifdef XMRIG_FEATURE_CC_CLIENT_SHELL_EXECUTE
+  if (!command.empty()) {
+    system(command.c_str());
+  }
+#   else
+  LOG_EMERG("Shell execute disabled. Skipping %s", command.c_str());
+#   endif
+}
+#   endif

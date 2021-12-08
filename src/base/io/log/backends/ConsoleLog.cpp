@@ -25,22 +25,26 @@
 
 #include <cstdio>
 
+xmrig::ConsoleLog::ConsoleLog()
+{
+  if (!isSupported()) {
+    Log::setColors(false);
+    return;
+  }
+
+  m_tty = new uv_tty_t;
+
+  if (uv_tty_init(uv_default_loop(), m_tty, 1, 0) < 0) {
+    Log::setColors(false);
+    return;
+  }
+
+  uv_tty_set_mode(m_tty, UV_TTY_MODE_NORMAL);
+}
 
 xmrig::ConsoleLog::ConsoleLog(const Title &title)
+  : ConsoleLog()
 {
-    if (!isSupported()) {
-        Log::setColors(false);
-        return;
-    }
-
-    m_tty = new uv_tty_t;
-
-    if (uv_tty_init(uv_default_loop(), m_tty, 1, 0) < 0) {
-        Log::setColors(false);
-        return;
-    }
-
-    uv_tty_set_mode(m_tty, UV_TTY_MODE_NORMAL);
 
 #   ifdef XMRIG_OS_WIN
     m_stream = reinterpret_cast<uv_stream_t*>(m_tty);

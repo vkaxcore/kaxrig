@@ -26,6 +26,7 @@
 #include "base/kernel/interfaces/IBaseListener.h"
 #include "base/kernel/interfaces/IStrategyListener.h"
 #include "base/kernel/interfaces/ITimerListener.h"
+#include "base/cc/interfaces/IClientStatusListener.h"
 #include "base/tools/Object.h"
 #include "interfaces/IJobResultListener.h"
 
@@ -41,7 +42,7 @@ class IStrategy;
 class NetworkState;
 
 
-class Network : public IJobResultListener, public IStrategyListener, public IBaseListener, public ITimerListener, public IApiListener
+class Network : public IJobResultListener, public IStrategyListener, public IBaseListener, public ITimerListener, public IApiListener, public IClientStatusListener
 {
 public:
     XMRIG_DISABLE_COPY_MOVE_DEFAULT(Network)
@@ -68,6 +69,10 @@ protected:
 
 #   ifdef XMRIG_FEATURE_API
     void onRequest(IApiRequest &request) override;
+#   endif
+
+#   ifdef XMRIG_FEATURE_CC_CLIENT
+    void onUpdateRequest(ClientStatus& clientStatus) override;
 #   endif
 
 private:

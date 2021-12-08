@@ -1,6 +1,7 @@
 /* XMRig
- * Copyright (c) 2018-2021 SChernykh   <https://github.com/SChernykh>
- * Copyright (c) 2016-2021 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright 2018-2021 SChernykh   <https://github.com/SChernykh>
+ * Copyright 2016-2021 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright 2016-2021 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -19,18 +20,24 @@
 #ifndef XMRIG_VERSION_H
 #define XMRIG_VERSION_H
 
-#define APP_ID        "xmrig"
-#define APP_NAME      "XMRig"
-#define APP_DESC      "XMRig miner"
-#define APP_VERSION   "6.16.2-dev"
-#define APP_DOMAIN    "xmrig.com"
-#define APP_SITE      "www.xmrig.com"
-#define APP_COPYRIGHT "Copyright (C) 2016-2021 xmrig.com"
+#define APP_ID        "XMRigCC"
+#define APP_NAME      "XMRigCC"
+#define APP_DESC      "XMRigCC miner"
+#define APP_VERSION   "3.0.0"
+#define APP_DOMAIN    ""
+#define APP_SITE      "https://github.com/BenDr0id/xmrigCC/"
+#define APP_COPYRIGHT "Copyright (C) 2017- XMRigCC"
 #define APP_KIND      "miner"
 
-#define APP_VER_MAJOR  6
-#define APP_VER_MINOR  16
-#define APP_VER_PATCH  2
+#define APP_VER_MAJOR  3
+#define APP_VER_MINOR  0
+#define APP_VER_PATCH  0
+
+#ifndef NDEBUG
+#define BUILD_TYPE   "DEBUG"
+#else
+#define BUILD_TYPE   "RELEASE"
+#endif
 
 #ifdef _MSC_VER
 #   if (_MSC_VER >= 1920)

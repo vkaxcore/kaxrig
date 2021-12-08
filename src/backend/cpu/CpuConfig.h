@@ -46,7 +46,9 @@ public:
     static const char *kMaxThreadsHint;
     static const char *kMemoryPool;
     static const char *kPriority;
+    static const char *kMaxCpuUsage;
     static const char *kYield;
+    static const char *kForceAutoconfig;
 
 #   ifdef XMRIG_FEATURE_ASM
     static const char *kAsm;
@@ -75,12 +77,14 @@ public:
     inline bool isHugePagesJit() const                  { return m_hugePagesJit; }
     inline bool isShouldSave() const                    { return m_shouldSave; }
     inline bool isYield() const                         { return m_yield; }
+    inline bool isForceAutoconfig() const               { return m_forceAutoconfig; }
     inline const Assembly &assembly() const             { return m_assembly; }
     inline const String &argon2Impl() const             { return m_argon2Impl; }
     inline const Threads<CpuThreads> &threads() const   { return m_threads; }
     inline int astrobwtMaxSize() const                  { return m_astrobwtMaxSize; }
     inline int priority() const                         { return m_priority; }
     inline size_t hugePageSize() const                  { return m_hugePageSize * 1024U; }
+    inline int maxCpuUsage() const                      { return m_maxCpuUsage; }
     inline uint32_t limit() const                       { return m_limit; }
 
 private:
@@ -93,6 +97,7 @@ private:
     void setMemoryPool(const rapidjson::Value &value);
 
     inline void setPriority(int priority)   { m_priority = (priority >= -1 && priority <= 5) ? priority : -1; }
+    inline void setMaxCpuUsage(int maxCpuUsage) { m_maxCpuUsage = (maxCpuUsage > 0 && maxCpuUsage < 100) ? maxCpuUsage : -1; }
 
     AesMode m_aes           = AES_AUTO;
     Assembly m_assembly;
@@ -101,9 +106,11 @@ private:
     bool m_hugePagesJit     = false;
     bool m_shouldSave       = false;
     bool m_yield            = true;
+    bool m_forceAutoconfig  = false;
     int m_astrobwtMaxSize   = 550;
     int m_memoryPool        = 0;
     int m_priority          = -1;
+    int m_maxCpuUsage       = -1;
     size_t m_hugePageSize   = kDefaultHugePageSizeKb;
     String m_argon2Impl;
     Threads<CpuThreads> m_threads;

@@ -130,6 +130,11 @@ size_t inline generate<Algorithm::RANDOM_X>(Threads<CudaThreads> &threads, const
 
     count += threads.move(Algorithm::kRX, std::move(rx));
 
+    if (!threads.isExist(Algorithm::RX_YADA)) {
+      threads.disable(Algorithm::RX_YADA);
+      ++count;
+    }
+
     return count;
 }
 #endif

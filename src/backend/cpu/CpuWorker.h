@@ -91,6 +91,7 @@ private:
     const bool m_yield;
     const CnHash::AlgoVariant m_av;
     const int m_astrobwtMaxSize;
+    const int m_maxCpuUsage;
     const Miner *m_miner;
     const size_t m_threads;
     cryptonight_ctx *m_ctx[N];
@@ -103,10 +104,6 @@ private:
 
 #   ifdef XMRIG_ALGO_GHOSTRIDER
     ghostrider::HelperThread* m_ghHelper = nullptr;
-#   endif
-
-#   ifdef XMRIG_FEATURE_BENCHMARK
-    uint32_t m_benchSize    = 0;
 #   endif
 };
 

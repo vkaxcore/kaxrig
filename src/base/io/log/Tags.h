@@ -41,8 +41,8 @@ public:
 #   ifdef XMRIG_ALGO_RANDOMX
     static const char *randomx();
 #   endif
-#   ifdef XMRIG_FEATURE_BENCHMARK
-    static const char *bench();
+#   ifdef XMRIG_FEATURE_CC_CLIENT
+    static const char *cc();
 #   endif
 #   endif
 

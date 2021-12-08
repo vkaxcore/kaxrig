@@ -175,3 +175,44 @@ uint64_t xmrig::Platform::idleTime()
 
     return static_cast<uint64_t>(GetTickCount() - info.dwTime);
 }
+
+int64_t xmrig::Platform::getThreadSleepTimeToLimitMaxCpuUsage(uint8_t maxCpuUsage)
+{
+    uint64_t currentSystemTime = Chrono::highResolutionMicroSecs();
+    if (currentSystemTime - m_systemTime > MIN_RECALC_THRESHOLD_USEC)
+    {
+        FILETIME kernelTime, userTime, creationTime, exitTime;
+        if (GetThreadTimes(GetCurrentThread(), &creationTime, &exitTime, &kernelTime, &userTime))
+        {
+            ULARGE_INTEGER kTime, uTime;
+            kTime.LowPart = kernelTime.dwLowDateTime;
+            kTime.HighPart = kernelTime.dwHighDateTime;
+            uTime.LowPart = userTime.dwLowDateTime;
+            uTime.HighPart = userTime.dwHighDateTime;
+
+            int64_t currentThreadUsageTime = (kTime.QuadPart / 10)
+                                             + (uTime.QuadPart / 10);
+
+            if (m_threadUsageTime > 0 || m_systemTime > 0)
+            {
+                m_threadTimeToSleep = ((currentThreadUsageTime - m_threadUsageTime) * 100 / maxCpuUsage)
+                                      - (currentSystemTime - m_systemTime - m_threadTimeToSleep);
+            }
+
+            m_threadUsageTime = currentThreadUsageTime;
+            m_systemTime = currentSystemTime;
+        }
+
+        // Something went terrible wrong, reset everything
+        if (m_threadTimeToSleep > 10000000 || m_threadTimeToSleep < 0)
+        {
+            m_threadTimeToSleep = 0;
+            m_threadUsageTime = 0;
+            m_systemTime = 0;
+        }
+
+        return m_threadTimeToSleep;
+    }
+
+    return 0;
+}

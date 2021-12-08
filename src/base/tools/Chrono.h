@@ -31,6 +31,13 @@ class Chrono
 public:
     static double highResolutionMSecs();
 
+    static inline uint64_t highResolutionMicroSecs()
+    {
+        using namespace std::chrono;
+
+        return static_cast<uint64_t>(time_point_cast<microseconds>(high_resolution_clock::now()).time_since_epoch().count());
+    }
+
 
     static inline uint64_t steadyMSecs()
     {

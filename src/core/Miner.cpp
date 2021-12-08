@@ -45,6 +45,12 @@
 #endif
 
 
+#ifdef XMRIG_FEATURE_CC_CLIENT
+#   include "cc/CCClient.h"
+#   include "crypto/common/VirtualMemory.h"
+#endif
+
+
 #ifdef XMRIG_FEATURE_OPENCL
 #   include "backend/opencl/OclBackend.h"
 #endif
@@ -339,12 +345,6 @@ public:
                  Hashrate::format(maxHashrate[algorithm] * scale,   num + 16 * 3, 16), h,
                  avg_hashrate_buf
                  );
-
-#       ifdef XMRIG_FEATURE_BENCHMARK
-        for (auto backend : backends) {
-            backend->printBenchProgress();
-        }
-#       endif
     }
 
 
@@ -407,6 +407,10 @@ xmrig::Miner::Miner(Controller *controller)
 
 #   ifdef XMRIG_FEATURE_API
     controller->api()->addListener(this);
+#   endif
+
+#   ifdef XMRIG_FEATURE_CC_CLIENT
+    controller->ccClient()->addClientStatusListener(this);
 #   endif
 
     d_ptr->timer = new Timer(this);
@@ -566,6 +570,7 @@ void xmrig::Miner::setJob(const Job &job, bool donate)
     d_ptr->reset = !(d_ptr->job.index() == 1 && index == 0 && d_ptr->userJobId == job.id());
     d_ptr->job   = job;
     d_ptr->job.setIndex(index);
+    d_ptr->job.setDonate(donate);
 
     if (index == 0) {
         d_ptr->userJobId = job.id();
@@ -725,5 +730,114 @@ void xmrig::Miner::onDatasetReady()
     }
 
     d_ptr->handleJobChange();
+}
+#endif
+
+#ifdef XMRIG_FEATURE_CC_CLIENT
+void xmrig::Miner::onUpdateRequest(ClientStatus& clientStatus)
+{
+    clientStatus.setCurrentStatus(d_ptr->enabled ? ClientStatus::RUNNING : ClientStatus::PAUSED);
+
+    if (!d_ptr->job.isDonate()) {
+
+        clientStatus.clearGPUInfoList();
+
+        double t[3] = { 0.0 };
+        int ways = {0};
+        int threads = {0};
+        int totalPages = {0};
+        int totalHugepages = {0};
+
+        for (IBackend *backend : d_ptr->backends) {
+            const Hashrate *hr = backend->hashrate();
+            if (!hr) {
+              continue;
+            }
+
+            t[0] += hr->calc(Hashrate::ShortInterval);
+            t[1] += hr->calc(Hashrate::MediumInterval);
+            t[2] += hr->calc(Hashrate::LargeInterval);
+
+            threads += backend->hashrate()->threads();
+
+            if (backend->type() == "cpu") {
+                const auto cpuBackend = static_cast<CpuBackend *>(backend);
+
+                ways += cpuBackend->ways();
+
+                HugePagesInfo pages = cpuBackend->hugePages();
+
+#   ifdef XMRIG_ALGO_RANDOMX
+                if (d_ptr->algorithm.family() == Algorithm::RANDOM_X) {
+                  pages += Rx::hugePages();
+                }
+#   endif
+
+                totalHugepages += pages.allocated;
+                totalPages += pages.total;
+            } else if (backend->type() == "opencl") {
+#   ifdef XMRIG_FEATURE_OPENCL
+                const auto oclBackend = static_cast<OclBackend *>(backend);
+                auto launchData = oclBackend->getLaunchData();
+
+                for (auto const& data : launchData) {
+                    GPUInfo gpuInfo;
+                    gpuInfo.setType(backend->type().data());
+                    gpuInfo.setDeviceIdx(data.device.index());
+                    gpuInfo.setBusId(data.device.topology().toString().data());
+                    gpuInfo.setName(data.device.name().data());
+                    gpuInfo.setComputeUnits(data.device.computeUnits());
+                    gpuInfo.setFreeMem(data.device.freeMemSize());
+                    gpuInfo.setMemory(data.device.globalMemSize());
+                    gpuInfo.setIntensity(data.thread.intensity());
+                    gpuInfo.setWorkSize(data.thread.worksize());
+                    gpuInfo.setClock(data.device.clock());
+
+                    clientStatus.addGPUInfo(gpuInfo);
+                }
+#    endif
+            } else if (backend->type() == "cuda") {
+#   ifdef XMRIG_FEATURE_OPENCL
+                const auto cudaBackend = static_cast<CudaBackend *>(backend);
+                auto launchData = cudaBackend->getLaunchData();
+
+                for (auto const& data: launchData)
+                {
+                    GPUInfo gpuInfo;
+                    gpuInfo.setType(backend->type().data());
+                    gpuInfo.setDeviceIdx(data.device.index());
+                    gpuInfo.setBusId(data.device.topology().toString().data());
+                    gpuInfo.setName(data.device.name().data());
+                    gpuInfo.setComputeUnits(data.device.smx());
+                    gpuInfo.setFreeMem(data.device.freeMemSize());
+                    gpuInfo.setMemory(data.device.globalMemSize());
+                    gpuInfo.setIntensity(data.thread.threads()*data.thread.blocks());
+                    gpuInfo.setBlocks(data.thread.blocks());
+                    gpuInfo.setBfactor(data.thread.bfactor());
+                    gpuInfo.setBsleep(data.thread.bsleep());
+                    gpuInfo.setThreads(data.thread.threads());
+                    gpuInfo.setClock(data.device.clock());
+
+                    clientStatus.addGPUInfo(gpuInfo);
+                }
+#    endif
+            }
+        }
+
+        clientStatus.setTotalPages(totalPages);
+        clientStatus.setTotalHugepages(totalHugepages);
+        clientStatus.setHugepagesEnabled(totalHugepages>0);
+        clientStatus.setHugepages(VirtualMemory::isHugepagesAvailable());
+        clientStatus.setCurrentThreads(threads);
+        clientStatus.setCurrentWays(ways);
+        clientStatus.setTotalMemory(uv_get_total_memory());
+        clientStatus.setFreeMemory(uv_get_free_memory());
+        clientStatus.setMaxCpuUsage(d_ptr->controller->config()->cpu().maxCpuUsage());
+        clientStatus.setHashFactor(threads > 0 ? ways/threads : 0);
+        clientStatus.setHashrateShort(t[0]);
+        clientStatus.setHashrateMedium(t[1]);
+        clientStatus.setHashrateLong(t[2]);
+        clientStatus.setHashrateHighest(d_ptr->maxHashrate[d_ptr->algorithm]);
+    }
 }
 #endif

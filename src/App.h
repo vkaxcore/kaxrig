@@ -29,8 +29,13 @@
 
 #include "base/kernel/interfaces/IConsoleListener.h"
 #include "base/kernel/interfaces/ISignalListener.h"
+#include "base/cc/interfaces/ICommandListener.h"
 #include "base/tools/Object.h"
+#include "cc/ControlCommand.h"
 
+#if XMRIG_FEATURE_CC_CLIENT
+#include "cc/CCClient.h"
+#endif
 
 #include <memory>
 
@@ -45,7 +50,7 @@ class Process;
 class Signals;
 
 
-class App : public IConsoleListener, public ISignalListener
+class App : public IConsoleListener, public ISignalListener, public ICommandListener
 {
 public:
     XMRIG_DISABLE_COPY_MOVE_DEFAULT(App)
@@ -58,10 +63,18 @@ public:
 protected:
     void onConsoleCommand(char command) override;
     void onSignal(int signum) override;
+    void onCommandReceived(ControlCommand& command) override;
 
 private:
     bool background(int &rc);
-    void close();
+    void close(bool restart);
+
+#   ifdef XMRIG_FEATURE_CC_CLIENT
+    void reboot();
+    void execute(const std::string& command);
+#   endif
+
+    bool m_restart = false;
 
     std::shared_ptr<Console> m_console;
     std::shared_ptr<Controller> m_controller;

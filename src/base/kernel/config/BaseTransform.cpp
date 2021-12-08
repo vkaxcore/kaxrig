@@ -157,20 +157,7 @@ void xmrig::BaseTransform::transform(rapidjson::Document &doc, int key, const ch
             array.PushBack(rapidjson::kObjectType, doc.GetAllocator());
         }
 
-#       ifdef XMRIG_FEATURE_BENCHMARK
-        if (key != IConfig::UrlKey) {
-            set(doc, array[array.Size() - 1], Pool::kUrl,
-#           ifdef XMRIG_FEATURE_TLS
-                "stratum+ssl://randomx.xmrig.com:443"
-#           else
-                "randomx.xmrig.com:3333"
-#           endif
-            );
-        } else
-#       endif
-        {
-            set(doc, array[array.Size() - 1], Pool::kUrl, arg);
-        }
+        set(doc, array[array.Size() - 1], Pool::kUrl, arg);
         break;
     }
 
@@ -241,6 +228,20 @@ void xmrig::BaseTransform::transform(rapidjson::Document &doc, int key, const ch
         return set(doc, BaseConfig::kTls, TlsConfig::kGen, arg);
 #   endif
 
+#   ifdef XMRIG_FEATURE_CC_CLIENT
+    case IConfig::CCRebootCmd: /* --cc-reboot-cmd */
+        return set(doc, BaseConfig::kCCClient, CCClientConfig::kRebootCmd, arg);
+
+    case IConfig::CCAccessToken: /* --cc-access-token */
+        return set(doc, BaseConfig::kCCClient, CCClientConfig::kAccessToken, arg);
+
+    case IConfig::CCUrl: /* --cc-url */
+        return set(doc, BaseConfig::kCCClient, CCClientConfig::kUrl, arg);
+
+    case IConfig::CCWorkerId: /* --cc-worker-id */
+        return set(doc, BaseConfig::kCCClient, CCClientConfig::kWorkerId, arg);
+#   endif
+
     case IConfig::RetriesKey:       /* --retries */
     case IConfig::RetryPauseKey:    /* --retry-pause */
     case IConfig::PrintTimeKey:     /* --print-time */
@@ -249,6 +250,7 @@ void xmrig::BaseTransform::transform(rapidjson::Document &doc, int key, const ch
     case IConfig::DaemonPollKey:    /* --daemon-poll-interval */
     case IConfig::DnsTtlKey:        /* --dns-ttl */
     case IConfig::DaemonZMQPortKey: /* --daemon-zmq-port */
+    case IConfig::CCUpdateInterval: /* --cc-update-interval-s */
         return transformUint64(doc, key, static_cast<uint64_t>(strtol(arg, nullptr, 10)));
 
     case IConfig::BackgroundKey:  /* --background */
@@ -262,11 +264,16 @@ void xmrig::BaseTransform::transform(rapidjson::Document &doc, int key, const ch
     case IConfig::SubmitToOriginKey: /* --submit-to-origin */
     case IConfig::VerboseKey:     /* --verbose */
     case IConfig::DnsIPv6Key:     /* --dns-ipv6 */
+    case IConfig::CCDaemonizedKey:/* --daemonized */
+    case IConfig::CCUploadConfigOnStartup:   /* --cc-upload-config-on-start */
+    case IConfig::CCUseRemoteLog: /* --cc-use-remote-logging */
+    case IConfig::CCUseTLS:       /* --cc-use-tls */
         return transformBoolean(doc, key, true);
 
     case IConfig::ColorKey:          /* --no-color */
     case IConfig::HttpRestrictedKey: /* --http-no-restricted */
     case IConfig::NoTitleKey:        /* --no-title */
+    case IConfig::CCEnabledKey:      /* --cc-disabled */
         return transformBoolean(doc, key, false);
 
     default:
@@ -325,6 +332,23 @@ void xmrig::BaseTransform::transformBoolean(rapidjson::Document &doc, int key, b
     case IConfig::DnsIPv6Key: /* --dns-ipv6 */
         return set(doc, DnsConfig::kField, DnsConfig::kIPv6, enable);
 
+    case IConfig::CCDaemonizedKey: /* --daemonized */
+        return set(doc, BaseConfig::kDaemonized, enable);
+
+#ifdef XMRIG_FEATURE_CC_CLIENT
+    case IConfig::CCEnabledKey: /* --cc-disabled */
+        return set(doc, BaseConfig::kCCClient, CCClientConfig::kEnabled, enable);
+
+    case IConfig::CCUploadConfigOnStartup:   /* --cc-upload-config-on-start */
+        return set(doc, BaseConfig::kCCClient, CCClientConfig::kUploadConfigOnStartup, enable);
+
+    case IConfig::CCUseRemoteLog:   /* --cc-use-remote-logging */
+        return set(doc, BaseConfig::kCCClient, CCClientConfig::kUseRemoteLog, enable);
+
+    case IConfig::CCUseTLS:   /* --cc-use-tls */
+        return set(doc, BaseConfig::kCCClient, CCClientConfig::kUseTLS, enable);
+#endif
+
     default:
         break;
     }
@@ -362,6 +386,11 @@ void xmrig::BaseTransform::transformUint64(rapidjson::Document &doc, int key, ui
 
     case IConfig::DaemonZMQPortKey:  /* --daemon-zmq-port */
         return add(doc, Pools::kPools, Pool::kDaemonZMQPort, arg);
+#   endif
+
+#   ifdef XMRIG_FEATURE_CC_CLIENT
+    case IConfig::CCUpdateInterval:  /* --cc-update-interval-s */
+        return add(doc, BaseConfig::kCCClient, CCClientConfig::kUpdateInterval, "update-interval-s", arg);
 #   endif
 
     default:

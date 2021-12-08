@@ -43,12 +43,6 @@
 #endif
 
 
-#ifdef XMRIG_FEATURE_BENCHMARK
-#   include "base/net/stratum/benchmark/BenchClient.h"
-#   include "base/net/stratum/benchmark/BenchConfig.h"
-#endif
-
-
 #ifdef _MSC_VER
 #   define strcasecmp  _stricmp
 #endif
@@ -145,31 +139,6 @@ xmrig::Pool::Pool(const rapidjson::Value &object) :
 }
 
 
-#ifdef XMRIG_FEATURE_BENCHMARK
-xmrig::Pool::Pool(const std::shared_ptr<BenchConfig> &benchmark) :
-    m_mode(MODE_BENCHMARK),
-    m_flags(1 << FLAG_ENABLED),
-    m_url(BenchConfig::kBenchmark),
-    m_benchmark(benchmark)
-{
-}
-
-
-xmrig::BenchConfig *xmrig::Pool::benchmark() const
-{
-    assert(m_mode == MODE_BENCHMARK && m_benchmark);
-
-    return m_benchmark.get();
-}
-
-
-uint32_t xmrig::Pool::benchSize() const
-{
-    return benchmark()->size();
-}
-#endif
-
-
 bool xmrig::Pool::isEnabled() const
 {
 #   ifndef XMRIG_FEATURE_TLS
@@ -240,11 +209,6 @@ xmrig::IClient *xmrig::Pool::createClient(int id, IClientListener *listener) con
 #   if defined XMRIG_ALGO_KAWPOW || defined XMRIG_ALGO_GHOSTRIDER
     else if (m_mode == MODE_AUTO_ETH) {
         client = new AutoClient(id, Platform::userAgent(), listener);
-    }
-#   endif
-#   ifdef XMRIG_FEATURE_BENCHMARK
-    else if (m_mode == MODE_BENCHMARK) {
-        client = new BenchClient(m_benchmark, listener);
     }
 #   endif
 

@@ -64,6 +64,7 @@ public:
     const bool yield;
     const int astrobwtMaxSize;
     const int priority;
+    const int maxCpuUsage;
     const int64_t affinity;
     const Miner *miner;
     const size_t threads;

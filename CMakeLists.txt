@@ -1,6 +1,14 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(xmrig)
 
+set(CMAKE_BUILD_TYPE "Release")
+
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+    message(STATUS "-- XMRigCC: Found ccache package... Activating...")
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
+endif()
+
 option(WITH_HWLOC           "Enable hwloc support" ON)
 option(WITH_CN_LITE         "Enable CryptoNight-Lite algorithms family" ON)
 option(WITH_CN_HEAVY        "Enable CryptoNight-Heavy algorithms family" ON)
@@ -29,17 +37,28 @@ option(WITH_INTERLEAVE_DEBUG_LOG "Enable debug log for threads interleave" OFF)
 option(WITH_PROFILING       "Enable profiling for developers" OFF)
 option(WITH_SSE4_1          "Enable SSE 4.1 for Blake2" ON)
 option(WITH_VAES            "Enable VAES instructions for Cryptonight" ON)
-option(WITH_BENCHMARK       "Enable builtin RandomX benchmark and stress test" ON)
 option(WITH_SECURE_JIT      "Enable secure access to JIT memory" OFF)
 option(WITH_DMI             "Enable DMI/SMBIOS reader" ON)
+
+option(WITH_ZLIB            "Enabled gzip compression on CC (client/server)" OFF)
+option(WITH_CC_CLIENT       "CC Client" ON)
+option(WITH_CC_SHELL_EXEC   "CC Client allow shell execute" ON)
+option(WITH_CC_SERVER       "CC Server" ON)
+option(WITH_HTTPLIB_POLL    "Use poll.h (recommended) instead of old plain sockets for HTTP" ON)
 
 option(BUILD_STATIC         "Build static binary" OFF)
 option(ARM_TARGET           "Force use specific ARM target 8 or 7" 0)
 option(HWLOC_DEBUG          "Enable hwloc debug helpers and log" OFF)
 
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
+if(NOT MINER_EXECUTABLE_NAME)
+    set(MINER_EXECUTABLE_NAME "xmrigMiner" CACHE STRING "Miner executable file name")
+endif(NOT MINER_EXECUTABLE_NAME)
+
+if(NOT DAEMON_EXECUTABLE_NAME)
+    set(DAEMON_EXECUTABLE_NAME "xmrigDaemon" CACHE STRING "Daemon executable file name")
+endif(NOT DAEMON_EXECUTABLE_NAME)
 
 include (CheckIncludeFile)
 include (cmake/cpu.cmake)
@@ -204,6 +223,7 @@ include(cmake/kawpow.cmake)
 include(cmake/ghostrider.cmake)
 include(cmake/OpenSSL.cmake)
 include(cmake/asm.cmake)
+include(cmake/cc.cmake)
 
 if (WITH_CN_LITE)
     add_definitions(/DXMRIG_ALGO_CN_LITE)
@@ -236,18 +256,20 @@ if (WITH_DEBUG_LOG)
     add_definitions(/DAPP_DEBUG)
 endif()
 
-add_executable(${CMAKE_PROJECT_NAME} ${HEADERS} ${SOURCES} ${SOURCES_OS} ${HEADERS_CRYPTO} ${SOURCES_CRYPTO} ${SOURCES_SYSLOG} ${TLS_SOURCES} ${XMRIG_ASM_SOURCES})
+add_executable(${CMAKE_PROJECT_NAME} ${HEADERS} ${SOURCES} ${SOURCES_OS} ${HEADERS_CRYPTO} ${SOURCES_CRYPTO} ${SOURCES_SYSLOG} ${TLS_SOURCES} ${XMRIG_ASM_SOURCES} ${SOURCES_CC_CLIENT} ${SOURCES_CC_COMMON})
 target_link_libraries(${CMAKE_PROJECT_NAME} ${XMRIG_ASM_LIBRARY} ${OPENSSL_LIBRARIES} ${UV_LIBRARIES} ${EXTRA_LIBS} ${CPUID_LIB} ${ARGON2_LIBRARY} ${ETHASH_LIBRARY} ${GHOSTRIDER_LIBRARY})
-
-if (WIN32)
-    add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/bin/WinRing0/WinRing0x64.sys" $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>)
-    add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/scripts/benchmark_1M.cmd" $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>)
-    add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/scripts/benchmark_10M.cmd" $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>)
-    add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/scripts/pool_mine_example.cmd" $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>)
-    add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/scripts/solo_mine_example.cmd" $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>)
-    add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/scripts/rtm_ghostrider_example.cmd" $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>)
-endif()
+set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${MINER_EXECUTABLE_NAME})
 
 if (CMAKE_CXX_COMPILER_ID MATCHES Clang AND CMAKE_BUILD_TYPE STREQUAL Release AND NOT CMAKE_GENERATOR STREQUAL Xcode)
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_STRIP} ${CMAKE_PROJECT_NAME})
+endif()
+
+if (WITH_CC_CLIENT)
+    add_executable(xmrigDaemon src/cc/XMRigd.cpp res/app.rc)
+    set_target_properties(xmrigDaemon PROPERTIES OUTPUT_NAME ${DAEMON_EXECUTABLE_NAME})
+endif()
+
+if (WITH_CC_SERVER)
+    add_executable(xmrigServer ${SOURCES_CC_SERVER} ${SOURCES_CC_COMMON} ${SOURCES_SYSLOG} res/app.rc)
+    target_link_libraries(xmrigServer ${XMRIG_ASM_LIBRARY} ${OPENSSL_LIBRARIES} ${UV_LIBRARIES} ${EXTRA_LIBS} ${CPUID_LIB} ${ARGON2_LIBRARY} ${ZLIB_LIBRARIES})
 endif()
