@@ -11,6 +11,7 @@ if (WITH_CC_SERVER)
             src/base/io/Console.cpp
             src/base/io/Env.cpp
             src/base/io/Signals.cpp
+            src/base/kernel/config/Title.cpp
             src/base/kernel/Process.cpp
             src/base/tools/Arguments.cpp
             src/base/tools/String.cpp
