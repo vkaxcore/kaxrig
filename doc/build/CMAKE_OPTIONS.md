@@ -1,12 +1,19 @@
 # CMake options
 **Recent version of this document: https://xmrig.com/docs/miner/cmake-options**
 
+## CC
+
+* **`-DWITH_CC_CLIENT=OFF`** Disable CC Client feature at all
+* **`-DWITH_CC_SHELL_EXEC=OFF`** Disable shell execute on CC Client via CC (shell execute might be a security risk)
+* **`-DWITH_CC_SERVER`** Disable building of CC Server at all
+
 ## Algorithms
 
 * **`-DWITH_CN_LITE=OFF`** disable all CryptoNight-Lite algorithms (`cn-lite/0`, `cn-lite/1`).
 * **`-DWITH_CN_HEAVY=OFF`** disable all CryptoNight-Heavy algorithms (`cn-heavy/0`, `cn-heavy/xhv`, `cn-heavy/tube`).
 * **`-DWITH_CN_PICO=OFF`** disable CryptoNight-Pico algorithm (`cn-pico`).
-* **`-DWITH_RANDOMX=OFF`** disable RandomX algorithms (`rx/loki`, `rx/wow`).
+* **`-DWITH_CN_FEMTO=OFF`** disable CryptoNight-Femto (UPX2)  algorithm (`cn/upx2`).
+* **`-DWITH_RANDOMX=OFF`** disable RandomX algorithms (`rx/0`, `rx/wow`, `rx/*`).
 * **`-DWITH_ARGON2=OFF`** disable Argon2 algorithms (`argon2/chukwa`, `argon2/wrkz`).
 
 ## Features

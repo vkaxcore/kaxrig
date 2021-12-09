@@ -128,11 +128,6 @@ void xmrig::CCClient::updateClientInfo()
 #   else
   m_clientStatus.setAssembly("none");
 #   endif
-
-  // ADD GPUConfig here
-
-
-
 }
 
 

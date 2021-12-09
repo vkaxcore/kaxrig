@@ -44,7 +44,6 @@ class Pools
 {
 public:
     static const char *kDonateLevel;
-    static const char *kDonateOverProxy;
     static const char *kPools;
     static const char *kRetries;
     static const char *kRetryPause;
@@ -78,14 +77,12 @@ public:
 
 private:
     void setDonateLevel(int level);
-    void setProxyDonate(int value);
     void setRetries(int retries);
     void setRetryPause(int retryPause);
 
     int m_donateLevel;
     int m_retries               = 5;
     int m_retryPause            = 5;
-    ProxyDonate m_proxyDonate   = PROXY_DONATE_AUTO;
     std::vector<Pool> m_data;
 };
 

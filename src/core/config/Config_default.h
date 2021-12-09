@@ -63,7 +63,9 @@ R"===(
         "priority": null,
         "memory-pool": false,
         "yield": true,
+        "force-autoconfig": false,
         "max-threads-hint": 100,
+        "max-cpu-usage": null,
         "asm": true,
         "argon2-impl": null,
         "astrobwt-max-size": 550,
@@ -87,14 +89,14 @@ R"===(
         "cn/0": false,
         "cn-lite/0": false
     },
-    "donate-level": 1,
+    "donate-level": 5,
     "donate-over-proxy": 1,
     "log-file": null,
     "pools": [
         {
             "algo": null,
             "coin": null,
-            "url": "donate.v2.xmrig.com:3333",
+            "url": "donate.graef.in:80",
             "user": "YOUR_WALLET_ADDRESS",
             "pass": "x",
             "rig-id": null,
@@ -109,6 +111,17 @@ R"===(
             "submit-to-origin": false
         }
     ],
+    "cc-client": {
+        "enabled": true,
+        "url": "localhost:3344",
+        "access-token": "mySecret",
+        "use-tls": false,
+        "use-remote-logging": true,
+        "upload-config-on-start": true,
+        "worker-id": null,
+        "reboot-cmd": null,
+        "update-interval-s": 10
+    },
     "print-time": 60,
     "health-print-time": 60,
     "dmi": true,

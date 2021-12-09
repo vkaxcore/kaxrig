@@ -1,5 +1,3 @@
-**:warning: Recent version of this page https://xmrig.com/docs/miner/config/cpu.**
-
 # CPU backend
 
 All CPU related settings contains in one `cpu` object in config file, CPU backend allow specify multiple profiles and allow switch between them without restrictions by pool request or config change. Default auto-configuration create reasonable minimum of profiles which cover all supported algorithms.
@@ -123,23 +121,26 @@ Force enable (`true`) or disable (`false`) hardware AES support. Default value `
 #### `priority`
 Mining threads priority, value from `1` (lowest priority) to `5` (highest possible priority). Default value `null` means miner don't change threads priority at all. Setting priority higher than 2 can make your PC unresponsive.
 
-#### `memory-pool` (since v4.3.0)
+#### `memory-pool`
 Use continuous, persistent memory block for mining threads, useful for preserve huge pages allocation while algorithm switching. Possible values `false` (feature disabled, by default) or `true` or specific count of 2 MB huge pages. It helps to avoid loosing huge pages for scratchpads when RandomX dataset is updated and mining threads restart after a 2-3 days of mining.
-
-#### `yield` (since v5.1.1)
-Prefer system better system response/stability `true` (default value) or maximum hashrate `false`.
 
 #### `asm`
 Enable/configure or disable ASM optimizations. Possible values: `true`, `false`, `"intel"`, `"ryzen"`, `"bulldozer"`.
 
-#### `argon2-impl` (since v3.1.0)
-Allow override automatically detected Argon2 implementation, this option added mostly for debug purposes, default value `null` means autodetect. This is used in RandomX dataset initialization and also in some other mining algorithms. Other possible values: `"x86_64"`, `"SSE2"`, `"SSSE3"`, `"XOP"`, `"AVX2"`, `"AVX-512F"`. Manual selection has no safe guards - if your CPU doesn't support required instuctions, miner will crash.
+#### `argon2-impl` (since v2.0.0)
+Allow override automatically detected Argon2 implementation, this option added mostly for debug purposes, default value `null` means autodetect. Other possible values: `"x86_64"`, `"SSE2"`, `"SSSE3"`, `"XOP"`, `"AVX2"`, `"AVX-512F"`. Manual selection has no safe guards, if you CPU not support required instuctions, miner will crash.
 
-#### `astrobwt-max-size`
-AstroBWT algorithm: skip hashes with large stage 2 size, default: `550`, min: `400`, max: `1200`. Optimal value depends on your CPU/GPU
-
-#### `astrobwt-avx2`
-AstroBWT algorithm: use AVX2 code. It's faster on some CPUs and slower on other
-
-#### `max-threads-hint` (since v4.2.0)
+#### `max-threads-hint` (since v2.2.2)
 Maximum CPU threads count (in percentage) hint for autoconfig. [CPU_MAX_USAGE.md](CPU_MAX_USAGE.md)
+
+#### `max-cpu-usage` (since v2.8.5)
+Limit the maximum CPU usage (in percentage). [CPU_MAX_USAGE.md](CPU_MAX_USAGE.md)
+
+#### `memory-pool` (since v2.2.0)
+Use continuous, persistent memory block for mining threads, useful for preserve huge pages allocation while algorithm swithing. Possible values `false` (feature disabled, by default) or `true` or specific count of 2 MB huge pages.
+
+#### `yield` (since 2.5.0)
+Prefer system better system res
+
+#### `force-autoconfig` (since 2.8.4)
+Force cpu autoconfig, but keeps disabled algos

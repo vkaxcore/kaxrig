@@ -36,7 +36,6 @@ namespace xmrig {
 
 
 const char *Pools::kDonateLevel     = "donate-level";
-const char *Pools::kDonateOverProxy = "donate-over-proxy";
 const char *Pools::kPools           = "pools";
 const char *Pools::kRetries         = "retries";
 const char *Pools::kRetryPause      = "retry-pause";
@@ -141,7 +140,6 @@ void xmrig::Pools::load(const IJsonReader &reader)
     }
 
     setDonateLevel(reader.getInt(kDonateLevel, kDefaultDonateLevel));
-    setProxyDonate(reader.getInt(kDonateOverProxy, PROXY_DONATE_AUTO));
     setRetries(reader.getInt(kRetries));
     setRetryPause(reader.getInt(kRetryPause));
 }
@@ -178,7 +176,6 @@ void xmrig::Pools::toJSON(rapidjson::Value &out, rapidjson::Document &doc) const
     auto &allocator = doc.GetAllocator();
 
     doc.AddMember(StringRef(kDonateLevel),      m_donateLevel, allocator);
-    doc.AddMember(StringRef(kDonateOverProxy),  m_proxyDonate, allocator);
     out.AddMember(StringRef(kPools),            toJSON(doc), allocator);
     doc.AddMember(StringRef(kRetries),          retries(), allocator);
     doc.AddMember(StringRef(kRetryPause),       retryPause(), allocator);
@@ -189,20 +186,6 @@ void xmrig::Pools::setDonateLevel(int level)
 {
     if (level >= kMinimumDonateLevel && level <= 99) {
         m_donateLevel = level;
-    }
-}
-
-
-void xmrig::Pools::setProxyDonate(int value)
-{
-    switch (value) {
-    case PROXY_DONATE_NONE:
-    case PROXY_DONATE_AUTO:
-    case PROXY_DONATE_ALWAYS:
-        m_proxyDonate = static_cast<ProxyDonate>(value);
-
-    default:
-        break;
     }
 }
 

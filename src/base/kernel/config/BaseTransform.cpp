@@ -367,9 +367,6 @@ void xmrig::BaseTransform::transformUint64(rapidjson::Document &doc, int key, ui
     case IConfig::DonateLevelKey: /* --donate-level */
         return set(doc, Pools::kDonateLevel, arg);
 
-    case IConfig::ProxyDonateKey: /* --donate-over-proxy */
-        return set(doc, Pools::kDonateOverProxy, arg);
-
     case IConfig::HttpPort: /* --http-port */
         m_http = true;
         return set(doc, BaseConfig::kHttp, Http::kPort, arg);
