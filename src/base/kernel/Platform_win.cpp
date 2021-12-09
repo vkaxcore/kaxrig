@@ -25,6 +25,7 @@
 
 
 #include "base/kernel/Platform.h"
+#include "base/tools/Chrono.h"
 #include "version.h"
 
 
