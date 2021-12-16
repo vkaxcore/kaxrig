@@ -28,7 +28,8 @@ Full Windows/Linux/OSx/Android compatible, and you can mix all on a single XMRig
 
 ## Last integrated algos in XMRigCC:
 
-* **Ghostrider/RTM** (Algo: "gr")
+* **Ghostrider (Raptoreum)** (Algo: "gr")
+* **KawPow (Ravencoin)** (Algo: "kawpow")
 * **Graft** RX variant (Algo: "rx/graft")
 * **Yadacoin** RX variant (Algo: "rx/yada")
 * **Turtlecoin** argon2 chukwa variant 2 (algo: "argon2/chukwav2")
