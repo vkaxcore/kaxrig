@@ -1,8 +1,7 @@
 # XMRigCC
 
-XMRigCC is a high performance RandomX, CryptoNight, Argon2 and AstroBWT CPU miner with support for Windows, Linux and MacOS.
-
-:bulb: **This is the CPU variant of XMRigCC, if you're looking for the AMD GPU (OpenCL, Cryptonight only) variant [click here](https://github.com/Bendr0id/xmrigCC-amd/).**
+XMRigCC is a high performance, open source, cross platform RandomX, GhostRider, KawPow, CryptoNight and AstroBWT 
+unified CPU/GPU miner. Official binaries are available for Windows, Linux, macOS and Android.
 
 [![Windows Build status](https://ci.appveyor.com/api/projects/status/l8v7cuuy320a4tpd?svg=true)](https://ci.appveyor.com/project/Bendr0id/xmrigcc)
 [![Docker Build status](https://img.shields.io/docker/cloud/build/bendr0id/xmrigcc.svg)](https://hub.docker.com/r/bendr0id/xmrigcc/)
@@ -16,7 +15,7 @@ XMRigCC is a high performance RandomX, CryptoNight, Argon2 and AstroBWT CPU mine
 
 ![XMRigCC Logo](https://i.imgur.com/7mi0WCe.png)
 
-### About XMRigCC
+### About [CC]
 
 XMRigCC is a [XMRig](https://github.com/xmrig/xmrig) fork which adds remote control and monitoring functions to XMRigCC miners. It lets you control your miners via a Dashboard or the REST api.
 XMRigCC has a "Command and Control" (C&amp;C) server part, a daemon to keep the XMRigCC miner alive and modifications to send the current status to the C&amp;C Server.
@@ -25,15 +24,14 @@ Assign config templates to multiple miners with a single click and let them swit
 Watch your miners logs with the simple remote Log viewer and monitor you miners. When the hashrate drops or one of your miners went offline you can get a notification via
 PushOver or Telegram automatically so that you dont need to watch your miners all day.
 
-Full Windows/Linux compatible, and you can mix Linux and Windows miner on one XMRigCCServer.
+Full Windows/Linux/OSx/Android compatible, and you can mix all on a single XMRigCC-Server.
 
 ## Last integrated algos in XMRigCC:
 
+* **Ghostrider/RTM** (Algo: "gr")
 * **Graft** RX variant (Algo: "rx/graft")
 * **Yadacoin** RX variant (Algo: "rx/yada")
-* **CXCHE** CN variant (algo: "cn/cache_hash")
 * **Turtlecoin** argon2 chukwa variant 2 (algo: "argon2/chukwav2")
-* **Panthera (XLA)** RX variant (algo: "panthera")
 * **ninjacoin** variant (algo: "ninja")
 * **AstroBWT** variant (algo: "astrobwt")
 * **RandomKEVA** RX variant (algo: "rx/keva")
@@ -48,13 +46,19 @@ Full Windows/Linux compatible, and you can mix Linux and Windows miner on one XM
 * NUMA support
 * Command and control server
 * CC Dashboard with:
-    * statistics of all connected miners with graphs
-    * remote control miners (start/stop/restart/shutdown)
-    * remote configuration changes of miners
-    * simple config editor for miner / config templates
-    * monitoring / offline notification push notifications via Pushover and Telegram
+    * statistics of all connected miners with graphs (CPU+GPU)
+    * remote control miners (start/stop/restart/shutdown/execute)
+    * remote configure miners
+    * simple config editor for miner / config templates / apply to all
+    * monitoring
+    * remote logging 
+    * configurable alarm notifications via Pushover and Telegram
 * Daemon to restart the miner
 
+## Mining backends
+- **CPU** (x64/ARMv8)
+- **OpenCL** for AMD GPUs.
+- **CUDA** for NVIDIA GPUs via XMRig's official [CUDA plugin](https://github.com/xmrig/xmrig-cuda).
 
 **XMRigCC Miner**
 
@@ -79,7 +83,7 @@ Full Windows/Linux compatible, and you can mix Linux and Windows miner on one XM
 ## Download
 * Binary releases: https://github.com/Bendr0id/xmrigCC/releases
 * Git tree: https://github.com/Bendr0id/xmrigCC.git
-    * Clone with `git clone https://github.com/Bendr0id/xmrigCC.git` :hammer: [Build instructions](https://github.com/xmrig/xmrig/wiki/Build.
+    * Clone with `git clone https://github.com/Bendr0id/xmrigCC.git` :hammer: [official XMRig Build instructions](https://xmrig.com/docs/miner/build)
 
 ## Usage
 ### Basic example XMRigCCServer

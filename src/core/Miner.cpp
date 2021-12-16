@@ -525,6 +525,12 @@ void xmrig::Miner::setEnabled(bool enabled)
         return;
     }
 
+    if (d_ptr->user_active && enabled) {
+      LOG_INFO("%s " YELLOW_BOLD("can't resume while user is active"), Tags::miner());
+
+      return;
+    }
+
     d_ptr->enabled = enabled;
     d_ptr->m_taskbar.setEnabled(enabled);
 

@@ -167,11 +167,11 @@ void xmrig::App::close(bool restart)
 {
     m_restart = restart;
 
-    m_signals.reset();
-    m_console.reset();
-
     m_controller->stop();
     m_controller.reset();
+
+    m_signals.reset();
+    m_console.reset();
 
     Log::destroy();
 

@@ -17,6 +17,7 @@
  */
 
 #include <mutex>
+#include <string>
 
 
 #include "backend/cpu/CpuBackend.h"

@@ -80,10 +80,7 @@ rapidjson::Value xmrig::CpuConfig::toJSON(rapidjson::Document &doc) const
     obj.AddMember(StringRef(kMemoryPool),   m_memoryPool < 1 ? Value(m_memoryPool < 0) : Value(m_memoryPool), allocator);
     obj.AddMember(StringRef(kYield),        m_yield, allocator);
     obj.AddMember(StringRef(kForceAutoconfig), m_forceAutoconfig, allocator);
-
-    if (m_threads.isEmpty()) {
-        obj.AddMember(StringRef(kMaxThreadsHint), m_limit, allocator);
-    }
+    obj.AddMember(StringRef(kMaxThreadsHint), m_limit, allocator);
 
 #   ifdef XMRIG_FEATURE_ASM
     obj.AddMember(StringRef(kAsm), m_assembly.toJSON(), allocator);

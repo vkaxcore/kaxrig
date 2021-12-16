@@ -18,6 +18,7 @@
 
 #include <thread>
 #include <mutex>
+#include <cmath>
 
 
 #include "backend/cpu/Cpu.h"
@@ -253,7 +254,8 @@ void xmrig::CpuWorker<N>::start()
             consumeJob();
         }
 
-        bool limitCpuUsage = m_maxCpuUsage > 0 && m_maxCpuUsage < 100;
+        int maxUsagePerThread = (static_cast<double>(Cpu::info()->threads()) / static_cast<double>(m_threads*threads())) * m_maxCpuUsage;
+        bool limitCpuUsage = m_maxCpuUsage > 0 && m_maxCpuUsage < 100 && maxUsagePerThread < 100;
 
 #       ifdef XMRIG_ALGO_RANDOMX
         bool first = true;
@@ -343,7 +345,7 @@ void xmrig::CpuWorker<N>::start()
             }
 
             if ((m_count & 7) == 0 && limitCpuUsage) {
-                auto sleepTime = xmrig::Platform::getThreadSleepTimeToLimitMaxCpuUsage(m_maxCpuUsage);
+                auto sleepTime = xmrig::Platform::getThreadSleepTimeToLimitMaxCpuUsage(maxUsagePerThread);
                 std::this_thread::sleep_for(std::chrono::microseconds(sleepTime));
             }
 

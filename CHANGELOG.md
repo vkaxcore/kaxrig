@@ -1,3 +1,12 @@
+# 3.0.0
+* Full Rebase of XMRig 6.16.3-dev
+  * Unified CPU & GPU (Cuda/OpenCL) support
+  * Ghostrider support
+  * KawPow (Ravencoin) [GPU-only] support
+  * Tons of other improvements and optimizations
+* Improved max-cpu-usage parameter for better core utilization [MAX-CPU-USAGE](https://github.com/Bendr0id/xmrigCC/blob/master/doc/CPU_MAX_USAGE.md)
+* Reintegrated [Yadacoin](https://yadacoin.io/) RandomX variant (`rx/yada`) or coin (`yada`)
+* Dropped support for `panthera` (XLA/scala), `cn/superfast`, `cn/cache_hash`
 # 2.9.7
 * AstroBWT speedup (upstream 6.15.3 -> up to +35%)
 * Fixed corrupt Server Push messages
