@@ -23,7 +23,7 @@
 #define APP_ID        "XMRigCC"
 #define APP_NAME      "XMRigCC"
 #define APP_DESC      "XMRigCC miner"
-#define APP_VERSION   "3.0.0"
+#define APP_VERSION   "3.0.1-dev"
 #define APP_DOMAIN    ""
 #define APP_SITE      "https://github.com/BenDr0id/xmrigCC/"
 #define APP_COPYRIGHT "Copyright (C) 2017- XMRigCC"
@@ -31,7 +31,7 @@
 
 #define APP_VER_MAJOR  3
 #define APP_VER_MINOR  0
-#define APP_VER_PATCH  0
+#define APP_VER_PATCH  1
 
 #ifndef NDEBUG
 #define BUILD_TYPE   "DEBUG"
