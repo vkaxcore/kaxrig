@@ -84,8 +84,9 @@ public:
         return true;
     }
 
-    inline int32_t nonceOffset() const  { return currentJob().nonceOffset(); }
-    inline size_t nonceSize() const     { return currentJob().nonceSize(); }
+
+    inline int32_t nonceOffset() const { return currentJob().nonceOffset(); }
+    inline size_t nonceSize() const { return currentJob().nonceSize(); }
 
 private:
     inline uint64_t nonceMask() const     { return m_nonce_mask[index()]; }

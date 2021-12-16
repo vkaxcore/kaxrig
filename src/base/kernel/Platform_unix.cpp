@@ -1,11 +1,6 @@
 /* XMRig
- * Copyright 2010      Jeff Garzik <jgarzik@pobox.com>
- * Copyright 2012-2014 pooler      <pooler@litecoinpool.org>
- * Copyright 2014      Lucas Jones <https://github.com/lucasjones>
- * Copyright 2014-2016 Wolf9466    <https://github.com/OhGodAPet>
- * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
- * Copyright 2018-2020 SChernykh   <https://github.com/SChernykh>
- * Copyright 2016-2020 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright (c) 2018-2021 SChernykh   <https://github.com/SChernykh>
+ * Copyright (c) 2016-2021 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -28,29 +23,29 @@
 #   include <pthread_np.h>
 #endif
 
+
 #include <pthread.h>
 #include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/resource.h>
 #include <unistd.h>
 #include <uv.h>
 #include <thread>
-#include <map>
-#include <sys/resource.h>
+#include <fstream>
+#include <limits>
+
 
 #include "base/kernel/Platform.h"
 #include "base/tools/Chrono.h"
 #include "version.h"
 
-#ifdef XMRIG_NVIDIA_PROJECT
-#   include "nvidia/cryptonight.h"
-#endif
-
 
 #ifdef __FreeBSD__
 typedef cpuset_t cpu_set_t;
 #endif
+
 
 char *xmrig::Platform::createUserAgent()
 {
@@ -67,11 +62,6 @@ char *xmrig::Platform::createUserAgent()
     length += snprintf(buf + length, max - length, "arm) libuv/%s", uv_version_string());
 #   else
     length += snprintf(buf + length, max - length, "i686) libuv/%s", uv_version_string());
-#   endif
-
-#   ifdef XMRIG_NVIDIA_PROJECT
-    const int cudaVersion = cuda_get_runtime_version();
-    length += snprintf(buf + length, max - length, " CUDA/%d.%d", cudaVersion / 1000, cudaVersion % 100);
 #   endif
 
 #   ifdef __clang__
@@ -101,17 +91,6 @@ bool xmrig::Platform::setThreadAffinity(uint64_t cpu_id)
     return result;
 }
 #endif
-
-
-uint32_t xmrig::Platform::setTimerResolution(uint32_t resolution)
-{
-    return resolution;
-}
-
-
-void xmrig::Platform::restoreTimerResolution()
-{
-}
 
 
 void xmrig::Platform::setProcessPriority(int)
@@ -166,37 +145,59 @@ void xmrig::Platform::setThreadPriority(int priority)
 #   endif
 }
 
+
+bool xmrig::Platform::isOnBatteryPower()
+{
+    for (int i = 0; i <= 1; ++i) {
+        char buf[64];
+        snprintf(buf, 64, "/sys/class/power_supply/BAT%d/status", i);
+        std::ifstream f(buf);
+        if (f.is_open()) {
+            std::string status;
+            f >> status;
+            return (status == "Discharging");
+        }
+    }
+    return false;
+}
+
+
+uint64_t xmrig::Platform::idleTime()
+{
+    return std::numeric_limits<uint64_t>::max();
+}
+
 int64_t xmrig::Platform::getThreadSleepTimeToLimitMaxCpuUsage(uint8_t maxCpuUsage)
 {
-  uint64_t currentSystemTime = Chrono::highResolutionMicroSecs();
-  if (currentSystemTime - m_systemTime > MIN_RECALC_THRESHOLD_USEC)
-  {
-    struct rusage usage{};
-    if (getrusage(RUSAGE_THREAD, &usage) == 0)
+    uint64_t currentSystemTime = Chrono::highResolutionMicroSecs();
+    if (currentSystemTime - m_systemTime > MIN_RECALC_THRESHOLD_USEC)
     {
-      int64_t currentThreadUsageTime = usage.ru_stime.tv_usec + (usage.ru_stime.tv_sec * 1000000)
-                                     + usage.ru_utime.tv_usec + (usage.ru_utime.tv_sec * 1000000);
+        struct rusage usage{};
+        if (getrusage(RUSAGE_THREAD, &usage) == 0)
+        {
+            int64_t currentThreadUsageTime = usage.ru_stime.tv_usec + (usage.ru_stime.tv_sec * 1000000)
+                                             + usage.ru_utime.tv_usec + (usage.ru_utime.tv_sec * 1000000);
 
-      if (m_threadUsageTime > 0 || m_systemTime > 0)
-      {
-        m_threadTimeToSleep = ((currentThreadUsageTime - m_threadUsageTime) * 100 / maxCpuUsage)
-                              - (currentSystemTime - m_systemTime - m_threadTimeToSleep);
-      }
+            if (m_threadUsageTime > 0 || m_systemTime > 0)
+            {
+                m_threadTimeToSleep = ((currentThreadUsageTime - m_threadUsageTime) * 100 / maxCpuUsage)
+                                      - (currentSystemTime - m_systemTime - m_threadTimeToSleep);
+            }
 
-      m_threadUsageTime = currentThreadUsageTime;
-      m_systemTime = currentSystemTime;
+            m_threadUsageTime = currentThreadUsageTime;
+            m_systemTime = currentSystemTime;
+        }
+
+        // Something went terrible wrong, reset everything
+        if (m_threadTimeToSleep > 10000000 || m_threadTimeToSleep < 0)
+        {
+            m_threadTimeToSleep = 0;
+            m_threadUsageTime = 0;
+            m_systemTime = 0;
+        }
+
+        return m_threadTimeToSleep;
     }
 
-    // Something went terrible wrong, reset everything
-    if (m_threadTimeToSleep > 10000000 || m_threadTimeToSleep < 0)
-    {
-      m_threadTimeToSleep = 0;
-      m_threadUsageTime = 0;
-      m_systemTime = 0;
-    }
-
-    return m_threadTimeToSleep;
-  }
-
-  return 0;
+    return 0;
 }

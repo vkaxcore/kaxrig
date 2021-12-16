@@ -6,8 +6,8 @@
  * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
  * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
  * Copyright 2018      Lee Clagett <https://github.com/vtnerd>
- * Copyright 2018-2019 SChernykh   <https://github.com/SChernykh>
- * Copyright 2016-2019 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright 2018-2020 SChernykh   <https://github.com/SChernykh>
+ * Copyright 2016-2020 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -24,36 +24,33 @@
  */
 
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <uv.h>
+
 
 #include "App.h"
 #include "backend/cpu/Cpu.h"
 #include "base/io/Console.h"
 #include "base/io/log/Log.h"
-#include "base/tools/Buffer.h"
-#include "base/kernel/Signals.h"
+#include "base/io/log/Tags.h"
+#include "base/io/Signals.h"
+#include "base/kernel/Platform.h"
 #include "core/config/Config.h"
 #include "core/Controller.h"
-#include "core/Miner.h"
-#include "crypto/common/VirtualMemory.h"
-#include "net/Network.h"
 #include "cc/ControlCommand.h"
 #include "Summary.h"
+#include "version.h"
+
 
 xmrig::App::App(Process *process)
 {
-    m_controller = new Controller(process);
+    m_controller = std::make_shared<Controller>(process);
 }
 
 
 xmrig::App::~App()
 {
     Cpu::release();
-
-    delete m_signals;
-    delete m_console;
-    delete m_controller;
 }
 
 
@@ -68,12 +65,11 @@ int xmrig::App::exec()
 #   ifdef XMRIG_FEATURE_CC_CLIENT
     if (!m_controller->config()->isDaemonized()) {
         LOG_EMERG(APP_ID " is compiled with CC support, please start the daemon instead.\n");
-
         return 2;
     }
 #   endif
 
-    m_signals = new Signals(this);
+    m_signals = std::make_shared<Signals>(this);
 
     int rc = 0;
     if (background(rc)) {
@@ -86,13 +82,13 @@ int xmrig::App::exec()
     }
 
     if (!m_controller->isBackground()) {
-        m_console = new Console(this);
+        m_console = std::make_shared<Console>(this);
     }
 
-    Summary::print(m_controller);
+    Summary::print(m_controller.get());
 
     if (m_controller->config()->isDryRun()) {
-        LOG_NOTICE("OK");
+        LOG_NOTICE("%s " WHITE_BOLD("OK"), Tags::config());
 
         return 0;
     }
@@ -112,12 +108,11 @@ int xmrig::App::exec()
 
 void xmrig::App::onConsoleCommand(char command)
 {
-    if (command == 'q') {
+    if (command == 3) {
+        LOG_WARN("%s " YELLOW("Ctrl+C received, exiting"), Tags::signal());
         close(false);
-    } else if (command == 3) {
-        LOG_WARN("Ctrl+C received, exiting");
-        close(false);
-    } else {
+    }
+    else {
         m_controller->execCommand(command);
     }
 }
@@ -130,10 +125,13 @@ void xmrig::App::onSignal(int signum)
     case SIGHUP:
     case SIGTERM:
     case SIGINT:
-        close(false);
+        return close(false);
+
+    default:
         break;
     }
 }
+
 
 void xmrig::App::onCommandReceived(ControlCommand& command)
 {
@@ -164,45 +162,45 @@ void xmrig::App::onCommandReceived(ControlCommand& command)
 #   endif
 }
 
+
 void xmrig::App::close(bool restart)
 {
     m_restart = restart;
 
     m_controller->stop();
+    m_controller.reset();
 
-    m_signals->stop();
-
-    if (m_console) {
-        m_console->stop();
-    }
+    m_signals.reset();
+    m_console.reset();
 
     Log::destroy();
-    
+
     uv_stop(uv_default_loop());
 }
+
 
 #   ifdef XMRIG_FEATURE_CC_CLIENT
 void xmrig::App::reboot()
 {
 #   ifdef XMRIG_FEATURE_CC_CLIENT_SHELL_EXECUTE
-    auto rebootCmd = m_controller->config()->ccClient().rebootCmd();
-    if (rebootCmd) {
-        system(rebootCmd);
-        close(false);
-    }
+  auto rebootCmd = m_controller->config()->ccClient().rebootCmd();
+  if (rebootCmd) {
+    system(rebootCmd);
+    close(false);
+  }
 #   else
-    LOG_EMERG("Shell execute disabled. Skipping REBOOT.");
+  LOG_EMERG("Shell execute disabled. Skipping REBOOT.");
 #   endif
 }
 
 void xmrig::App::execute(const std::string& command)
 {
 #   ifdef XMRIG_FEATURE_CC_CLIENT_SHELL_EXECUTE
-    if (!command.empty()) {
-        system(command.c_str());
-    }
+  if (!command.empty()) {
+    system(command.c_str());
+  }
 #   else
-    LOG_EMERG("Shell execute disabled. Skipping %s", command.c_str());
+  LOG_EMERG("Shell execute disabled. Skipping %s", command.c_str());
 #   endif
 }
 #   endif

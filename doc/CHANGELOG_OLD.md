@@ -1,18 +1,18 @@
 # 2.0.0
 **Thx to @xmrig and @SChernykh awesome work!**
-* Full Rebase on XMRig 3.1.1 
-     * randomX/wow/XL
-     * NUMA support
-     * flexible multi algorithm configuration
-     * unlimited switching between incompatible algorithms at runtime
+* Full Rebase on XMRig 3.1.1
+  * randomX/wow/XL
+  * NUMA support
+  * flexible multi algorithm configuration
+  * unlimited switching between incompatible algorithms at runtime
 * Argon2, UPX2 (Nice hashrate improvement) and CN-Conceal support integrated like in previous version
 * 5-10% Hashrate improvement on ARMv8 CPUs when mining CN based algos compared to stock xmrig
 * Fully compatible to XMRigCCServer 1.9.5 no server upgrade needed!
-**New XMRigCCServer will be released soon with new features**
+  **New XMRigCCServer will be released soon with new features**
 # 1.9.5
 - Integrated CN-Conceal algo (algo: "cryptonight", variant: "conceal" or variant: "ccx") #259
-- Integrated Argon2-512 algo "chukwa" for upcoming trtl fork (algo: "argon2-512", variant: "auto" or "chukwa") #258 
-- Integrated Argon2-256 algo "chukwa-wrkz" for upcoming wrkz fork (algo: "argon2-256", variant: "auto" or "wrkz") 
+- Integrated Argon2-512 algo "chukwa" for upcoming trtl fork (algo: "argon2-512", variant: "auto" or "chukwa") #258
+- Integrated Argon2-256 algo "chukwa-wrkz" for upcoming wrkz fork (algo: "argon2-256", variant: "auto" or "wrkz")
 - Added possibility to delete templates #257
 - Added embedded config parsing #256
 - OSX Hugepages fix #250
@@ -22,7 +22,7 @@
 - Fixed donation address for UPX2/CN-Extremelite
 # 1.9.2
 - Integrated cn-extremelite a.k.a upx2 (algo: "cryptonight-extremelite", variant: "upx2")
-- Improved hashfactor autodetection for cnv8 and r based coins 
+- Improved hashfactor autodetection for cnv8 and r based coins
 - Integrated merged templates and replace of @WORKER-ID@ in template assignment
 # 1.9.1
 - Fix coloring of outdated miners on Dashboard
@@ -71,7 +71,7 @@
 # 1.8.4
 - Added XFH (Freehaven-project) support aka CN-Heavy-superfast
 - Hashrate improve -> CN-Fast (MSR and others) ASM code for Intel CPUs
-- Hashrate improve -> CNv2 ASM code for AMD Bulldozer CPUs 
+- Hashrate improve -> CNv2 ASM code for AMD Bulldozer CPUs
 - Fix memory leak in cc client component
 - Alloy algo is now shown as XAO on Dashboard
 # 1.8.2
@@ -79,7 +79,7 @@
 - Fixed avg.time on Dashboard
 # 1.8.1
 - Fix connection stuck in Failover case when DNS resolve fails #197
-- Fix supported-variants announcement in login 
+- Fix supported-variants announcement in login
 # 1.8.0
 - Integration of cnv2 aka moneroV8
 - Hashrate improve -> all cnv1, cn-litev1, cnv2, xtl by adding ASM code for Intel/AMD and softaes [thx @SChernykh]
@@ -90,9 +90,9 @@
 - Full integration of xmrigCC-amd into XMRigCCServer/Dashboard with GPUInfo / remote logging
 - Config property to enable/disable config upload on startup (--cc-upload-config-on-startup) #80
 - Refactoring of remote logging feature: #143
-    - Only deltas will be send to the XMRigCCServer
-    - Fetching miner log on dashboard upon need
-    - Maximum lines of log history kept per miner can be configured on XMRigCCServer 
+  - Only deltas will be send to the XMRigCCServer
+  - Fetching miner log on dashboard upon need
+  - Maximum lines of log history kept per miner can be configured on XMRigCCServer
 - Fix correct hugepages status on Dashboard
 - Fix cpu affinity for single thread usage
 - Add all needed security infos to XMRigCCServer logging to harden the server (f.e. fail2ban)
@@ -125,37 +125,37 @@
 # 1.6.2
 - Implementation of CN-Lite-IPBC algo
 - Fixed Windows 32bit build / crashes
-- Fixed XMRigCCServer crash when auth header is manipulated 
+- Fixed XMRigCCServer crash when auth header is manipulated
 # 1.6.1
 - beta
 # 1.6.0
-- Complete rewrite of the stratum TCP/TLS network communication using boost::asio to fix connection issues and crashs 
+- Complete rewrite of the stratum TCP/TLS network communication using boost::asio to fix connection issues and crashs
 - Force of PoW via "variant" parameter in xmrg-proxy 2.5.2+, it now overrules local settings
-- Implementation of CN-Heavy algo used by Sumokoin / Haven / ... 
+- Implementation of CN-Heavy algo used by Sumokoin / Haven / ...
 - XMRigDaemon now keeps the miner running event when the miner crashs
 # 1.5.5
 - Fixed Bad/Invalid shares and high share transmit latency
 - Fixed hugepages for some older linux versions
 - Fixed compatibility to xmrig-proxy 2.5.x+
-- Added restart of crashed miners to xmrigDaemon  
+- Added restart of crashed miners to xmrigDaemon
 - Added force algo variant by xmrig-proxy 2.5.x+
 - Added auto force of nicehash param by xmrig-proxy 2.5.x+
 - Partial rebase of XMRig 2.5.2
 # 1.5.2
 - Fixed OSX Build
-- Fixed force PoW algo version 
+- Fixed force PoW algo version
 - Added AEON test vectors for new PoW Algo
-- Changed DonateStrategy to avoid peaks on donate pool when restarting multiple miners 
+- Changed DonateStrategy to avoid peaks on donate pool when restarting multiple miners
 # 1.5.1
-- Applied changes for upcoming Monero v7 PoW changes starting 03/28/18 (No changes in config needed) 
+- Applied changes for upcoming Monero v7 PoW changes starting 03/28/18 (No changes in config needed)
 - Applied changes for upcoming AEON PoW changes starting 04/07/18  (No changes in config needed)
-- Added option to force PoW version 
+- Added option to force PoW version
 - Added new design / icons
 # 1.5.0
 - Full SSL/TLS support for the whole communication:
-    - XMRigCCServer Dashboard <-> Browser
-    - XMRigCCServer <-> XMRigMiner
-    - XMRigMiner <-> Pool
+  - XMRigCCServer Dashboard <-> Browser
+  - XMRigCCServer <-> XMRigMiner
+  - XMRigMiner <-> Pool
 - Easy rename of miner/daemon in CMakeList.txt by modifying `MINER_EXECUTABLE_NAME` and `DAEMON_EXECUTABLE_NAME` before compiling
 - Dockerfile and official DockerHub image
 - Added Miner uptime to Dashboard
@@ -199,7 +199,7 @@
 - Fixed Windows compilation with msys2 (gcc)
 - Added ability to do static build of xmrigDaemon and xmrigMiner
 - Added client version to Dashboard client id tooltip
-- Added update checker to Dashboard with notification bar 
+- Added update checker to Dashboard with notification bar
 # v1.1.0
 - Added option to hide offline miners from Dashboard
 - Added online status indicator to Dashboard client id column (green:red)
@@ -207,7 +207,7 @@
 - Added Tooltip to Dashboard column id containing new miner info (CPU, CPU flags, Cores, Threads, Memory, External IP, ...)
 - Moved CCClient to own thread and changed ControlCommand processing to async to improve performance
 # v1.0.9
-- Integrated cpp-httplib as libcurl replacement 
+- Integrated cpp-httplib as libcurl replacement
 - Removed libcurl dependicies
 - Fixed round of avgTime in Dashboard
 - Removed subrepo dependencies for easier building

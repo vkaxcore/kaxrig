@@ -1,8 +1,7 @@
-# XMRigCC 
+# XMRigCC
 
-XMRigCC is a high performance RandomX, CryptoNight, Argon2 and AstroBWT CPU miner with support for Windows, Linux and MacOS.
-
-:bulb: **This is the CPU variant of XMRigCC, if you're looking for the AMD GPU (OpenCL, Cryptonight only) variant [click here](https://github.com/Bendr0id/xmrigCC-amd/).**
+XMRigCC is a high performance, open source, cross platform RandomX, GhostRider, KawPow, CryptoNight and AstroBWT 
+unified CPU/GPU miner. Official binaries are available for Windows, Linux, macOS and Android.
 
 [![Windows Build status](https://ci.appveyor.com/api/projects/status/l8v7cuuy320a4tpd?svg=true)](https://ci.appveyor.com/project/Bendr0id/xmrigcc)
 [![Docker Build status](https://img.shields.io/docker/cloud/build/bendr0id/xmrigcc.svg)](https://hub.docker.com/r/bendr0id/xmrigcc/)
@@ -16,24 +15,24 @@ XMRigCC is a high performance RandomX, CryptoNight, Argon2 and AstroBWT CPU mine
 
 ![XMRigCC Logo](https://i.imgur.com/7mi0WCe.png)
 
-### About XMRigCC
+### About [CC]
 
 XMRigCC is a [XMRig](https://github.com/xmrig/xmrig) fork which adds remote control and monitoring functions to XMRigCC miners. It lets you control your miners via a Dashboard or the REST api.
-XMRigCC has a "Command and Control" (C&amp;C) server part, a daemon to keep the XMRigCC miner alive and modifications to send the current status to the C&amp;C Server.
-The modified version can handle commands like "update config", "start/stop mining" or "restart/shutdown/reboot" which can be send from the C&amp;C-Server Dashboard. 
+XMRigCC has a "Command and Control" (CC) server part, a daemon to keep the XMRigCC miner alive and modifications to send the current status to the CC Server.
+The modified version can handle commands like "update config", "start/stop mining" or "restart/shutdown/reboot" which can be send from the CC-Server Dashboard.
 Assign config templates to multiple miners with a single click and let them switch configs without connecting to each of them.
-Watch your miners logs with the simple remote Log viewer and monitor you miners. When the hashrate drops or one of your miners went offline you can get a notification via 
+Watch your miners logs with the simple remote Log viewer and monitor you miners. When the hashrate drops or one of your miners went offline you can get a notification via
 PushOver or Telegram automatically so that you dont need to watch your miners all day.
 
-Full Windows/Linux compatible, and you can mix Linux and Windows miner on one XMRigCCServer.
+Full Windows/Linux/OSx/Android compatible, and you can mix all on a single XMRigCC-Server.
 
 ## Last integrated algos in XMRigCC:
 
+* **Ghostrider (Raptoreum)** (Algo: "gr")
+* **KawPow (Ravencoin)** (Algo: "kawpow")
 * **Graft** RX variant (Algo: "rx/graft")
 * **Yadacoin** RX variant (Algo: "rx/yada")
-* **CXCHE** CN variant (algo: "cn/cache_hash")
 * **Turtlecoin** argon2 chukwa variant 2 (algo: "argon2/chukwav2")
-* **Panthera (XLA)** RX variant (algo: "panthera")
 * **ninjacoin** variant (algo: "ninja")
 * **AstroBWT** variant (algo: "astrobwt")
 * **RandomKEVA** RX variant (algo: "rx/keva")
@@ -48,13 +47,19 @@ Full Windows/Linux compatible, and you can mix Linux and Windows miner on one XM
 * NUMA support
 * Command and control server
 * CC Dashboard with:
-    * statistics of all connected miners with graphs
-    * remote control miners (start/stop/restart/shutdown) 
-    * remote configuration changes of miners
-    * simple config editor for miner / config templates 
-    * monitoring / offline notification push notifications via Pushover and Telegram 
+    * statistics of all connected miners with graphs (CPU+GPU)
+    * remote control miners (start/stop/restart/shutdown/execute)
+    * remote configure miners
+    * simple config editor for miner / config templates / apply to all
+    * monitoring
+    * remote logging 
+    * configurable alarm notifications via Pushover and Telegram
 * Daemon to restart the miner
 
+## Mining backends
+- **CPU** (x64/ARMv8)
+- **OpenCL** for AMD GPUs.
+- **CUDA** for NVIDIA GPUs via XMRig's official [CUDA plugin](https://github.com/xmrig/xmrig-cuda).
 
 **XMRigCC Miner**
 
@@ -79,7 +84,7 @@ Full Windows/Linux compatible, and you can mix Linux and Windows miner on one XM
 ## Download
 * Binary releases: https://github.com/Bendr0id/xmrigCC/releases
 * Git tree: https://github.com/Bendr0id/xmrigCC.git
-  * Clone with `git clone https://github.com/Bendr0id/xmrigCC.git` :hammer: [Build instructions](https://github.com/xmrig/xmrig/wiki/Build.
+    * Clone with `git clone https://github.com/Bendr0id/xmrigCC.git` :hammer: [official XMRig Build instructions](https://xmrig.com/docs/miner/build)
 
 ## Usage
 ### Basic example XMRigCCServer
@@ -89,7 +94,7 @@ xmrigServer --port=3344 --user=admin --pass=pass --token=SECRET_TOKEN_TO_ACCESS_
 
 ### Options XMRigCCServer
 ```
-  -b, --bind arg                The CC Server bind ip (default: 0.0.0.0)
+ -b, --bind arg                The CC Server bind ip (default: 0.0.0.0)
   -p, --port N                  The CC Server port
   -U, --user arg                The CC Server admin user
   -P, --pass arg                The CC Server admin pass
@@ -149,33 +154,57 @@ Network:
       --rig-id=ID               rig identifier for pool-side statistics (needs pool support)
       --tls                     enable SSL/TLS support (needs pool support)
       --tls-fingerprint=HEX     pool TLS certificate fingerprint for strict certificate pinning
+      --dns-ipv6                prefer IPv6 records from DNS responses
+      --dns-ttl=N               N seconds (default: 30) TTL for internal DNS cache
       --daemon                  use daemon RPC instead of pool for solo mining
       --daemon-poll-interval=N  daemon poll interval in milliseconds (default: 1000)
       --self-select=URL         self-select block templates from URL
+      --submit-to-origin        also submit solution back to self-select URL
   -r, --retries=N               number of times to retry before switch to backup server (default: 5)
   -R, --retry-pause=N           time to pause between retries (default: 5)
       --user-agent              set custom user-agent string for pool
-      --donate-level=N          donate level, default 5%% (5 minutes in 100 minutes)
-      --donate-over-proxy=N     control donate over xmrig-proxy feature
+      --donate-level=N          donate level, default 1%% (1 minute in 100 minutes)
 
 CPU backend:
       --no-cpu                  disable CPU mining backend
-  -t, --threads=N               number of CPU threads
+  -t, --threads=N               number of CPU threads, proper CPU affinity required for some optimizations.
+      --cpu-affinity=N          set process affinity to CPU core(s), mask 0x3 for cores 0 and 1
   -v, --av=N                    algorithm variation, 0 auto select
-      --cpu-affinity            set process affinity to CPU core(s), mask 0x3 for cores 0 and 1
-      --cpu-priority            set process priority (0 idle, 2 normal to 5 highest)
+      --cpu-priority=N          set process priority (0 idle, 2 normal to 5 highest)
+      --cpu-max-cpu-usage=N     set maximum CPU usage (in percentage) on all used threads
       --cpu-max-threads-hint=N  maximum CPU threads count (in percentage) hint for autoconfig
       --cpu-memory-pool=N       number of 2 MB pages for persistent memory pool, -1 (auto), 0 (disable)
       --cpu-no-yield            prefer maximum hashrate rather than system response/stability
       --cpu-force-autoconfig    force cpu autoconfig, but keeps disabled algos
       --no-huge-pages           disable huge pages support
+      --hugepage-size=N         custom hugepage size in kB
+      --huge-pages-jit          enable huge pages support for RandomX JIT code
       --asm=ASM                 ASM optimizations, possible values: auto, none, intel, ryzen, bulldozer
+      --argon2-impl=IMPL        argon2 implementation: x86_64, SSE2, SSSE3, XOP, AVX2, AVX-512F
       --randomx-init=N          threads count to initialize RandomX dataset
       --randomx-no-numa         disable NUMA support for RandomX
       --randomx-mode=MODE       RandomX mode: auto, fast, light
-      --randomx-1gb-pages       use 1GB hugepages for dataset (Linux only)
-      --randomx-wrmsr=N         write custom value (0-15) to Intel MSR register 0x1a4 or disable MSR mod (-1)
+      --randomx-1gb-pages       use 1GB hugepages for RandomX dataset (Linux only)
+      --randomx-wrmsr=N         write custom value(s) to MSR registers or disable MSR mod (-1)
       --randomx-no-rdmsr        disable reverting initial MSR values on exit
+      --randomx-cache-qos       enable Cache QoS
+      --astrobwt-max-size=N     skip hashes with large stage 2 size, default: 550, min: 400, max: 1200
+      --astrobwt-avx2           enable AVX2 optimizations for AstroBWT algorithm
+OpenCL backend:
+      --opencl                  enable OpenCL mining backend
+      --opencl-devices=N        comma separated list of OpenCL devices to use
+      --opencl-platform=N       OpenCL platform index or name
+      --opencl-loader=PATH      path to OpenCL-ICD-Loader (OpenCL.dll or libOpenCL.so)
+      --opencl-no-cache         disable OpenCL cache
+      --print-platforms         print available OpenCL platforms and exit
+
+CUDA backend:
+      --cuda                    enable CUDA mining backend
+      --cuda-loader=PATH        path to CUDA plugin (xmrig-cuda.dll or libxmrig-cuda.so)
+      --cuda-devices=N          comma separated list of CUDA devices to use
+      --cuda-bfactor-hint=N     bfactor hint for autoconfig (0-12)
+      --cuda-bsleep-hint=N      bsleep hint for autoconfig
+      --no-nvml                 disable NVML (NVIDIA Management Library) support
 
 API:
       --api-worker-id=ID        custom worker-id for API
@@ -184,6 +213,15 @@ API:
       --http-port=N             bind port for HTTP API
       --http-access-token=T     access token for HTTP API
       --http-no-restricted      enable full remote access to HTTP API (only if access token set)
+
+TLS:
+      --tls-gen=HOSTNAME        generate TLS certificate for specific hostname
+      --tls-cert=FILE           load TLS certificate chain from a file in the PEM format
+      --tls-cert-key=FILE       load TLS certificate private key from a file in the PEM format
+      --tls-dhparam=FILE        load DH parameters for DHE ciphers from a file in the PEM format
+      --tls-protocols=N         enable specified TLS protocols, example: "TLSv1 TLSv1.1 TLSv1.2 TLSv1.3"
+      --tls-ciphers=S           set list of available ciphers (TLSv1.2 and below)
+      --tls-ciphersuites=S      set list of available TLSv1.3 ciphersuites
 
 CC feature:
       --cc-disabled                 disable CC Client feature
@@ -200,6 +238,7 @@ Logging:
   -S, --syslog                  use system log for output messages
   -l, --log-file=FILE           log all output to a file
       --print-time=N            print hashrate report every N seconds
+      --health-print-time=N     print health report every N seconds
       --no-color                disable colored output
       --verbose                 verbose output
 
@@ -210,6 +249,9 @@ Misc:
   -h, --help                    display this help and exit
       --dry-run                 test configuration and exit
       --export-topology         export hwloc topology to a XML file and exit
+      --pause-on-battery        pause mine on battery power
+      --pause-on-active=N       pause mine when the user is active (resume after N seconds of last activity)
+      --no-dmi                  disable DMI/SMBIOS reader
 ```
 
 
@@ -223,7 +265,7 @@ Misc:
 ### Linux only: Background mode
 * The `--background` option will only work properly for the XMRigServer. But there is a simple workaround for the XMRigDaemon process. Just append an `&` to the command and it will run smoothly in the background.
 
-    `./xmrigDaemon --config=my_config_cc.json &` or you just use `screen`
+  `./xmrigDaemon --config=my_config_cc.json &` or you just use `screen`
 
 
 ### HUGE PAGES unavailable (Windows)
@@ -233,11 +275,11 @@ Misc:
 ### HUGE PAGES unavailable (Linux)
 * Before starting XMRigDaemon set huge pages
 
-    `sudo sysctl -w vm.nr_hugepages=128`
+  `sudo sysctl -w vm.nr_hugepages=128`
 
- 
+
 ## Donations
-* Default donation 5% (5 minutes in 100 minutes) can be reduced to 1% via command line option `--donate-level`. 
+* Default donation 5% (5 minutes in 100 minutes) can be reduced to 1% via command line option `--donate-level`.
 
 ##### BenDroid (XMRigCC):
 XMR:  `4BEn3sSa2SsHBcwa9dNdKnGvvbyHPABr2JzoY7omn7DA2hPv84pVFvwDrcwMCWgz3dQVcrkw3gE9aTC9Mi5HxzkfF9ev1eH`

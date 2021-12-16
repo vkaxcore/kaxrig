@@ -1,13 +1,7 @@
 /* XMRig
- * Copyright 2010      Jeff Garzik <jgarzik@pobox.com>
- * Copyright 2012-2014 pooler      <pooler@litecoinpool.org>
- * Copyright 2014      Lucas Jones <https://github.com/lucasjones>
- * Copyright 2014-2016 Wolf9466    <https://github.com/OhGodAPet>
- * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
- * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
- * Copyright 2019      jtgrassie   <https://github.com/jtgrassie>
- * Copyright 2018-2020 SChernykh   <https://github.com/SChernykh>
- * Copyright 2016-2020 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright (c) 2019      jtgrassie   <https://github.com/jtgrassie>
+ * Copyright (c) 2018-2021 SChernykh   <https://github.com/SChernykh>
+ * Copyright (c) 2016-2021 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -48,11 +42,12 @@
 #include "base/io/log/Log.h"
 #include "base/kernel/interfaces/IClientListener.h"
 #include "base/net/dns/Dns.h"
+#include "base/net/dns/DnsRecords.h"
 #include "base/net/stratum/Socks5.h"
 #include "base/net/tools/NetBuffer.h"
+#include "base/tools/Chrono.h"
 #include "base/tools/Cvt.h"
 #include "base/tools/cryptonote/BlobReader.h"
-#include "base/tools/Chrono.h"
 #include "net/JobResult.h"
 
 
@@ -88,13 +83,11 @@ xmrig::Client::Client(int id, const char *agent, IClientListener *listener) :
 {
     m_reader.setListener(this);
     m_key = m_storage.add(this);
-    m_dns = new Dns(this);
 }
 
 
 xmrig::Client::~Client()
 {
-    delete m_dns;
     delete m_socket;
 }
 
@@ -201,8 +194,8 @@ int64_t xmrig::Client::submit(const JobResult &result)
     const char *nonce = result.nonce;
     const char *data  = result.result;
 #   else
-    char *nonce = m_sendBuf.data();
-    char *data  = m_sendBuf.data() + 16;
+    char *nonce = m_tempBuf.data();
+    char *data  = m_tempBuf.data() + 16;
     char *signature = m_tempBuf.data() + 88;
 
     Cvt::toHex(nonce, sizeof(uint32_t) * 2 + 1, reinterpret_cast<const uint8_t *>(&result.nonce), sizeof(uint32_t));
@@ -226,10 +219,14 @@ int64_t xmrig::Client::submit(const JobResult &result)
     if (result.minerSignature()) {
         params.AddMember("sig", StringRef(signature), allocator);
     }
+#   else
+    if (result.sig) {
+        params.AddMember("sig", StringRef(result.sig), allocator);
+    }
 #   endif
 
     if (has<EXT_ALGO>() && result.algorithm.isValid()) {
-        params.AddMember("algo", StringRef(result.algorithm.shortName()), allocator);
+        params.AddMember("algo", StringRef(result.algorithm.name()), allocator);
     }
 
     JsonRequest::create(doc, m_sequence, "submit", params);
@@ -308,22 +305,24 @@ void xmrig::Client::tick(uint64_t now)
 }
 
 
-void xmrig::Client::onResolved(const Dns &dns, int status)
+void xmrig::Client::onResolved(const DnsRecords &records, int status, const char *error)
 {
+    m_dns.reset();
+
     assert(m_listener != nullptr);
     if (!m_listener) {
         return reconnect();
     }
 
-    if (status < 0 && dns.isEmpty()) {
+    if (status < 0 && records.isEmpty()) {
         if (!isQuiet()) {
-            LOG_ERR("%s " RED("DNS error: ") RED_BOLD("\"%s\""), tag(), uv_strerror(status));
+            LOG_ERR("%s " RED("DNS error: ") RED_BOLD("\"%s\""), tag(), error);
         }
 
         return reconnect();
     }
 
-    const auto &record = dns.get();
+    const auto &record = records.get();
     m_ip = record.ip();
 
     connect(record.addr(m_socks5 ? m_pool.proxy().port() : m_pool.port()));
@@ -350,32 +349,6 @@ bool xmrig::Client::close()
 }
 
 
-bool xmrig::Client::isCriticalError(const char *message)
-{
-    if (!message) {
-        return false;
-    }
-
-    if (strncasecmp(message, "Unauthenticated", 15) == 0) {
-        return true;
-    }
-
-    if (strncasecmp(message, "your IP is banned", 17) == 0) {
-        return true;
-    }
-
-    if (strncasecmp(message, "IP Address currently banned", 27) == 0) {
-        return true;
-    }
-
-    if (strncasecmp(message, "Invalid job id", 14) == 0) {
-        return true;
-    }
-
-    return false;
-}
-
-
 bool xmrig::Client::parseJob(const rapidjson::Value &params, int *code)
 {
     if (!params.IsObject()) {
@@ -391,18 +364,16 @@ bool xmrig::Client::parseJob(const rapidjson::Value &params, int *code)
     }
 
     const char *algo = Json::getString(params, "algo");
+    const char *blobData = Json::getString(params, "blob");
     if (algo) {
         job.setAlgorithm(algo);
     }
     else if (m_pool.coin().isValid()) {
-        auto blob = params["blob"].GetString();
-        if (strlen(blob) > 2) {
-            auto version = Cvt::fromHex(blob, 2);
-            if (!version.empty())
-            {
-                job.setAlgorithm(m_pool.coin().algorithm(version[0]));
-            }
+        uint8_t blobVersion = 0;
+        if (blobData) {
+            Cvt::fromHex(&blobVersion, 1, blobData, 2);
         }
+        job.setAlgorithm(m_pool.coin().algorithm(blobVersion));
     }
 
 #   ifdef XMRIG_FEATURE_HTTP
@@ -418,7 +389,7 @@ bool xmrig::Client::parseJob(const rapidjson::Value &params, int *code)
     else
 #   endif
     {
-        if (!job.setBlob(params["blob"].GetString())) {
+        if (!job.setBlob(blobData)) {
             *code = 4;
             return false;
         }
@@ -441,12 +412,7 @@ bool xmrig::Client::parseJob(const rapidjson::Value &params, int *code)
         return false;
     }
 
-#   ifndef XMRIG_PROXY_PROJECT
-    uint8_t signatureKeyBuf[32 * 2];
-    if (Cvt::fromHex(signatureKeyBuf, sizeof(signatureKeyBuf), Json::getValue(params, "sig_key"))) {
-        job.setEphemeralKeys(signatureKeyBuf, signatureKeyBuf + 32);
-    }
-#   endif
+    job.setSigKey(Json::getString(params, "sig_key"));
 
     m_job.setClientId(m_rpcId);
 
@@ -473,7 +439,7 @@ bool xmrig::Client::send(BIO *bio)
 {
 #   ifdef XMRIG_FEATURE_TLS
     uv_buf_t buf;
-    buf.len = BIO_get_mem_data(bio, &buf.base);
+    buf.len = BIO_get_mem_data(bio, &buf.base); // NOLINT(cppcoreguidelines-pro-type-cstyle-cast)
 
     if (buf.len == 0) {
         return true;
@@ -517,7 +483,7 @@ bool xmrig::Client::verifyAlgorithm(const Algorithm &algorithm, const char *algo
     m_listener->onVerifyAlgorithm(this, algorithm, &ok);
 
     if (!ok && !isQuiet()) {
-        LOG_ERR("%s " RED("incompatible/disabled algorithm ") RED_BOLD("\"%s\" ") RED("detected, reconnect"), tag(), algorithm.shortName());
+        LOG_ERR("%s " RED("incompatible/disabled algorithm ") RED_BOLD("\"%s\" ") RED("detected, reconnect"), tag(), algorithm.name());
     }
 
     return ok;
@@ -551,13 +517,7 @@ int xmrig::Client::resolve(const String &host)
         m_failures = 0;
     }
 
-    if (!m_dns->resolve(host)) {
-        if (!isQuiet()) {
-            LOG_ERR("%s " RED("getaddrinfo error: ") RED_BOLD("\"%s\""), tag(), uv_strerror(m_dns->status()));
-        }
-
-        return 1;
-    }
+    m_dns = Dns::resolve(host, this);
 
     return 0;
 }
@@ -593,7 +553,7 @@ int64_t xmrig::Client::send(size_t size)
 }
 
 
-void xmrig::Client::connect(sockaddr *addr)
+void xmrig::Client::connect(const sockaddr *addr)
 {
     setState(ConnectingState);
 
@@ -611,8 +571,6 @@ void xmrig::Client::connect(sockaddr *addr)
 #   endif
 
     uv_tcp_connect(req, m_socket, addr, onConnect);
-
-    delete addr;
 }
 
 
@@ -972,6 +930,32 @@ void xmrig::Client::startTimeout()
 
         m_keepAlive = Chrono::steadyMSecs() + ms;
     }
+}
+
+
+bool xmrig::Client::isCriticalError(const char *message)
+{
+    if (!message) {
+        return false;
+    }
+
+    if (strncasecmp(message, "Unauthenticated", 15) == 0) {
+        return true;
+    }
+
+    if (strncasecmp(message, "your IP is banned", 17) == 0) {
+        return true;
+    }
+
+    if (strncasecmp(message, "IP Address currently banned", 27) == 0) {
+        return true;
+    }
+
+    if (strncasecmp(message, "Invalid job id", 14) == 0) {
+        return true;
+    }
+
+    return false;
 }
 
 

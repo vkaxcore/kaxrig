@@ -5,8 +5,8 @@
  * Copyright 2014-2016 Wolf9466    <https://github.com/OhGodAPet>
  * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
  * Copyright 2017-2019 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
- * Copyright 2018-2019 SChernykh   <https://github.com/SChernykh>
- * Copyright 2016-2019 XMRig       <support@xmrig.com>
+ * Copyright 2018-2021 SChernykh   <https://github.com/SChernykh>
+ * Copyright 2016-2021 XMRig       <support@xmrig.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -37,6 +37,12 @@
 #include "crypto/common/VirtualMemory.h"
 #include "Summary.h"
 #include "version.h"
+
+
+#ifdef XMRIG_FEATURE_DMI
+#   include "hw/dmi/DmiReader.h"
+#endif
+
 
 #ifdef XMRIG_ALGO_RANDOMX
 #   include "crypto/rx/RxConfig.h"
@@ -129,6 +135,39 @@ static void print_memory(const Config *config)
                totalMem / oneGiB,
                percent
                );
+
+#   ifdef XMRIG_FEATURE_DMI
+    if (!config->isDMI()) {
+        return;
+    }
+
+    DmiReader reader;
+    if (!reader.read()) {
+        return;
+    }
+
+    const bool printEmpty = reader.memory().size() <= 8;
+
+    for (const auto &memory : reader.memory()) {
+        if (!memory.isValid()) {
+            continue;
+        }
+
+        if (memory.size()) {
+            Log::print(WHITE_BOLD("   %-13s") "%s: " CYAN_BOLD("%" PRIu64) CYAN(" GB ") WHITE_BOLD("%s @ %" PRIu64 " MHz ") BLACK_BOLD("%s"),
+                       "", memory.id().data(), memory.size() / oneGiB, memory.type(), memory.speed() / 1000000ULL, memory.product().data());
+        }
+        else if (printEmpty) {
+            Log::print(WHITE_BOLD("   %-13s") "%s: " BLACK_BOLD("<empty>"), "", memory.slot().data());
+        }
+    }
+
+    const auto &board = Cpu::info()->isVM() ? reader.system() : reader.board();
+
+    if (board.isValid()) {
+        Log::print(GREEN_BOLD(" * ") WHITE_BOLD("%-13s") WHITE_BOLD("%s") " - " WHITE_BOLD("%s"), "MOTHERBOARD", board.vendor().data(), board.product().data());
+    }
+#   endif
 }
 
 
@@ -160,12 +199,11 @@ static void print_commands(Config *)
                                                                  MAGENTA_BG_BOLD("p") WHITE_BOLD("ause, ")
                                                                  MAGENTA_BG_BOLD("r") WHITE_BOLD("esume, ")
                                                                  WHITE_BOLD("re") MAGENTA_BG(WHITE_BOLD_S "s") WHITE_BOLD("ults, ")
-                                                                 MAGENTA_BG_BOLD("c") WHITE_BOLD("onnection, ")
-								                                                 MAGENTA_BG_BOLD("q") WHITE_BOLD("uit")
+                                                                 MAGENTA_BG_BOLD("c") WHITE_BOLD("onnection")
                    );
     }
     else {
-        Log::print(" * COMMANDS     'h' hashrate, 'p' pause, 'r' resume, 's' results, 'c' connection, 'q' quit");
+        Log::print(" * COMMANDS     'h' hashrate, 'p' pause, 'r' resume, 's' results, 'c' connection");
     }
 }
 

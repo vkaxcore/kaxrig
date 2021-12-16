@@ -1,12 +1,6 @@
 /* XMRig
- * Copyright 2010      Jeff Garzik <jgarzik@pobox.com>
- * Copyright 2012-2014 pooler      <pooler@litecoinpool.org>
- * Copyright 2014      Lucas Jones <https://github.com/lucasjones>
- * Copyright 2014-2016 Wolf9466    <https://github.com/OhGodAPet>
- * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
- * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
- * Copyright 2018-2020 SChernykh   <https://github.com/SChernykh>
- * Copyright 2016-2020 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright (c) 2018-2021 SChernykh   <https://github.com/SChernykh>
+ * Copyright (c) 2016-2021 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -21,7 +15,6 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-
 
 #include <cstdio>
 
@@ -39,23 +32,29 @@
 #include "base/kernel/config/BaseConfig.h"
 #include "base/kernel/interfaces/IConfig.h"
 #include "base/kernel/Process.h"
+#include "base/net/dns/DnsConfig.h"
 #include "base/net/stratum/Pool.h"
 #include "base/net/stratum/Pools.h"
 #include "core/config/Config_platform.h"
+
+
+#ifdef XMRIG_FEATURE_TLS
+#   include "base/net/tls/TlsConfig.h"
+#endif
 
 
 void xmrig::BaseTransform::load(JsonChain &chain, Process *process, IConfigTransform &transform)
 {
     using namespace rapidjson;
 
-    int key;
+    int key     = 0;
     int argc    = process->arguments().argc();
     char **argv = process->arguments().argv();
 
     Document doc(kObjectType);
 
     while (true) {
-        key = getopt_long(argc, argv, short_options, options, nullptr);
+        key = getopt_long(argc, argv, short_options, options, nullptr); // NOLINT(concurrency-mt-unsafe)
         if (key < 0) {
             break;
         }
@@ -146,7 +145,8 @@ void xmrig::BaseTransform::transform(rapidjson::Document &doc, int key, const ch
         }
         break;
 
-    case IConfig::UrlKey: /* --url */
+    case IConfig::UrlKey:    /* --url */
+    case IConfig::StressKey: /* --stress */
     {
         if (!doc.HasMember(Pools::kPools)) {
             doc.AddMember(rapidjson::StringRef(Pools::kPools), rapidjson::kArrayType, doc.GetAllocator());
@@ -202,6 +202,32 @@ void xmrig::BaseTransform::transform(rapidjson::Document &doc, int key, const ch
     case IConfig::UserAgentKey: /* --user-agent */
         return set(doc, BaseConfig::kUserAgent, arg);
 
+    case IConfig::TitleKey: /* --title */
+        return set(doc, BaseConfig::kTitle, arg);
+
+#   ifdef XMRIG_FEATURE_TLS
+    case IConfig::TlsCertKey: /* --tls-cert */
+        return set(doc, BaseConfig::kTls, TlsConfig::kCert, arg);
+
+    case IConfig::TlsCertKeyKey: /* --tls-cert-key */
+        return set(doc, BaseConfig::kTls, TlsConfig::kCertKey, arg);
+
+    case IConfig::TlsDHparamKey: /* --tls-dhparam */
+        return set(doc, BaseConfig::kTls, TlsConfig::kDhparam, arg);
+
+    case IConfig::TlsCiphersKey: /* --tls-ciphers */
+        return set(doc, BaseConfig::kTls, TlsConfig::kCiphers, arg);
+
+    case IConfig::TlsCipherSuitesKey: /* --tls-ciphersuites */
+        return set(doc, BaseConfig::kTls, TlsConfig::kCipherSuites, arg);
+
+    case IConfig::TlsProtocolsKey: /* --tls-protocols */
+        return set(doc, BaseConfig::kTls, TlsConfig::kProtocols, arg);
+
+    case IConfig::TlsGenKey: /* --tls-gen */
+        return set(doc, BaseConfig::kTls, TlsConfig::kGen, arg);
+#   endif
+
 #   ifdef XMRIG_FEATURE_CC_CLIENT
     case IConfig::CCRebootCmd: /* --cc-reboot-cmd */
         return set(doc, BaseConfig::kCCClient, CCClientConfig::kRebootCmd, arg);
@@ -216,13 +242,15 @@ void xmrig::BaseTransform::transform(rapidjson::Document &doc, int key, const ch
         return set(doc, BaseConfig::kCCClient, CCClientConfig::kWorkerId, arg);
 #   endif
 
-    case IConfig::RetriesKey:     /* --retries */
-    case IConfig::RetryPauseKey:  /* --retry-pause */
-    case IConfig::PrintTimeKey:   /* --print-time */
-    case IConfig::HttpPort:       /* --http-port */
-    case IConfig::DonateLevelKey: /* --donate-level */
-    case IConfig::DaemonPollKey:  /* --daemon-poll-interval */
-    case IConfig::CCUpdateInterval:  /* --cc-update-interval-s */
+    case IConfig::RetriesKey:       /* --retries */
+    case IConfig::RetryPauseKey:    /* --retry-pause */
+    case IConfig::PrintTimeKey:     /* --print-time */
+    case IConfig::HttpPort:         /* --http-port */
+    case IConfig::DonateLevelKey:   /* --donate-level */
+    case IConfig::DaemonPollKey:    /* --daemon-poll-interval */
+    case IConfig::DnsTtlKey:        /* --dns-ttl */
+    case IConfig::DaemonZMQPortKey: /* --daemon-zmq-port */
+    case IConfig::CCUpdateInterval: /* --cc-update-interval-s */
         return transformUint64(doc, key, static_cast<uint64_t>(strtol(arg, nullptr, 10)));
 
     case IConfig::BackgroundKey:  /* --background */
@@ -233,7 +261,9 @@ void xmrig::BaseTransform::transform(rapidjson::Document &doc, int key, const ch
     case IConfig::DryRunKey:      /* --dry-run */
     case IConfig::HttpEnabledKey: /* --http-enabled */
     case IConfig::DaemonKey:      /* --daemon */
+    case IConfig::SubmitToOriginKey: /* --submit-to-origin */
     case IConfig::VerboseKey:     /* --verbose */
+    case IConfig::DnsIPv6Key:     /* --dns-ipv6 */
     case IConfig::CCDaemonizedKey:/* --daemonized */
     case IConfig::CCUploadConfigOnStartup:   /* --cc-upload-config-on-start */
     case IConfig::CCUseRemoteLog: /* --cc-use-remote-logging */
@@ -242,6 +272,7 @@ void xmrig::BaseTransform::transform(rapidjson::Document &doc, int key, const ch
 
     case IConfig::ColorKey:          /* --no-color */
     case IConfig::HttpRestrictedKey: /* --http-no-restricted */
+    case IConfig::NoTitleKey:        /* --no-title */
     case IConfig::CCEnabledKey:      /* --cc-disabled */
         return transformBoolean(doc, key, false);
 
@@ -266,6 +297,8 @@ void xmrig::BaseTransform::transformBoolean(rapidjson::Document &doc, int key, b
     case IConfig::TlsKey: /* --tls */
         return add(doc, Pools::kPools, Pool::kTls, enable);
 
+    case IConfig::SubmitToOriginKey: /* --submit-to-origin */
+        return add(doc, Pools::kPools, Pool::kSubmitToOrigin, enable);
 #   ifdef XMRIG_FEATURE_HTTP
     case IConfig::DaemonKey: /* --daemon */
         return add(doc, Pools::kPools, Pool::kDaemon, enable);
@@ -292,6 +325,12 @@ void xmrig::BaseTransform::transformBoolean(rapidjson::Document &doc, int key, b
 
     case IConfig::VerboseKey: /* --verbose */
         return set(doc, BaseConfig::kVerbose, enable);
+
+    case IConfig::NoTitleKey: /* --no-title */
+        return set(doc, BaseConfig::kTitle, enable);
+
+    case IConfig::DnsIPv6Key: /* --dns-ipv6 */
+        return set(doc, DnsConfig::kField, DnsConfig::kIPv6, enable);
 
     case IConfig::CCDaemonizedKey: /* --daemonized */
         return set(doc, BaseConfig::kDaemonized, enable);
@@ -328,9 +367,6 @@ void xmrig::BaseTransform::transformUint64(rapidjson::Document &doc, int key, ui
     case IConfig::DonateLevelKey: /* --donate-level */
         return set(doc, Pools::kDonateLevel, arg);
 
-    case IConfig::ProxyDonateKey: /* --donate-over-proxy */
-        return set(doc, Pools::kDonateOverProxy, arg);
-
     case IConfig::HttpPort: /* --http-port */
         m_http = true;
         return set(doc, BaseConfig::kHttp, Http::kPort, arg);
@@ -338,14 +374,22 @@ void xmrig::BaseTransform::transformUint64(rapidjson::Document &doc, int key, ui
     case IConfig::PrintTimeKey: /* --print-time */
         return set(doc, BaseConfig::kPrintTime, arg);
 
+    case IConfig::DnsTtlKey: /* --dns-ttl */
+        return set(doc, DnsConfig::kField, DnsConfig::kTTL, arg);
+
 #   ifdef XMRIG_FEATURE_HTTP
     case IConfig::DaemonPollKey:  /* --daemon-poll-interval */
         return add(doc, Pools::kPools, Pool::kDaemonPollInterval, arg);
+
+    case IConfig::DaemonZMQPortKey:  /* --daemon-zmq-port */
+        return add(doc, Pools::kPools, Pool::kDaemonZMQPort, arg);
 #   endif
+
 #   ifdef XMRIG_FEATURE_CC_CLIENT
     case IConfig::CCUpdateInterval:  /* --cc-update-interval-s */
         return add(doc, BaseConfig::kCCClient, CCClientConfig::kUpdateInterval, "update-interval-s", arg);
 #   endif
+
     default:
         break;
     }

@@ -1,6 +1,6 @@
 /* XMRig
- * Copyright (c) 2018-2020 SChernykh   <https://github.com/SChernykh>
- * Copyright (c) 2016-2020 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright (c) 2018-2021 SChernykh   <https://github.com/SChernykh>
+ * Copyright (c) 2016-2021 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -20,11 +20,11 @@
 #define XMRIG_STRING_H
 
 
+#include "3rdparty/rapidjson/fwd.h"
+
+
 #include <utility>
 #include <vector>
-
-
-#include "3rdparty/rapidjson/fwd.h"
 
 
 namespace xmrig {

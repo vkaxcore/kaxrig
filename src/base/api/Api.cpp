@@ -1,12 +1,6 @@
 /* XMRig
- * Copyright 2010      Jeff Garzik <jgarzik@pobox.com>
- * Copyright 2012-2014 pooler      <pooler@litecoinpool.org>
- * Copyright 2014      Lucas Jones <https://github.com/lucasjones>
- * Copyright 2014-2016 Wolf9466    <https://github.com/OhGodAPet>
- * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
- * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
- * Copyright 2018-2019 SChernykh   <https://github.com/SChernykh>
- * Copyright 2016-2019 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright (c) 2018-2021 SChernykh   <https://github.com/SChernykh>
+ * Copyright (c) 2016-2021 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -22,23 +16,20 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #include <uv.h>
 
 
 #include "base/api/Api.h"
-#include "3rdparty/http-parser/http_parser.h"
 #include "base/api/interfaces/IApiListener.h"
 #include "base/api/requests/HttpApiRequest.h"
+#include "base/crypto/keccak.h"
+#include "base/io/Env.h"
 #include "base/io/json/Json.h"
 #include "base/kernel/Base.h"
-#include "base/kernel/Env.h"
-#include "base/tools/Buffer.h"
-#include "base/tools/Cvt.h"
 #include "base/tools/Chrono.h"
+#include "base/tools/Cvt.h"
 #include "core/config/Config.h"
 #include "core/Controller.h"
-#include "base/crypto/keccak.h"
 #include "version.h"
 
 
@@ -193,7 +184,7 @@ void xmrig::Api::exec(IApiRequest &request)
         }
     }
 
-    request.done(request.isNew() ? HTTP_STATUS_NOT_FOUND : HTTP_STATUS_OK);
+    request.done(request.isNew() ? 404 : 200);
 }
 
 
@@ -206,7 +197,7 @@ void xmrig::Api::genId(const String &id)
         return;
     }
 
-    uv_interface_address_t *interfaces;
+    uv_interface_address_t *interfaces = nullptr;
     int count = 0;
 
     if (uv_interface_addresses(&interfaces, &count) < 0) {
@@ -220,7 +211,7 @@ void xmrig::Api::genId(const String &id)
             const size_t inSize   = (sizeof(APP_KIND) - 1) + addrSize + sizeof(uint16_t);
             const auto port       = static_cast<uint16_t>(m_base->config()->http().port());
 
-            auto*input = new uint8_t[inSize]();
+            auto *input = new uint8_t[inSize]();
             memcpy(input, &port, sizeof(uint16_t));
             memcpy(input + sizeof(uint16_t), interfaces[i].phys_addr, addrSize);
             memcpy(input + sizeof(uint16_t) + addrSize, APP_KIND, (sizeof(APP_KIND) - 1));

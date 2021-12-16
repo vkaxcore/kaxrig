@@ -18,6 +18,7 @@
 
 #include <chrono>
 #include <cstring>
+#include <regex>
 #include "3rdparty/rapidjson/stringbuffer.h"
 #include "3rdparty/rapidjson/prettywriter.h"
 
@@ -481,7 +482,9 @@ bool ClientStatus::parseFromJson(const rapidjson::Document& document)
         }
 
         if (clientStatus.HasMember("current_algo_name")) {
-            m_currentAlgoName = clientStatus["current_algo_name"].GetString();
+          m_currentAlgoName = std::regex_replace(clientStatus["current_algo_name"].GetString(), std::regex("randomx"), "rx");
+          m_currentAlgoName = std::regex_replace(m_currentAlgoName, std::regex("cryptonight"), "cn");
+          m_currentAlgoName = std::regex_replace(m_currentAlgoName, std::regex("cryptonight-extremelite"), "cn");
         }
 
         if (clientStatus.HasMember("current_pow_variant_name")) {

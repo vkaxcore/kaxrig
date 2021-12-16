@@ -1,12 +1,6 @@
 /* XMRig
- * Copyright 2010      Jeff Garzik <jgarzik@pobox.com>
- * Copyright 2012-2014 pooler      <pooler@litecoinpool.org>
- * Copyright 2014      Lucas Jones <https://github.com/lucasjones>
- * Copyright 2014-2016 Wolf9466    <https://github.com/OhGodAPet>
- * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
- * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
- * Copyright 2018-2020 SChernykh   <https://github.com/SChernykh>
- * Copyright 2016-2020 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright (c) 2018-2021 SChernykh   <https://github.com/SChernykh>
+ * Copyright (c) 2016-2021 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -22,46 +16,46 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #include "backend/cpu/CpuConfig.h"
+#include "3rdparty/rapidjson/document.h"
 #include "backend/cpu/CpuConfig_gen.h"
 #include "backend/cpu/Cpu.h"
 #include "base/io/json/Json.h"
-#include "3rdparty/rapidjson/document.h"
 
 #include <algorithm>
 
 
 namespace xmrig {
 
-static const char *kEnabled             = "enabled";
-static const char *kHugePages           = "huge-pages";
-static const char *kHugePagesJit        = "huge-pages-JIT";
-static const char *kHwAes               = "hw-aes";
-static const char *kMaxThreadsHint      = "max-threads-hint";
-static const char *kMemoryPool          = "memory-pool";
-static const char *kPriority            = "priority";
-static const char *kYield               = "yield";
-static const char *kForceAutoconfig     = "force-autoconfig";
-static const char *kMaxCpuUsage         = "max-cpu-usage";
+const char *CpuConfig::kEnabled             = "enabled";
+const char *CpuConfig::kField               = "cpu";
+const char *CpuConfig::kHugePages           = "huge-pages";
+const char *CpuConfig::kHugePagesJit        = "huge-pages-jit";
+const char *CpuConfig::kHwAes               = "hw-aes";
+const char *CpuConfig::kMaxThreadsHint      = "max-threads-hint";
+const char *CpuConfig::kMemoryPool          = "memory-pool";
+const char *CpuConfig::kPriority            = "priority";
+const char *CpuConfig::kYield               = "yield";
+const char *CpuConfig::kForceAutoconfig     = "force-autoconfig";
+const char *CpuConfig::kMaxCpuUsage         = "max-cpu-usage";
 
 #ifdef XMRIG_FEATURE_ASM
-static const char *kAsm = "asm";
+const char *CpuConfig::kAsm                 = "asm";
 #endif
 
 #ifdef XMRIG_ALGO_ARGON2
-static const char *kArgon2Impl = "argon2-impl";
+const char *CpuConfig::kArgon2Impl          = "argon2-impl";
 #endif
 
 #ifdef XMRIG_ALGO_ASTROBWT
-static const char* kAstroBWTMaxSize = "astrobwt-max-size";
-static const char* kAstroBWTAVX2    = "astrobwt-avx2";
+const char *CpuConfig::kAstroBWTMaxSize     = "astrobwt-max-size";
+const char *CpuConfig::kAstroBWTAVX2        = "astrobwt-avx2";
 #endif
 
 
 extern template class Threads<CpuThreads>;
 
-}
+} // namespace xmrig
 
 
 bool xmrig::CpuConfig::isHwAES() const
@@ -115,6 +109,10 @@ size_t xmrig::CpuConfig::memPoolSize() const
 
 std::vector<xmrig::CpuLaunchData> xmrig::CpuConfig::get(const Miner *miner, const Algorithm &algorithm) const
 {
+    if (algorithm.family() == Algorithm::KAWPOW) {
+        return {};
+    }
+
     std::vector<CpuLaunchData> out;
     const auto &threads = m_threads.get(algorithm);
 
@@ -125,8 +123,15 @@ std::vector<xmrig::CpuLaunchData> xmrig::CpuConfig::get(const Miner *miner, cons
     const size_t count = threads.count();
     out.reserve(count);
 
+    std::vector<int64_t> affinities;
+    affinities.reserve(count);
+
+    for (const auto& thread : threads.data()) {
+        affinities.emplace_back(thread.affinity());
+    }
+
     for (const auto &thread : threads.data()) {
-        out.emplace_back(miner, algorithm, *this, thread, count);
+        out.emplace_back(miner, algorithm, *this, thread, count, affinities);
     }
 
     return out;
@@ -140,7 +145,7 @@ void xmrig::CpuConfig::read(const rapidjson::Value &value)
         m_hugePagesJit = Json::getBool(value, kHugePagesJit, m_hugePagesJit);
         m_limit        = Json::getUint(value, kMaxThreadsHint, m_limit);
         m_yield        = Json::getBool(value, kYield, m_yield);
-	      m_forceAutoconfig = Json::getBool(value, kForceAutoconfig, m_forceAutoconfig);
+        m_forceAutoconfig = Json::getBool(value, kForceAutoconfig, m_forceAutoconfig);
 
         setAesMode(Json::getValue(value, kHwAes));
         setHugePages(Json::getValue(value, kHugePages));
@@ -196,7 +201,7 @@ void xmrig::CpuConfig::generate()
     }
 
     if (isForceAutoconfig()) {
-      m_threads.clear();
+        m_threads.clear();
     }
 
     size_t count = 0;
@@ -205,10 +210,11 @@ void xmrig::CpuConfig::generate()
     count += xmrig::generate<Algorithm::CN_LITE>(m_threads, m_limit);
     count += xmrig::generate<Algorithm::CN_HEAVY>(m_threads, m_limit);
     count += xmrig::generate<Algorithm::CN_PICO>(m_threads, m_limit);
-    count += xmrig::generate<Algorithm::CN_EXTREMELITE>(m_threads, m_limit);
+    count += xmrig::generate<Algorithm::CN_FEMTO>(m_threads, m_limit);
     count += xmrig::generate<Algorithm::RANDOM_X>(m_threads, m_limit);
     count += xmrig::generate<Algorithm::ARGON2>(m_threads, m_limit);
     count += xmrig::generate<Algorithm::ASTROBWT>(m_threads, m_limit);
+    count += xmrig::generate<Algorithm::GHOSTRIDER>(m_threads, m_limit);
 
     m_shouldSave |= count > 0;
 }

@@ -27,6 +27,7 @@
 
 
 #include "3rdparty/argon2.h"
+#include "base/crypto/Algorithm.h"
 #include "crypto/cn/CryptoNight.h"
 
 
@@ -42,7 +43,7 @@ inline void single_hash(const uint8_t *__restrict__ input, size_t size, uint8_t 
     else if (ALGO == Algorithm::AR2_CHUKWA_V2) {
         argon2id_hash_raw_ex(4, 1024, 1, input, size, input, 16, output, 32, ctx[0]->memory);
     }
-    else if (ALGO == Algorithm::AR2_CHUKWA_LITE) {
+    else if (ALGO == Algorithm::AR2_WRKZ) {
         argon2id_hash_raw_ex(4, 256, 1, input, size, input, 16, output, 32, ctx[0]->memory);
     }
 }

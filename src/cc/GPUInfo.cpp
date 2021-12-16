@@ -1,5 +1,5 @@
 /* XMRigCC
- * Copyright 2018-     BenDr0id    <https://github.com/BenDr0id>, <ben@graef.in>
+ * Copyright 2017-     BenDr0id    <https://github.com/BenDr0id>, <ben@graef.in>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -18,14 +18,6 @@
 #include "GPUInfo.h"
 
 GPUInfo::GPUInfo()
-    : m_deviceIdx(0),
-      m_rawIntensity(0),
-      m_workSize(0),
-      m_maxWorkSize(0),
-      m_freeMem(0),
-      m_memChunk(0),
-      m_compMode(0),
-      m_computeUnits(0)
 {
 
 }
@@ -40,14 +32,21 @@ rapidjson::Value GPUInfo::toJson(rapidjson::MemoryPoolAllocator <rapidjson::CrtA
     rapidjson::Value gpuInfo(rapidjson::kObjectType);
 
     gpuInfo.AddMember("name", rapidjson::StringRef(m_name.c_str()), allocator);
-    gpuInfo.AddMember("device_idx", static_cast<uint32_t>(m_deviceIdx), allocator); 
-    gpuInfo.AddMember("raw_intensity", static_cast<uint32_t>(m_rawIntensity), allocator); 
-    gpuInfo.AddMember("work_size", static_cast<uint32_t>(m_workSize), allocator); 
-    gpuInfo.AddMember("max_work_size", static_cast<uint32_t>(m_maxWorkSize), allocator); 
-    gpuInfo.AddMember("free_mem", static_cast<uint32_t>(m_freeMem), allocator); 
-    gpuInfo.AddMember("mem_chunk", m_memChunk, allocator); 
-    gpuInfo.AddMember("comp_mode", m_memChunk, allocator); 
-    gpuInfo.AddMember("compute_units", m_memChunk, allocator);
+    gpuInfo.AddMember("type", rapidjson::StringRef(m_type.c_str()), allocator);
+    gpuInfo.AddMember("busId", rapidjson::StringRef(m_busId.c_str()), allocator);
+
+    gpuInfo.AddMember("device_idx", m_deviceIdx, allocator);
+    gpuInfo.AddMember("intensity", m_intensity, allocator);
+    gpuInfo.AddMember("work_size", m_workSize, allocator);
+    gpuInfo.AddMember("threads", m_threads, allocator);
+    gpuInfo.AddMember("compute_units", m_computeUnits, allocator);
+    gpuInfo.AddMember("block", m_blocks, allocator);
+    gpuInfo.AddMember("bfactor", m_bfactor, allocator);
+    gpuInfo.AddMember("bsleep", m_bsleep, allocator);
+    gpuInfo.AddMember("clock", m_clock, allocator);
+
+    gpuInfo.AddMember("memory", static_cast<uint32_t>(m_memory), allocator);
+    gpuInfo.AddMember("free_mem", static_cast<uint32_t>(m_freeMem), allocator);
 
     return gpuInfo;
 }
@@ -61,127 +60,198 @@ bool GPUInfo::parseFromJson(const rapidjson::Value& gpuInfo)
         result = true;
     }
 
-    if (gpuInfo.HasMember("device_idx")) {
-        m_deviceIdx = static_cast<size_t>(gpuInfo["device_idx"].GetInt());
+    if (gpuInfo.HasMember("type")) {
+        m_type = gpuInfo["type"].GetString();
     }
 
-    if (gpuInfo.HasMember("raw_intensity")) {
-        m_rawIntensity = static_cast<size_t>(gpuInfo["raw_intensity"].GetInt());
+    if (gpuInfo.HasMember("busId")) {
+        m_busId = gpuInfo["busId"].GetString();
+    }
+
+    if (gpuInfo.HasMember("device_idx")) {
+        m_deviceIdx = gpuInfo["device_idx"].GetInt();
+    }
+
+    if (gpuInfo.HasMember("intensity")) {
+        m_intensity = gpuInfo["intensity"].GetInt();
     }
 
     if (gpuInfo.HasMember("work_size")) {
-        m_workSize = static_cast<size_t>(gpuInfo["work_size"].GetInt());
+        m_workSize = gpuInfo["work_size"].GetInt();
     }
 
-    if (gpuInfo.HasMember("max_work_size")) {
-        m_maxWorkSize = static_cast<size_t>(gpuInfo["max_work_size"].GetInt());
-    }
-
-    if (gpuInfo.HasMember("free_mem")) {
-        m_freeMem = static_cast<size_t>(gpuInfo["free_mem"].GetInt());
-    }
-
-    if (gpuInfo.HasMember("mem_chunk")) {
-        m_memChunk = gpuInfo["mem_chunk"].GetInt();
-    }
-
-    if (gpuInfo.HasMember("comp_mode")) {
-        m_compMode = gpuInfo["comp_mode"].GetInt();
+    if (gpuInfo.HasMember("threads")) {
+        m_threads = gpuInfo["threads"].GetInt();
     }
 
     if (gpuInfo.HasMember("compute_units")) {
         m_computeUnits = gpuInfo["compute_units"].GetInt();
     }
 
+    if (gpuInfo.HasMember("block")) {
+        m_blocks = gpuInfo["block"].GetInt();
+    }
+
+    if (gpuInfo.HasMember("bfactor")) {
+      m_bfactor = gpuInfo["bfactor"].GetInt();
+    }
+
+    if (gpuInfo.HasMember("bsleep")) {
+        m_bsleep = gpuInfo["bsleep"].GetInt();
+    }
+
+    if (gpuInfo.HasMember("clock")) {
+        m_clock = gpuInfo["clock"].GetInt();
+    }
+
+    if (gpuInfo.HasMember("free_mem")) {
+        m_freeMem = static_cast<size_t>(gpuInfo["free_mem"].GetInt());
+    }
+
+    if (gpuInfo.HasMember("memory")) {
+        m_memory = static_cast<size_t>(gpuInfo["memory"].GetInt());
+    }
+
     return result;
 }
 
-size_t GPUInfo::getDeviceIdx() const
+uint32_t GPUInfo::getDeviceIdx() const
 {
-    return m_deviceIdx;
+  return m_deviceIdx;
 }
 
-void GPUInfo::setDeviceIdx(size_t deviceIdx)
+void GPUInfo::setDeviceIdx(uint32_t deviceIdx)
 {
-    m_deviceIdx = deviceIdx;
+  m_deviceIdx = deviceIdx;
 }
 
-size_t GPUInfo::getRawIntensity() const
+uint32_t GPUInfo::getIntensity() const
 {
-    return m_rawIntensity;
+  return m_intensity;
 }
 
-void GPUInfo::setRawIntensity(size_t rawIntensity)
+void GPUInfo::setIntensity(uint32_t intensity)
 {
-    m_rawIntensity = rawIntensity;
+  m_intensity = intensity;
 }
 
-size_t GPUInfo::getWorkSize() const
+uint32_t GPUInfo::getWorkSize() const
 {
-    return m_workSize;
+  return m_workSize;
 }
 
-void GPUInfo::setWorkSize(size_t workSize)
+void GPUInfo::setWorkSize(uint32_t workSize)
 {
-    m_workSize = workSize;
+  m_workSize = workSize;
 }
 
-size_t GPUInfo::getMaxWorkSize() const
+size_t GPUInfo::getMemory() const
 {
-    return m_maxWorkSize;
+  return m_memory;
 }
 
-void GPUInfo::setMaxWorkSize(size_t maxWorkSize)
+void GPUInfo::setMemory(size_t memory)
 {
-    m_maxWorkSize = maxWorkSize;
+  m_memory = memory;
 }
 
 size_t GPUInfo::getFreeMem() const
 {
-    return m_freeMem;
+  return m_freeMem;
 }
 
 void GPUInfo::setFreeMem(size_t freeMem)
 {
-    m_freeMem = freeMem;
+  m_freeMem = freeMem;
 }
 
-int GPUInfo::getMemChunk() const
+uint32_t GPUInfo::getThreads() const
 {
-    return m_memChunk;
+  return m_threads;
 }
 
-void GPUInfo::setMemChunk(int memChunk)
+void GPUInfo::setThreads(uint32_t threads)
 {
-    m_memChunk = memChunk;
+  m_threads = threads;
 }
 
-int GPUInfo::getCompMode() const
+uint32_t GPUInfo::getBlocks() const
 {
-    return m_compMode;
+  return m_blocks;
 }
 
-void GPUInfo::setCompMode(int compMode)
+void GPUInfo::setBlocks(uint32_t blocks)
 {
-    m_compMode = compMode;
+  m_blocks = blocks;
 }
 
-int GPUInfo::getComputeUnits() const
+uint32_t GPUInfo::getBfactor() const
 {
-    return m_computeUnits;
+  return m_bfactor;
 }
 
-void GPUInfo::setComputeUnits(int computeUnits)
+void GPUInfo::setBfactor(uint32_t bfactor)
 {
-    m_computeUnits = computeUnits;
+  m_bfactor = bfactor;
+}
+
+uint32_t GPUInfo::getBsleep() const
+{
+  return m_bsleep;
+}
+
+void GPUInfo::setBsleep(uint32_t bsleep)
+{
+  m_bsleep = bsleep;
+}
+
+uint32_t GPUInfo::getComputeUnits() const
+{
+  return m_computeUnits;
+}
+
+void GPUInfo::setComputeUnits(uint32_t computeUnits)
+{
+  m_computeUnits = computeUnits;
+}
+
+uint32_t GPUInfo::getClock() const
+{
+  return m_clock;
+}
+
+void GPUInfo::setClock(uint32_t clock)
+{
+  m_clock = clock;
 }
 
 std::string GPUInfo::getName() const
 {
-    return m_name;
+  return m_name;
 }
 
 void GPUInfo::setName(const std::string& name)
 {
-    m_name = name;
+  m_name = name;
 }
+
+std::string GPUInfo::getType() const
+{
+  return m_type;
+}
+
+void GPUInfo::setType(const std::string& type)
+{
+  m_type = type;
+}
+
+std::string GPUInfo::getBusId() const
+{
+  return m_busId;
+}
+
+void GPUInfo::setBusId(const std::string& busId)
+{
+  m_busId = busId;
+}
+

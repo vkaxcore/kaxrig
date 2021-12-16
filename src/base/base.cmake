@@ -1,25 +1,30 @@
 set(HEADERS_BASE
-    src/3rdparty/fmt/format.cc
+    src/3rdparty/epee/span.h
     src/base/api/interfaces/IApiListener.h
-    src/base/cc/interfaces/IClientStatusListener.h
-    src/base/cc/interfaces/ICommandListener.h
+    src/base/crypto/Algorithm.h
+    src/base/crypto/Coin.h
+    src/base/crypto/keccak.h
+    src/base/crypto/sha3.h
     src/base/io/Async.h
     src/base/io/Console.h
+    src/base/io/Env.h
     src/base/io/json/Json.h
     src/base/io/json/JsonChain.h
     src/base/io/json/JsonRequest.h
     src/base/io/log/backends/ConsoleLog.h
     src/base/io/log/backends/FileLog.h
-    src/base/io/log/backends/RemoteLog.h
     src/base/io/log/FileLogWriter.h
     src/base/io/log/Log.h
     src/base/io/log/Tags.h
+    src/base/io/Signals.h
     src/base/io/Watcher.h
     src/base/kernel/Base.h
     src/base/kernel/config/BaseConfig.h
     src/base/kernel/config/BaseTransform.h
+    src/base/kernel/config/Title.h
+    src/base/kernel/constants.h
     src/base/kernel/Entry.h
-    src/base/kernel/Env.h
+    src/base/kernel/interfaces/IAsyncListener.h
     src/base/kernel/interfaces/IBaseListener.h
     src/base/kernel/interfaces/IClient.h
     src/base/kernel/interfaces/IClientListener.h
@@ -27,6 +32,7 @@ set(HEADERS_BASE
     src/base/kernel/interfaces/IConfigListener.h
     src/base/kernel/interfaces/IConfigTransform.h
     src/base/kernel/interfaces/IConsoleListener.h
+    src/base/kernel/interfaces/IDnsBackend.h
     src/base/kernel/interfaces/IDnsListener.h
     src/base/kernel/interfaces/ILineListener.h
     src/base/kernel/interfaces/ILogBackend.h
@@ -37,9 +43,12 @@ set(HEADERS_BASE
     src/base/kernel/interfaces/IWatcherListener.h
     src/base/kernel/Platform.h
     src/base/kernel/Process.h
-    src/base/kernel/Signals.h
     src/base/net/dns/Dns.h
+    src/base/net/dns/DnsConfig.h
     src/base/net/dns/DnsRecord.h
+    src/base/net/dns/DnsRecords.h
+    src/base/net/dns/DnsRequest.h
+    src/base/net/dns/DnsUvBackend.h
     src/base/net/http/Http.h
     src/base/net/http/HttpListener.h
     src/base/net/stratum/BaseClient.h
@@ -61,42 +70,53 @@ set(HEADERS_BASE
     src/base/net/tools/Storage.h
     src/base/tools/Arguments.h
     src/base/tools/Baton.h
+    src/base/tools/bswap_64.h
     src/base/tools/Buffer.h
     src/base/tools/Chrono.h
-    src/base/tools/Cvt.h
-    src/base/tools/Handle.h
-    src/base/tools/String.h
-    src/base/tools/Timer.h
     src/base/tools/cryptonote/BlobReader.h
     src/base/tools/cryptonote/BlockTemplate.h
-    src/base/tools/cryptonote/Signatures.h
-    src/base/tools/cryptonote/WalletAddress.h
     src/base/tools/cryptonote/crypto-ops.h
+    src/base/tools/cryptonote/Signatures.h
+    src/base/tools/cryptonote/umul128.h
+    src/base/tools/cryptonote/WalletAddress.h
+    src/base/tools/Cvt.h
+    src/base/tools/Handle.h
+    src/base/tools/Span.h
+    src/base/tools/String.h
+    src/base/tools/Timer.h
    )
 
 set(SOURCES_BASE
+    src/3rdparty/fmt/format.cc
+    src/base/crypto/Algorithm.cpp
+    src/base/crypto/Coin.cpp
+    src/base/crypto/keccak.cpp
+    src/base/crypto/sha3.cpp
     src/base/io/Async.cpp
     src/base/io/Console.cpp
+    src/base/io/Env.cpp
     src/base/io/json/Json.cpp
     src/base/io/json/JsonChain.cpp
     src/base/io/json/JsonRequest.cpp
     src/base/io/log/backends/ConsoleLog.cpp
     src/base/io/log/backends/FileLog.cpp
-    src/base/io/log/backends/RemoteLog.cpp
     src/base/io/log/FileLogWriter.cpp
     src/base/io/log/Log.cpp
     src/base/io/log/Tags.cpp
+    src/base/io/Signals.cpp
     src/base/io/Watcher.cpp
     src/base/kernel/Base.cpp
     src/base/kernel/config/BaseConfig.cpp
     src/base/kernel/config/BaseTransform.cpp
+    src/base/kernel/config/Title.cpp
     src/base/kernel/Entry.cpp
-    src/base/kernel/Env.cpp
     src/base/kernel/Platform.cpp
     src/base/kernel/Process.cpp
-    src/base/kernel/Signals.cpp
     src/base/net/dns/Dns.cpp
+    src/base/net/dns/DnsConfig.cpp
     src/base/net/dns/DnsRecord.cpp
+    src/base/net/dns/DnsRecords.cpp
+    src/base/net/dns/DnsUvBackend.cpp
     src/base/net/http/Http.cpp
     src/base/net/stratum/BaseClient.cpp
     src/base/net/stratum/Client.cpp
@@ -112,14 +132,15 @@ set(SOURCES_BASE
     src/base/net/tools/LineReader.cpp
     src/base/net/tools/NetBuffer.cpp
     src/base/tools/Arguments.cpp
+    src/base/tools/Chrono.cpp
+    src/base/tools/cryptonote/BlockTemplate.cpp
+    src/base/tools/cryptonote/crypto-ops-data.c
+    src/base/tools/cryptonote/crypto-ops.c
+    src/base/tools/cryptonote/Signatures.cpp
+    src/base/tools/cryptonote/WalletAddress.cpp
     src/base/tools/Cvt.cpp
     src/base/tools/String.cpp
     src/base/tools/Timer.cpp
-    src/base/tools/cryptonote/BlockTemplate.cpp
-    src/base/tools/cryptonote/Signatures.cpp
-    src/base/tools/cryptonote/WalletAddress.cpp
-    src/base/tools/cryptonote/crypto-ops.c
-    src/base/tools/cryptonote/crypto-ops-data.c
    )
 
 
@@ -127,16 +148,19 @@ if (WIN32)
     set(SOURCES_OS
         src/base/io/json/Json_win.cpp
         src/base/kernel/Platform_win.cpp
+        src/base/kernel/Process_win.cpp
         )
 elseif (APPLE)
     set(SOURCES_OS
         src/base/io/json/Json_unix.cpp
         src/base/kernel/Platform_mac.cpp
+        src/base/kernel/Process_unix.cpp
         )
 else()
     set(SOURCES_OS
         src/base/io/json/Json_unix.cpp
         src/base/kernel/Platform_unix.cpp
+        src/base/kernel/Process_unix.cpp
         )
 endif()
 
@@ -159,7 +183,7 @@ endif()
 
 if (WITH_HTTP)
     set(HEADERS_BASE_HTTP
-        src/3rdparty/http-parser/http_parser.h
+        src/3rdparty/llhttp/llhttp.h
         src/base/api/Api.h
         src/base/api/Httpd.h
         src/base/api/interfaces/IApiRequest.h
@@ -168,28 +192,32 @@ if (WITH_HTTP)
         src/base/kernel/interfaces/IHttpListener.h
         src/base/kernel/interfaces/IJsonReader.h
         src/base/kernel/interfaces/ITcpServerListener.h
+        src/base/net/http/Fetch.h
         src/base/net/http/HttpApiResponse.h
         src/base/net/http/HttpClient.h
         src/base/net/http/HttpContext.h
         src/base/net/http/HttpData.h
         src/base/net/http/HttpResponse.h
-        src/base/net/http/HttpServer.h
         src/base/net/stratum/DaemonClient.h
         src/base/net/stratum/SelfSelectClient.h
         src/base/net/tools/TcpServer.h
         )
 
     set(SOURCES_BASE_HTTP
-        src/3rdparty/http-parser/http_parser.c
+        src/3rdparty/llhttp/llhttp.c
+        src/3rdparty/llhttp/api.c
+        src/3rdparty/llhttp/http.c
         src/base/api/Api.cpp
         src/base/api/Httpd.cpp
         src/base/api/requests/ApiRequest.cpp
         src/base/api/requests/HttpApiRequest.cpp
+        src/base/net/http/Fetch.cpp
         src/base/net/http/HttpApiResponse.cpp
         src/base/net/http/HttpClient.cpp
         src/base/net/http/HttpContext.cpp
+        src/base/net/http/HttpData.cpp
+        src/base/net/http/HttpListener.cpp
         src/base/net/http/HttpResponse.cpp
-        src/base/net/http/HttpServer.cpp
         src/base/net/stratum/DaemonClient.cpp
         src/base/net/stratum/SelfSelectClient.cpp
         src/base/net/tools/TcpServer.cpp
@@ -214,4 +242,17 @@ if (WITH_ENV_VARS)
     add_definitions(/DXMRIG_FEATURE_ENV)
 else()
     remove_definitions(/DXMRIG_FEATURE_ENV)
+endif()
+
+
+if (WITH_KAWPOW OR WITH_GHOSTRIDER)
+    list(APPEND HEADERS_BASE
+        src/base/net/stratum/AutoClient.h
+        src/base/net/stratum/EthStratumClient.h
+        )
+
+    list(APPEND SOURCES_BASE
+        src/base/net/stratum/AutoClient.cpp
+        src/base/net/stratum/EthStratumClient.cpp
+        )
 endif()

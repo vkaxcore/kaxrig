@@ -15,13 +15,10 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <cstring>
 #include <sstream>
-#include <fstream>
-#include "3rdparty/rapidjson/stringbuffer.h"
 #include "3rdparty/rapidjson/prettywriter.h"
 #include <crypto/common/VirtualMemory.h>
-#include "base/kernel/Env.h"
+#include "base/io/Env.h"
 #include "base/io/log/Tags.h"
 
 #include "backend/cpu/Cpu.h"
@@ -37,25 +34,14 @@
 #include "App.h"
 #include "version.h"
 
-#ifdef TYPE_AMD_GPU
-#include "common/log/Log.h"
-#include "common/log/RemoteLog.h"
-#include "common/Platform.h"
-#include "core/Config.h"
-#else
-
 #include "core/config/Config.h"
 #include "base/io/log/Log.h"
 #include "base/io/log/backends/RemoteLog.h"
 
-#endif
-
 #if _WIN32
 #   include "winsock2.h"
 #else
-
 #   include "unistd.h"
-
 #endif
 
 namespace
@@ -68,12 +54,7 @@ namespace
   }
 }
 
-#ifdef TYPE_AMD_GPU
-xmrig::CCClient::CCClient(xmrig::Config* config, uv_async_t* async)
-#else
-
 xmrig::CCClient::CCClient(Base* base)
-#endif
   : m_base(base),
     m_startTime(Chrono::currentMSecsSinceEpoch()),
     m_configPublishedOnStart(false),
@@ -147,12 +128,6 @@ void xmrig::CCClient::updateClientInfo()
 #   else
   m_clientStatus.setAssembly("none");
 #   endif
-
-
-#ifdef TYPE_AMD_GPU
-  m_clientStatus.setCurrentThreads(static_cast<int>(config->threads().size()));
-  m_clientStatus.setCurrentAlgoName(config->algorithm().name());
-#endif
 }
 
 
@@ -181,47 +156,8 @@ void xmrig::CCClient::updateStatistics()
   {
     listener->onUpdateRequest(m_clientStatus);
   }
-
-#ifdef TYPE_AMD_GPU
-  m_self->m_clientStatus.setHashFactor(0);
-  m_self->m_clientStatus.setHugepagesEnabled(false);
-  m_self->m_clientStatus.setHugepages(false);
-  m_self->m_clientStatus.setTotalPages(0);
-  m_self->m_clientStatus.setTotalHugepages(0);
-  m_self->m_clientStatus.setCurrentPowVariantName(xmrig::Algorithm::getVariantName(network.powVariant));
-#endif
-
 }
 
-#ifdef TYPE_AMD_GPU
-void CCClient::updateGpuInfo(const std::vector<GpuContext>& gpuContext)
-{
-  LOG_DEBUG("CCClient::updateGpuInfo");
-
-    if (m_self) {
-        uv_mutex_lock(&m_mutex);
-
-        m_self->m_clientStatus.clearGPUInfoList();
-
-        for (auto gpu : gpuContext) {
-            GPUInfo gpuInfo;
-            gpuInfo.setName(gpu.name);
-            gpuInfo.setCompMode(gpu.compMode);
-            gpuInfo.setComputeUnits(gpu.computeUnits);
-            gpuInfo.setDeviceIdx(gpu.deviceIdx);
-            gpuInfo.setFreeMem(gpu.freeMem);
-            gpuInfo.setWorkSize(gpu.workSize);
-            gpuInfo.setMaxWorkSize(gpu.maximumWorkSize);
-            gpuInfo.setMemChunk(gpu.memChunk);
-            gpuInfo.setRawIntensity(gpu.rawIntensity);
-
-            m_self->m_clientStatus.addGPUInfo(gpuInfo);
-        }
-
-        uv_mutex_unlock(&m_mutex);
-    }
-}
-#endif
 
 void xmrig::CCClient::publishClientStatusReport()
 {
@@ -235,12 +171,12 @@ void xmrig::CCClient::publishClientStatusReport()
   auto res = performRequest(requestUrl, requestBuffer, "POST");
   if (!res)
   {
-    LOG_ERR(CLEAR "%s" RED("error:unable to performRequest POST -> http%s://%s:%d%s"), Tags::cc(),
+    LOG_ERR(CLEAR "%s" RED("error:unable to performRequest POST [http%s://%s:%d%s]"), Tags::cc(),
             config.useTLS() ? "s":"", config.host(), config.port(), requestUrl.c_str());
   }
   else if (res->status != 200)
   {
-    LOG_ERR(CLEAR "%s" RED("error:\"%d\" -> http%s://%s:%d%s"), Tags::cc(), res->status,
+    LOG_ERR(CLEAR "%s" RED("error:\"%d\" [http%s://%s:%d%s]"), Tags::cc(), res->status,
             config.useTLS() ? "s" : "", config.host(), config.port(), requestUrl.c_str());
   }
   else
@@ -252,37 +188,37 @@ void xmrig::CCClient::publishClientStatusReport()
     {
       if (controlCommand.getCommand() == ControlCommand::START)
       {
-        LOG_DEBUG(CLEAR "%s Command: START received -> resume", Tags::cc());
+        LOG_DEBUG(CLEAR "%s Command: RESUME received", Tags::cc());
       }
       else if (controlCommand.getCommand() == ControlCommand::STOP)
       {
-        LOG_DEBUG(CLEAR "%s Command: STOP received -> pause", Tags::cc());
+        LOG_DEBUG(CLEAR "%s Command: PAUSE received", Tags::cc());
       }
       else if (controlCommand.getCommand() == ControlCommand::UPDATE_CONFIG)
       {
-        LOG_WARN(CLEAR "%s" YELLOW("Command: UPDATE_CONFIG received -> update config"), Tags::cc());
+        LOG_WARN(CLEAR "%s" YELLOW("Command: UPDATE_CONFIG received"), Tags::cc());
         fetchConfig();
       }
       else if (controlCommand.getCommand() == ControlCommand::PUBLISH_CONFIG)
       {
-        LOG_WARN(CLEAR "%s" YELLOW("Command: PUBLISH_CONFIG received -> publish config"), Tags::cc());
+        LOG_WARN(CLEAR "%s" YELLOW("Command: PUBLISH_CONFIG received"), Tags::cc());
         publishConfig();
       }
       else if (controlCommand.getCommand() == ControlCommand::RESTART)
       {
-        LOG_WARN(CLEAR "%s" YELLOW("Command: RESTART received -> trigger restart"), Tags::cc());
+        LOG_WARN(CLEAR "%s" YELLOW("Command: RESTART received"), Tags::cc());
       }
       else if (controlCommand.getCommand() == ControlCommand::SHUTDOWN)
       {
-        LOG_WARN(CLEAR "%s" YELLOW("Command: SHUTDOWN received -> quit"), Tags::cc());
+        LOG_WARN(CLEAR "%s" YELLOW("Command: SHUTDOWN received"), Tags::cc());
       }
       else if (controlCommand.getCommand() == ControlCommand::REBOOT)
       {
-        LOG_WARN(CLEAR "%s" YELLOW("Command: REBOOT received -> trigger reboot"), Tags::cc());
+        LOG_WARN(CLEAR "%s" YELLOW("Command: REBOOT received"), Tags::cc());
       }
       else if (controlCommand.getCommand() == ControlCommand::EXECUTE)
       {
-        LOG_WARN(CLEAR "%s" YELLOW("Command: EXECUTE received -> trigger execute"), Tags::cc());
+        LOG_WARN(CLEAR "%s" YELLOW("Command: EXECUTE received"), Tags::cc());
       }
 
       for (ICommandListener *listener : m_Commandlisteners)
@@ -309,12 +245,12 @@ void xmrig::CCClient::fetchConfig()
   auto res = performRequest(requestUrl, requestBuffer, "GET");
   if (!res)
   {
-    LOG_ERR(CLEAR "%s" RED("error:unable to performRequest GET -> http%s://%s:%d%s"), Tags::cc(),
+    LOG_ERR(CLEAR "%s" RED("error:unable to performRequest GET [http%s://%s:%d%s]"), Tags::cc(),
             config.useTLS() ? "s" : "", config.host(), config.port(), requestUrl.c_str());
   }
   else if (res->status != 200)
   {
-    LOG_ERR(CLEAR "%s" RED("error:\"%d\" -> http%s://%s:%d%s"), Tags::cc(), res->status,
+    LOG_ERR(CLEAR "%s" RED("error:\"%d\" [http%s://%s:%d%s]"), Tags::cc(), res->status,
             config.useTLS() ? "s" : "", config.host(), config.port(), requestUrl.c_str());
   }
   else
@@ -340,7 +276,7 @@ void xmrig::CCClient::fetchConfig()
           static_cast<IWatcherListener*>(m_base)->onFileChanged(m_base->config()->fileName());
         }
 
-        LOG_WARN(CLEAR "%s" YELLOW("Config updated. -> reload"), Tags::cc());
+        LOG_WARN(CLEAR "%s" YELLOW("Config updated."), Tags::cc());
       }
       else
       {
@@ -386,12 +322,12 @@ void xmrig::CCClient::publishConfig()
       auto res = performRequest(requestUrl, buffer.GetString(), "POST");
       if (!res)
       {
-        LOG_ERR(CLEAR "%s" RED("error:unable to performRequest POST -> http%s://%s:%d%s"), Tags::cc(),
+        LOG_ERR(CLEAR "%s" RED("error:unable to performRequest POST [http%s://%s:%d%s]"), Tags::cc(),
                 config.useTLS() ? "s" : "", config.host(), config.port(), requestUrl.c_str());
       }
       else if (res->status != 200)
       {
-        LOG_ERR(CLEAR "%s" RED("error:\"%d\" -> http%s://%s:%d%s"), Tags::cc(), res->status, config.host(),
+        LOG_ERR(CLEAR "%s" RED("error:\"%d\" [http%s://%s:%d%s]"), Tags::cc(), res->status, config.host(),
                 config.useTLS() ? "s" : "", config.port(), requestUrl.c_str());
       }
       else
@@ -440,7 +376,7 @@ std::shared_ptr<httplib::Response> xmrig::CCClient::performRequest(const std::st
              << ":"
              << config.port();
 
-  LOG_DEBUG("CCClient::performRequest %s -> [%s%s] send: '%.2048s'", operation.c_str(), hostHeader.str().c_str(), requestUrl.c_str(), requestBuffer.c_str());
+  LOG_DEBUG("CCClient::performRequest %s [%s%s] send: '%.2048s'", operation.c_str(), hostHeader.str().c_str(), requestUrl.c_str(), requestBuffer.c_str());
 
   httplib::Request req;
   req.method = operation;

@@ -17,7 +17,6 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #include "crypto/rx/Rx.h"
 #include "backend/cpu/CpuConfig.h"
 #include "backend/cpu/CpuThreads.h"
@@ -46,7 +45,7 @@ static RxPrivate *d_ptr     = nullptr;
 class RxPrivate
 {
 public:
-    inline RxPrivate(IRxListener *listener) : queue(listener) {}
+    inline explicit RxPrivate(IRxListener *listener) : queue(listener) {}
 
     RxQueue queue;
 };
@@ -88,11 +87,13 @@ void xmrig::Rx::init(IRxListener *listener)
 template<typename T>
 bool xmrig::Rx::init(const T &seed, const RxConfig &config, const CpuConfig &cpu)
 {
-    const Algorithm algo = seed.algorithm();
-    const Algorithm::Family f = algo.family();
+    const auto f = seed.algorithm().family();
     if ((f != Algorithm::RANDOM_X)
 #       ifdef XMRIG_ALGO_CN_HEAVY
         && (f != Algorithm::CN_HEAVY)
+#       endif
+#       ifdef XMRIG_ALGO_GHOSTRIDER
+        && (f != Algorithm::GHOSTRIDER)
 #       endif
         ) {
 #       ifdef XMRIG_FEATURE_MSR
@@ -114,9 +115,15 @@ bool xmrig::Rx::init(const T &seed, const RxConfig &config, const CpuConfig &cpu
     }
 #   endif
 
+#   ifdef XMRIG_ALGO_GHOSTRIDER
+    if (f == Algorithm::GHOSTRIDER) {
+        return true;
+    }
+#   endif
+
     randomx_set_scratchpad_prefetch_mode(config.scratchpadPrefetchMode());
     randomx_set_huge_pages_jit(cpu.isHugePagesJit());
-    randomx_set_optimized_dataset_init(algo != Algorithm::RX_XLA ? config.initDatasetAVX2() : 0);
+    randomx_set_optimized_dataset_init(config.initDatasetAVX2());
 
     if (!osInitialized) {
 #       ifdef XMRIG_FIX_RYZEN

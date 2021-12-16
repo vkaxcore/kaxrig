@@ -27,13 +27,8 @@
 #include "version.h"
 #include "ControlCommand.h"
 
-#ifdef TYPE_AMD_GPU
-#include "amd/GpuContext.h"
-#include "core/Controller.h"
-#else
 #include "base/kernel/interfaces/IBaseListener.h"
 #include "base/kernel/interfaces/ITimerListener.h"
-#endif
 
 namespace xmrig
 {
@@ -47,13 +42,7 @@ class ICommandListener;
 class CCClient : public IBaseListener, public ITimerListener
 {
 public:
-#ifdef TYPE_AMD_GPU
-    CCClient(xmrig::Config* m_config, uv_async_t* async);
-    static void updateGpuInfo(const std::vector<GpuContext>& network);
-#else
     CCClient(Base *base);
-#endif
-
     ~CCClient();
 
     inline void addClientStatusListener(IClientStatusListener *listener) { m_ClientStatuslisteners.push_back(listener); }
@@ -82,11 +71,8 @@ private:
                                                       const std::string &requestBuffer,
                                                       const std::string &operation);
 private:
-#ifdef TYPE_AMD_GPU
-    const xmrig::Config* m_config;
-#else
     Base *m_base;
-#endif
+
     const uint64_t m_startTime;
     ClientStatus m_clientStatus;
 

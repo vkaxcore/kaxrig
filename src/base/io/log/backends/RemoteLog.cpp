@@ -1,5 +1,5 @@
 /* XMRigCC
- * Copyright 2018-     BenDr0id    <https://github.com/BenDr0id>, <ben@graef.in>
+ * Copyright 2017-     BenDr0id    <https://github.com/BenDr0id>, <ben@graef.in>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ xmrig::RemoteLog::~RemoteLog()
     m_self = nullptr;
 }
 
-void xmrig::RemoteLog::print(int, const char *line, size_t, size_t size, bool colors)
+void xmrig::RemoteLog::print(uint64_t, int, const char *line, size_t, size_t size, bool colors)
 {
     if (colors) {
         return;

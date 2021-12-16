@@ -15,19 +15,12 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <cstring>
 #include "3rdparty/rapidjson/stringbuffer.h"
 #include "3rdparty/rapidjson/prettywriter.h"
+#include "base/io/log/Log.h"
 
 #include "ControlCommand.h"
 
-#include "version.h"
-
-#ifdef TYPE_AMD_GPU
-#include "common/log/Log.h"
-#else
-#include "base/io/log/Log.h"
-#endif
 
 ControlCommand::ControlCommand()
     : m_command(Command::START)

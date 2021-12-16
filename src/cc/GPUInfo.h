@@ -1,5 +1,5 @@
 /* XMRigCC
- * Copyright 2018-     BenDr0id    <https://github.com/BenDr0id>, <ben@graef.in>
+ * Copyright 2017-     BenDr0id    <https://github.com/BenDr0id>, <ben@graef.in>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -14,6 +14,7 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 #ifndef XMRIG_GPUINFO_H
 #define XMRIG_GPUINFO_H
 
@@ -29,45 +30,65 @@ public:
     rapidjson::Value toJson(rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>& allocator);
     bool parseFromJson(const rapidjson::Value& gpuInfo);
 
-    std::string getName() const;
-    void setName(const std::string& name);
+    uint32_t getDeviceIdx() const;
+    void setDeviceIdx(uint32_t deviceIdx);
 
-    size_t getDeviceIdx() const;
-    void setDeviceIdx(size_t deviceIdx);
+    uint32_t getIntensity() const;
+    void setIntensity(uint32_t intensity);
 
-    size_t getRawIntensity() const;
-    void setRawIntensity(size_t rawIntensity);
+    uint32_t getWorkSize() const;
+    void setWorkSize(uint32_t workSize);
 
-    size_t getWorkSize() const;
-    void setWorkSize(size_t workSize);
-
-    size_t getMaxWorkSize() const;
-    void setMaxWorkSize(size_t maxWorkSize);
+    size_t getMemory() const;
+    void setMemory(size_t memory);
 
     size_t getFreeMem() const;
     void setFreeMem(size_t freeMem);
 
-    int getMemChunk() const;
-    void setMemChunk(int memChunk);
+    uint32_t getThreads() const;
+    void setThreads(uint32_t threads);
 
-    int getCompMode() const;
-    void setCompMode(int compMode);
+    uint32_t getBlocks() const;
+    void setBlocks(uint32_t blocks);
 
-    int getComputeUnits() const;
-    void setComputeUnits(int computeUnits);
+    uint32_t getBfactor() const;
+    void setBfactor(uint32_t bfactor);
+
+    uint32_t getBsleep() const;
+    void setBsleep(uint32_t bsleep);
+
+    uint32_t getComputeUnits() const;
+    void setComputeUnits(uint32_t computeUnits);
+
+    uint32_t getClock() const;
+    void setClock(uint32_t clock);
+
+    std::string getName() const;
+    void setName(const std::string& name);
+
+    std::string getType() const;
+    void setType(const std::string& type);
+
+    std::string getBusId() const;
+    void setBusId(const std::string& busId);
 
 private:
-    size_t m_deviceIdx;
-    size_t m_rawIntensity;
-    size_t m_workSize;
-    size_t m_maxWorkSize;
-    size_t m_freeMem;
+    size_t m_memory {0};
+    size_t m_freeMem {0};
 
-    int m_memChunk;
-    int m_compMode;
-    int m_computeUnits;
+    uint32_t m_deviceIdx {0};
+    uint32_t m_intensity {0};
+    uint32_t m_workSize {0};
+    uint32_t m_threads {0};
+    uint32_t m_computeUnits {0};
+    uint32_t m_blocks {0};
+    uint32_t m_bfactor {0};
+    uint32_t m_bsleep {0};
+    uint32_t m_clock {0};
 
     std::string m_name;
+    std::string m_type;
+    std::string m_busId;
 };
 
 

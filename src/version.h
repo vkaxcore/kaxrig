@@ -1,12 +1,7 @@
 /* XMRig
- * Copyright 2010      Jeff Garzik <jgarzik@pobox.com>
- * Copyright 2012-2014 pooler      <pooler@litecoinpool.org>
- * Copyright 2014      Lucas Jones <https://github.com/lucasjones>
- * Copyright 2014-2016 Wolf9466    <https://github.com/OhGodAPet>
- * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
- * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
- * Copyright 2018-2019 SChernykh   <https://github.com/SChernykh>
- * Copyright 2016-2019 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright 2018-2021 SChernykh   <https://github.com/SChernykh>
+ * Copyright 2016-2021 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright 2016-2021 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -27,16 +22,16 @@
 
 #define APP_ID        "XMRigCC"
 #define APP_NAME      "XMRigCC"
-#define APP_DESC      "XMRigCC CPU miner"
-#define APP_VERSION   "2.9.7"
+#define APP_DESC      "XMRigCC miner"
+#define APP_VERSION   "3.0.0"
 #define APP_DOMAIN    ""
 #define APP_SITE      "https://github.com/BenDr0id/xmrigCC/"
 #define APP_COPYRIGHT "Copyright (C) 2017- XMRigCC"
-#define APP_KIND      "cpu"
+#define APP_KIND      "miner"
 
-#define APP_VER_MAJOR  2
-#define APP_VER_MINOR  9
-#define APP_VER_PATCH  7
+#define APP_VER_MAJOR  3
+#define APP_VER_MINOR  0
+#define APP_VER_PATCH  0
 
 #ifndef NDEBUG
 #define BUILD_TYPE   "DEBUG"

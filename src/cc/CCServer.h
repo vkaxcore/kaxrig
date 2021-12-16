@@ -23,7 +23,7 @@
 
 #include "base/kernel/interfaces/IConsoleListener.h"
 #include "base/kernel/interfaces/ISignalListener.h"
-#include "base/kernel/Signals.h"
+#include "base/io/Signals.h"
 #include "base/io/Console.h"
 
 #include "CCServerConfig.h"

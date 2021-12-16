@@ -32,7 +32,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
-#include "base/crypto/Algorithm.h"
 #include "crypto/randomx/intrin_portable.h"
 
 #define RANDOMX_HASH_SIZE 32
@@ -68,17 +67,18 @@ struct RandomX_ConfigurationBase
 	// Common parameters for all RandomX variants
 	enum Params : uint64_t
 	{
+		ArgonMemory = 262144,
+		CacheAccesses = 8,
+		DatasetBaseSize = 2147483648,
+		DatasetExtraSize = 33554368,
 		JumpBits = 8,
 		JumpOffset = 8,
+		CacheLineAlignMask_Calculated = (DatasetBaseSize - 1) & ~(RANDOMX_DATASET_ITEM_SIZE - 1),
+		DatasetExtraItems_Calculated = DatasetExtraSize / RANDOMX_DATASET_ITEM_SIZE,
 		ConditionMask_Calculated = ((1 << JumpBits) - 1) << JumpOffset,
 	};
 
-	uint32_t SuperscalarLatency;
-	uint32_t ArgonMemory;
-	uint32_t CacheAccesses;
-	uint64_t DatasetBaseSize;
-	uint32_t DatasetExtraSize;
-		
+  int64_t SuperscalarLatency;
 	uint32_t ArgonIterations;
 	uint32_t ArgonLanes;
 	const char* ArgonSalt;
@@ -124,46 +124,38 @@ struct RandomX_ConfigurationBase
 
 	rx_vec_i128 fillAes4Rx4_Key[8];
 
-	uint8_t codeShhPrefetchTweaked[20];
-	uint8_t codeReadDatasetTweaked[64];
-	uint32_t codeReadDatasetTweakedSize;
-	uint8_t codeReadDatasetRyzenTweaked[72];
-	uint32_t codeReadDatasetRyzenTweakedSize;
+	uint8_t codeSshPrefetchTweaked[20];
 	uint8_t codePrefetchScratchpadTweaked[28];
 	uint32_t codePrefetchScratchpadTweakedSize;
 
-	uint32_t CacheLineAlignMask_Calculated;
-	uint32_t DatasetExtraItems_Calculated;
 	uint32_t AddressMask_Calculated[4];
 	uint32_t ScratchpadL3Mask_Calculated;
 	uint32_t ScratchpadL3Mask64_Calculated;
 
-#if defined(XMRIG_ARMv8)
+#	if (XMRIG_ARM == 8)
 	uint32_t Log2_ScratchpadL1;
 	uint32_t Log2_ScratchpadL2;
 	uint32_t Log2_ScratchpadL3;
 	uint32_t Log2_DatasetBaseSize;
 	uint32_t Log2_CacheSize;
-#endif
+#	endif
 };
 
 struct RandomX_ConfigurationMonero : public RandomX_ConfigurationBase {};
 struct RandomX_ConfigurationWownero : public RandomX_ConfigurationBase { RandomX_ConfigurationWownero(); };
 struct RandomX_ConfigurationArqma : public RandomX_ConfigurationBase { RandomX_ConfigurationArqma(); };
+struct RandomX_ConfigurationGraft : public RandomX_ConfigurationBase { RandomX_ConfigurationGraft(); };
 struct RandomX_ConfigurationSafex : public RandomX_ConfigurationBase { RandomX_ConfigurationSafex(); };
 struct RandomX_ConfigurationKeva : public RandomX_ConfigurationBase { RandomX_ConfigurationKeva(); };
-struct RandomX_ConfigurationScala : public RandomX_ConfigurationBase { RandomX_ConfigurationScala(); };
 struct RandomX_ConfigurationYada : public RandomX_ConfigurationBase { RandomX_ConfigurationYada(); };
-struct RandomX_ConfigurationGraft: public RandomX_ConfigurationBase { RandomX_ConfigurationGraft(); };
 
 extern RandomX_ConfigurationMonero RandomX_MoneroConfig;
 extern RandomX_ConfigurationWownero RandomX_WowneroConfig;
 extern RandomX_ConfigurationArqma RandomX_ArqmaConfig;
+extern RandomX_ConfigurationGraft RandomX_GraftConfig;
 extern RandomX_ConfigurationSafex RandomX_SafexConfig;
 extern RandomX_ConfigurationKeva RandomX_KevaConfig;
-extern RandomX_ConfigurationScala RandomX_ScalaConfig;
 extern RandomX_ConfigurationYada RandomX_YadaConfig;
-extern RandomX_ConfigurationGraft RandomX_GraftConfig;
 
 extern RandomX_ConfigurationBase RandomX_CurrentConfig;
 
@@ -322,11 +314,10 @@ RANDOMX_EXPORT void randomx_destroy_vm(randomx_vm *machine);
  * @param output is a pointer to memory where the hash will be stored. Must not
  *        be NULL and at least RANDOMX_HASH_SIZE bytes must be available for writing.
 */
+RANDOMX_EXPORT void randomx_calculate_hash(randomx_vm *machine, const void *input, size_t inputSize, void *output);
+
 RANDOMX_EXPORT void randomx_calculate_hash_first(randomx_vm* machine, uint64_t (&tempHash)[8], const void* input, size_t inputSize);
 RANDOMX_EXPORT void randomx_calculate_hash_next(randomx_vm* machine, uint64_t (&tempHash)[8], const void* nextInput, size_t nextInputSize, void* output);
-
-RANDOMX_EXPORT void panthera_calculate_hash_first(randomx_vm* machine, uint64_t (&tempHash)[8], const void* input, size_t inputSize);
-RANDOMX_EXPORT void panthera_calculate_hash_next(randomx_vm* machine, uint64_t (&tempHash)[8], const void* nextInput, size_t nextInputSize, void* output);
 
 #if defined(__cplusplus)
 }

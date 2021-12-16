@@ -40,6 +40,12 @@
 #endif
 
 
+#ifdef XMRIG_ALGO_KAWPOW
+#   include "crypto/kawpow/KPCache.h"
+#   include "crypto/kawpow/KPHash.h"
+#endif
+
+
 #if defined(XMRIG_FEATURE_OPENCL) || defined(XMRIG_FEATURE_CUDA)
 #   include "base/tools/Baton.h"
 #   include "crypto/cn/CnCtx.h"
@@ -285,8 +291,6 @@ private:
     }
 #   endif
 
-
-private:
     const bool m_hwAES;
     IJobResultListener *m_listener;
     std::list<JobResult> m_results;
@@ -337,7 +341,7 @@ void xmrig::JobResults::submit(const Job &job, uint32_t nonce, const uint8_t *re
 
 void xmrig::JobResults::submit(const Job& job, uint32_t nonce, const uint8_t* result, const uint8_t* miner_signature)
 {
-  submit(JobResult(job, nonce, result, nullptr, nullptr, miner_signature));
+    submit(JobResult(job, nonce, result, nullptr, nullptr, miner_signature));
 }
 
 

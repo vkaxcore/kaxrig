@@ -24,8 +24,8 @@
 
 
 #include "backend/cpu/CpuThread.h"
-#include "base/io/json/Json.h"
 #include "3rdparty/rapidjson/document.h"
+#include "base/io/json/Json.h"
 
 
 xmrig::CpuThread::CpuThread(const rapidjson::Value &value)

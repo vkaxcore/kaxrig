@@ -31,7 +31,6 @@ namespace xmrig {
 
 
 class Algorithm;
-class Benchmark;
 class Hashrate;
 class IApiRequest;
 class IWorker;

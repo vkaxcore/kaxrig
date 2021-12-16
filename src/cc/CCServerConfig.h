@@ -1,5 +1,5 @@
 /* XMRigCC
- * Copyright 2019-     BenDr0id    <https://github.com/BenDr0id>, <ben@graef.in>
+ * Copyright 2017-     BenDr0id    <https://github.com/BenDr0id>, <ben@graef.in>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -75,9 +75,9 @@ private:
   int m_port = 3344;
 
   std::string m_bindIp = "0.0.0.0";
-  std::string m_adminUser = "";
-  std::string m_adminPass = "";
-  std::string m_token = "";
+  std::string m_adminUser;
+  std::string m_adminPass;
+  std::string m_token;
 
   std::string m_customDashboard = "index.html";
   std::string m_clientConfigFolder;

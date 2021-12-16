@@ -17,9 +17,9 @@
  */
 
 
+#include "base/tools/Timer.h"
 #include "base/kernel/interfaces/ITimerListener.h"
 #include "base/tools/Handle.h"
-#include "base/tools/Timer.h"
 
 
 xmrig::Timer::Timer(ITimerListener *listener) :

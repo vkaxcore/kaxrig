@@ -1,11 +1,6 @@
 /* XMRig
- * Copyright 2010      Jeff Garzik <jgarzik@pobox.com>
- * Copyright 2012-2014 pooler      <pooler@litecoinpool.org>
- * Copyright 2014      Lucas Jones <https://github.com/lucasjones>
- * Copyright 2014-2016 Wolf9466    <https://github.com/OhGodAPet>
- * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
- * Copyright 2018-2020 SChernykh   <https://github.com/SChernykh>
- * Copyright 2016-2020 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright (c) 2018-2021 SChernykh   <https://github.com/SChernykh>
+ * Copyright (c) 2016-2021 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -26,26 +21,17 @@
 #include <winsock2.h>
 #include <windows.h>
 #include <uv.h>
+#include <limits>
 
 
 #include "base/kernel/Platform.h"
 #include "base/tools/Chrono.h"
-#include "base/io/log/Log.h"
 #include "version.h"
 
 
-#ifdef XMRIG_NVIDIA_PROJECT
-#   include "nvidia/cryptonight.h"
-#endif
-
-
-#ifdef XMRIG_AMD_PROJECT
-static uint32_t timerResolution = 0;
-#endif
-
 static inline OSVERSIONINFOEX winOsVersion()
 {
-    typedef NTSTATUS (NTAPI *RtlGetVersionFunction)(LPOSVERSIONINFO);
+    typedef NTSTATUS (NTAPI *RtlGetVersionFunction)(LPOSVERSIONINFO); // NOLINT(modernize-use-using)
     OSVERSIONINFOEX result = { sizeof(OSVERSIONINFOEX), 0, 0, 0, 0, {'\0'}, 0, 0, 0, 0, 0};
 
     HMODULE ntdll = GetModuleHandleW(L"ntdll.dll");
@@ -75,15 +61,10 @@ char *xmrig::Platform::createUserAgent()
     length += snprintf(buf + length, max - length, ") libuv/%s", uv_version_string());
 #   endif
 
-#   ifdef XMRIG_NVIDIA_PROJECT
-    const int cudaVersion = cuda_get_runtime_version();
-    length += snprintf(buf + length, max - length, " CUDA/%d.%d", cudaVersion / 1000, cudaVersion % 100);
-#   endif
-
 #   ifdef __GNUC__
-    length += snprintf(buf + length, max - length, " gcc/%d.%d.%d", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
+    snprintf(buf + length, max - length, " gcc/%d.%d.%d", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
 #   elif _MSC_VER
-    length += snprintf(buf + length, max - length, " msvc/%d", MSVC_VERSION);
+    snprintf(buf + length, max - length, " msvc/%d", MSVC_VERSION);
 #   endif
 
     return buf;
@@ -93,43 +74,11 @@ char *xmrig::Platform::createUserAgent()
 #ifndef XMRIG_FEATURE_HWLOC
 bool xmrig::Platform::setThreadAffinity(uint64_t cpu_id)
 {
-    if (cpu_id >= 64) {
-        LOG_ERR("Unable to set affinity. Windows supports only affinity up to 63.");
-    }
-
     const bool result = (SetThreadAffinityMask(GetCurrentThread(), 1ULL << cpu_id) != 0);
     Sleep(1);
     return result;
 }
 #endif
-
-
-uint32_t xmrig::Platform::setTimerResolution(uint32_t resolution)
-{
-#   ifdef XMRIG_AMD_PROJECT
-    TIMECAPS tc;
-
-    if (timeGetDevCaps(&tc, sizeof(TIMECAPS)) != TIMERR_NOERROR) {
-        return 0;
-    }
-
-    timerResolution = std::min<uint32_t>(std::max<uint32_t>(tc.wPeriodMin, resolution), tc.wPeriodMax);
-
-    return timeBeginPeriod(timerResolution) == TIMERR_NOERROR ? timerResolution : 0;
-#   else
-    return resolution;
-#   endif
-}
-
-
-void xmrig::Platform::restoreTimerResolution()
-{
-#   ifdef XMRIG_AMD_PROJECT
-    if (timerResolution) {
-        timeEndPeriod(timerResolution);
-    }
-#   endif
-}
 
 
 void xmrig::Platform::setProcessPriority(int priority)
@@ -205,43 +154,66 @@ void xmrig::Platform::setThreadPriority(int priority)
     SetThreadPriority(GetCurrentThread(), prio);
 }
 
+
+bool xmrig::Platform::isOnBatteryPower()
+{
+    SYSTEM_POWER_STATUS st;
+    if (GetSystemPowerStatus(&st)) {
+        return (st.ACLineStatus == 0);
+    }
+    return false;
+}
+
+
+uint64_t xmrig::Platform::idleTime()
+{
+    LASTINPUTINFO info{};
+    info.cbSize = sizeof(LASTINPUTINFO);
+
+    if (!GetLastInputInfo(&info)) {
+        return std::numeric_limits<uint64_t>::max();
+    }
+
+    return static_cast<uint64_t>(GetTickCount() - info.dwTime);
+}
+
 int64_t xmrig::Platform::getThreadSleepTimeToLimitMaxCpuUsage(uint8_t maxCpuUsage)
 {
-  uint64_t currentSystemTime = Chrono::highResolutionMicroSecs();
-  if (currentSystemTime - m_systemTime > MIN_RECALC_THRESHOLD_USEC)
-  {
-	  FILETIME kernelTime, userTime, creationTime, exitTime;
-	  if(GetThreadTimes(GetCurrentThread(), &creationTime, &exitTime, &kernelTime, &userTime))
-	  {
-      ULARGE_INTEGER kTime, uTime;
-      kTime.LowPart = kernelTime.dwLowDateTime;
-      kTime.HighPart = kernelTime.dwHighDateTime;
-      uTime.LowPart = userTime.dwLowDateTime;
-      uTime.HighPart = userTime.dwHighDateTime;
+    uint64_t currentSystemTime = Chrono::highResolutionMicroSecs();
+    if (currentSystemTime - m_systemTime > MIN_RECALC_THRESHOLD_USEC)
+    {
+        FILETIME kernelTime, userTime, creationTime, exitTime;
+        if (GetThreadTimes(GetCurrentThread(), &creationTime, &exitTime, &kernelTime, &userTime))
+        {
+            ULARGE_INTEGER kTime, uTime;
+            kTime.LowPart = kernelTime.dwLowDateTime;
+            kTime.HighPart = kernelTime.dwHighDateTime;
+            uTime.LowPart = userTime.dwLowDateTime;
+            uTime.HighPart = userTime.dwHighDateTime;
 
-      int64_t currentThreadUsageTime = (kTime.QuadPart / 10)
-                                     + (uTime.QuadPart / 10);
+            int64_t currentThreadUsageTime = (kTime.QuadPart / 10)
+                                             + (uTime.QuadPart / 10);
 
-      if (m_threadUsageTime > 0 || m_systemTime > 0)
-      {
-        m_threadTimeToSleep = ((currentThreadUsageTime - m_threadUsageTime) * 100 / maxCpuUsage)
-                            - (currentSystemTime - m_systemTime - m_threadTimeToSleep);
-      }
+            if (m_threadUsageTime > 0 || m_systemTime > 0)
+            {
+                m_threadTimeToSleep = ((currentThreadUsageTime - m_threadUsageTime) * 100 / maxCpuUsage)
+                                      - (currentSystemTime - m_systemTime - m_threadTimeToSleep);
+            }
 
-        m_threadUsageTime = currentThreadUsageTime;
-        m_systemTime = currentSystemTime;
-	  }
+            m_threadUsageTime = currentThreadUsageTime;
+            m_systemTime = currentSystemTime;
+        }
 
-	  // Something went terrible wrong, reset everything
-	  if (m_threadTimeToSleep > 10000000 || m_threadTimeToSleep < 0)
-	  {
-      m_threadTimeToSleep = 0;
-      m_threadUsageTime = 0;
-      m_systemTime = 0;
-	  }
+        // Something went terrible wrong, reset everything
+        if (m_threadTimeToSleep > 10000000 || m_threadTimeToSleep < 0)
+        {
+            m_threadTimeToSleep = 0;
+            m_threadUsageTime = 0;
+            m_systemTime = 0;
+        }
 
-	  return m_threadTimeToSleep;
-  }
+        return m_threadTimeToSleep;
+    }
 
-  return 0;
+    return 0;
 }

@@ -6,8 +6,8 @@
  * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
  * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
  * Copyright 2018      Lee Clagett <https://github.com/vtnerd>
- * Copyright 2018-2019 SChernykh   <https://github.com/SChernykh>
- * Copyright 2016-2019 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright 2018-2020 SChernykh   <https://github.com/SChernykh>
+ * Copyright 2016-2020 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -26,15 +26,19 @@
 #ifndef XMRIG_APP_H
 #define XMRIG_APP_H
 
-#include <base/tools/Object.h>
+
 #include "base/kernel/interfaces/IConsoleListener.h"
 #include "base/kernel/interfaces/ISignalListener.h"
 #include "base/cc/interfaces/ICommandListener.h"
+#include "base/tools/Object.h"
 #include "cc/ControlCommand.h"
 
 #if XMRIG_FEATURE_CC_CLIENT
 #include "cc/CCClient.h"
 #endif
+
+#include <memory>
+
 
 namespace xmrig {
 
@@ -45,10 +49,11 @@ class Network;
 class Process;
 class Signals;
 
+
 class App : public IConsoleListener, public ISignalListener, public ICommandListener
 {
 public:
-     XMRIG_DISABLE_COPY_MOVE_DEFAULT(App)
+    XMRIG_DISABLE_COPY_MOVE_DEFAULT(App)
 
     App(Process *process);
     ~App() override;
@@ -71,12 +76,13 @@ private:
 
     bool m_restart = false;
 
-    Console *m_console       = nullptr;
-    Controller *m_controller = nullptr;
-    Signals *m_signals       = nullptr;
+    std::shared_ptr<Console> m_console;
+    std::shared_ptr<Controller> m_controller;
+    std::shared_ptr<Signals> m_signals;
 };
 
 
 } /* namespace xmrig */
+
 
 #endif /* XMRIG_APP_H */

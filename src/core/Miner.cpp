@@ -1,12 +1,6 @@
 /* XMRig
- * Copyright 2010      Jeff Garzik <jgarzik@pobox.com>
- * Copyright 2012-2014 pooler      <pooler@litecoinpool.org>
- * Copyright 2014      Lucas Jones <https://github.com/lucasjones>
- * Copyright 2014-2016 Wolf9466    <https://github.com/OhGodAPet>
- * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
- * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
- * Copyright 2018-2019 SChernykh   <https://github.com/SChernykh>
- * Copyright 2016-2019 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright (c) 2018-2021 SChernykh   <https://github.com/SChernykh>
+ * Copyright (c) 2016-2021 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -22,12 +16,14 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #include <algorithm>
 #include <mutex>
 #include <thread>
 
 
+#include "core/Miner.h"
+#include "core/Taskbar.h"
+#include "3rdparty/rapidjson/document.h"
 #include "backend/common/Hashrate.h"
 #include "backend/cpu/Cpu.h"
 #include "backend/cpu/CpuBackend.h"
@@ -39,10 +35,7 @@
 #include "base/tools/Timer.h"
 #include "core/config/Config.h"
 #include "core/Controller.h"
-#include "core/Miner.h"
 #include "crypto/common/Nonce.h"
-#include "crypto/rx/Rx.h"
-#include "3rdparty/rapidjson/document.h"
 #include "version.h"
 
 
@@ -51,10 +44,12 @@
 #   include "base/api/interfaces/IApiRequest.h"
 #endif
 
+
 #ifdef XMRIG_FEATURE_CC_CLIENT
 #   include "cc/CCClient.h"
 #   include "crypto/common/VirtualMemory.h"
 #endif
+
 
 #ifdef XMRIG_FEATURE_OPENCL
 #   include "backend/opencl/OclBackend.h"
@@ -78,6 +73,11 @@
 #endif
 
 
+#ifdef XMRIG_ALGO_GHOSTRIDER
+#   include "crypto/ghostrider/ghostrider.h"
+#endif
+
+
 namespace xmrig {
 
 
@@ -90,7 +90,7 @@ public:
     XMRIG_DISABLE_COPY_MOVE_DEFAULT(MinerPrivate)
 
 
-    inline MinerPrivate(Controller *controller) : controller(controller) {}
+    inline explicit MinerPrivate(Controller *controller) : controller(controller) {}
 
 
     inline ~MinerPrivate()
@@ -121,15 +121,7 @@ public:
 
     inline void rebuild()
     {
-        algorithms.clear();
-
-        for (int i = 0; i < Algorithm::MAX; ++i) {
-            const Algorithm algo(static_cast<Algorithm::Id>(i));
-
-            if (algo.isValid() && isEnabled(algo)) {
-                algorithms.push_back(algo);
-            }
-        }
+        algorithms = Algorithm::all([this](const Algorithm &algo) { return isEnabled(algo); });
     }
 
 
@@ -168,7 +160,7 @@ public:
 
         reply.AddMember("version",      APP_VERSION, allocator);
         reply.AddMember("kind",         APP_KIND, allocator);
-        reply.AddMember("ua",           StringRef(Platform::userAgent()), allocator);
+        reply.AddMember("ua",           Platform::userAgent().toJSON(), allocator);
         reply.AddMember("cpu",          Cpu::toJSON(doc), allocator);
         reply.AddMember("donate_level", controller->config()->pools().donateLevel(), allocator);
         reply.AddMember("paused",       !enabled, allocator);
@@ -176,7 +168,7 @@ public:
         Value algo(kArrayType);
 
         for (const Algorithm &a : algorithms) {
-            algo.PushBack(StringRef(a.shortName()), allocator);
+            algo.PushBack(StringRef(a.name()), allocator);
         }
 
         reply.AddMember("algorithms", algo, allocator);
@@ -301,9 +293,11 @@ public:
 
     void printHashrate(bool details)
     {
-        char num[16 * 4] = { 0 };
+        char num[16 * 5] = { 0 };
         double speed[3]  = { 0.0 };
         uint32_t count   = 0;
+
+        double avg_hashrate = 0.0;
 
         for (auto backend : backends) {
             const auto hashrate = backend->hashrate();
@@ -313,6 +307,8 @@ public:
                 speed[0] += hashrate->calc(Hashrate::ShortInterval);
                 speed[1] += hashrate->calc(Hashrate::MediumInterval);
                 speed[2] += hashrate->calc(Hashrate::LargeInterval);
+
+                avg_hashrate += hashrate->average();
             }
 
             backend->printHashrate(details);
@@ -332,31 +328,43 @@ public:
             h = "MH/s";
         }
 
-        LOG_INFO("%s " WHITE_BOLD("speed") " 10s/60s/15m " CYAN_BOLD("%s") CYAN(" %s %s ") CYAN_BOLD("%s") " max " CYAN_BOLD("%s %s"),
-                 Tags::miner(),
-                 Hashrate::format(speed[0] * scale,                 num,          sizeof(num) / 4),
-                 Hashrate::format(speed[1] * scale,                 num + 16,     sizeof(num) / 4),
-                 Hashrate::format(speed[2] * scale,                 num + 16 * 2, sizeof(num) / 4), h,
-                 Hashrate::format(maxHashrate[algorithm] * scale,   num + 16 * 3, sizeof(num) / 4), h
-                 );
+        char avg_hashrate_buf[64];
+        avg_hashrate_buf[0] = '\0';
 
-#       ifdef XMRIG_FEATURE_BENCHMARK
-        for (auto backend : backends) {
-            backend->printBenchProgress();
+#       ifdef XMRIG_ALGO_GHOSTRIDER
+        if (algorithm.family() == Algorithm::GHOSTRIDER) {
+            snprintf(avg_hashrate_buf, sizeof(avg_hashrate_buf), " avg " CYAN_BOLD("%s %s"), Hashrate::format(avg_hashrate * scale, num + 16 * 4, 16), h);
         }
 #       endif
+
+        LOG_INFO("%s " WHITE_BOLD("speed") " 10s/60s/15m " CYAN_BOLD("%s") CYAN(" %s %s ") CYAN_BOLD("%s") " max " CYAN_BOLD("%s %s") "%s",
+                 Tags::miner(),
+                 Hashrate::format(speed[0] * scale,                 num,          16),
+                 Hashrate::format(speed[1] * scale,                 num + 16,     16),
+                 Hashrate::format(speed[2] * scale,                 num + 16 * 2, 16), h,
+                 Hashrate::format(maxHashrate[algorithm] * scale,   num + 16 * 3, 16), h,
+                 avg_hashrate_buf
+                 );
     }
 
 
 #   ifdef XMRIG_ALGO_RANDOMX
-    inline bool initRX() { return Rx::init(job, controller->config()->rx(), controller->config()->cpu()); }
+    inline bool initRX() const { return Rx::init(job, controller->config()->rx(), controller->config()->cpu()); }
+#   endif
+
+
+#   ifdef XMRIG_ALGO_GHOSTRIDER
+    inline void initGhostRider() const { ghostrider::benchmark(); }
 #   endif
 
 
     Algorithm algorithm;
     Algorithms algorithms;
     bool active         = false;
+    bool battery_power  = false;
+    bool user_active    = false;
     bool enabled        = true;
+    int32_t auto_pause = 0;
     bool reset          = true;
     Controller *controller;
     Job job;
@@ -365,6 +373,8 @@ public:
     String userJobId;
     Timer *timer        = nullptr;
     uint64_t ticks      = 0;
+
+    Taskbar m_taskbar;
 };
 
 
@@ -476,6 +486,13 @@ void xmrig::Miner::execCommand(char command)
         setEnabled(true);
         break;
 
+    case 'e':
+    case 'E':
+        for (auto backend : d_ptr->backends) {
+            backend->printHealth();
+        }
+        break;
+
     default:
         break;
     }
@@ -489,10 +506,12 @@ void xmrig::Miner::execCommand(char command)
 void xmrig::Miner::pause()
 {
     d_ptr->active = false;
+    d_ptr->m_taskbar.setActive(false);
 
     Nonce::pause(true);
     Nonce::touch();
 }
+
 
 void xmrig::Miner::setEnabled(bool enabled)
 {
@@ -500,13 +519,31 @@ void xmrig::Miner::setEnabled(bool enabled)
         return;
     }
 
+    if (d_ptr->battery_power && enabled) {
+        LOG_INFO("%s " YELLOW_BOLD("can't resume while on battery power"), Tags::miner());
+
+        return;
+    }
+
+    if (d_ptr->user_active && enabled) {
+      LOG_INFO("%s " YELLOW_BOLD("can't resume while user is active"), Tags::miner());
+
+      return;
+    }
+
     d_ptr->enabled = enabled;
+    d_ptr->m_taskbar.setEnabled(enabled);
 
     if (enabled) {
-        LOG_INFO(GREEN_BOLD("resumed"));
+        LOG_INFO("%s " GREEN_BOLD("resumed"), Tags::miner());
     }
     else {
-        LOG_INFO(YELLOW_BOLD("paused") ", press " MAGENTA_BG_BOLD(" r ") " to resume");
+        if (d_ptr->battery_power) {
+            LOG_INFO("%s " YELLOW_BOLD("paused"), Tags::miner());
+        }
+        else {
+            LOG_INFO("%s " YELLOW_BOLD("paused") ", press " MAGENTA_BG_BOLD(" r ") " to resume", Tags::miner());
+        }
     }
 
     if (!d_ptr->active) {
@@ -551,9 +588,16 @@ void xmrig::Miner::setJob(const Job &job, bool donate)
     constexpr const bool ready = true;
 #   endif
 
+#   ifdef XMRIG_ALGO_GHOSTRIDER
+    if (job.algorithm().family() == Algorithm::GHOSTRIDER) {
+        d_ptr->initGhostRider();
+    }
+#   endif
+
     mutex.unlock();
 
     d_ptr->active = true;
+    d_ptr->m_taskbar.setActive(true);
 
     if (ready) {
         d_ptr->handleJobChange();
@@ -589,10 +633,20 @@ void xmrig::Miner::onConfigChanged(Config *config, Config *previousConfig)
 
 void xmrig::Miner::onTimer(const Timer *)
 {
-    double maxHashrate = 0.0;
+    double maxHashrate          = 0.0;
+    const auto config           = d_ptr->controller->config();
+    const auto healthPrintTime  = config->healthPrintTime();
+
+    bool stopMiner = false;
 
     for (IBackend *backend : d_ptr->backends) {
-        backend->tick(d_ptr->ticks);
+        if (!backend->tick(d_ptr->ticks)) {
+            stopMiner = true;
+        }
+
+        if (healthPrintTime && d_ptr->ticks && (d_ptr->ticks % (healthPrintTime * 2)) == 0 && backend->isEnabled()) {
+            backend->printHealth();
+        }
 
         if (backend->hashrate()) {
             maxHashrate += backend->hashrate()->calc(Hashrate::ShortInterval);
@@ -601,12 +655,35 @@ void xmrig::Miner::onTimer(const Timer *)
 
     d_ptr->maxHashrate[d_ptr->algorithm] = std::max(d_ptr->maxHashrate[d_ptr->algorithm], maxHashrate);
 
-    auto seconds = d_ptr->controller->config()->printTime();
-    if (seconds && (d_ptr->ticks % (seconds * 2)) == 0) {
+    const auto printTime = config->printTime();
+    if (printTime && d_ptr->ticks && (d_ptr->ticks % (printTime * 2)) == 0) {
         d_ptr->printHashrate(false);
     }
 
     d_ptr->ticks++;
+
+    auto autoPause = [this](bool &state, bool pause, const char *pauseMessage, const char *activeMessage)
+    {
+        if ((pause && !state) || (!pause && state)) {
+            LOG_INFO("%s %s", Tags::miner(), pause ? pauseMessage : activeMessage);
+
+            state = pause;
+            d_ptr->auto_pause += pause ? 1 : -1;
+            setEnabled(d_ptr->auto_pause == 0);
+        }
+    };
+
+    if (config->isPauseOnBattery()) {
+        autoPause(d_ptr->battery_power, Platform::isOnBatteryPower(), YELLOW_BOLD("on battery power"), GREEN_BOLD("on AC power"));
+    }
+
+    if (config->isPauseOnActive()) {
+        autoPause(d_ptr->user_active, Platform::isUserActive(config->idleTime()), YELLOW_BOLD("user active"), GREEN_BOLD("user inactive"));
+    }
+
+    if (stopMiner) {
+        stop();
+    }
 }
 
 
@@ -668,6 +745,9 @@ void xmrig::Miner::onUpdateRequest(ClientStatus& clientStatus)
     clientStatus.setCurrentStatus(d_ptr->enabled ? ClientStatus::RUNNING : ClientStatus::PAUSED);
 
     if (!d_ptr->job.isDonate()) {
+
+        clientStatus.clearGPUInfoList();
+
         double t[3] = { 0.0 };
         int ways = {0};
         int threads = {0};
@@ -677,7 +757,7 @@ void xmrig::Miner::onUpdateRequest(ClientStatus& clientStatus)
         for (IBackend *backend : d_ptr->backends) {
             const Hashrate *hr = backend->hashrate();
             if (!hr) {
-                continue;
+              continue;
             }
 
             t[0] += hr->calc(Hashrate::ShortInterval);
@@ -693,14 +773,60 @@ void xmrig::Miner::onUpdateRequest(ClientStatus& clientStatus)
 
                 HugePagesInfo pages = cpuBackend->hugePages();
 
-            #   ifdef XMRIG_ALGO_RANDOMX
+#   ifdef XMRIG_ALGO_RANDOMX
                 if (d_ptr->algorithm.family() == Algorithm::RANDOM_X) {
-                    pages += Rx::hugePages();
+                  pages += Rx::hugePages();
                 }
-            #   endif
+#   endif
 
                 totalHugepages += pages.allocated;
                 totalPages += pages.total;
+            } else if (backend->type() == "opencl") {
+#   ifdef XMRIG_FEATURE_OPENCL
+                const auto oclBackend = static_cast<OclBackend *>(backend);
+                auto launchData = oclBackend->getLaunchData();
+
+                for (auto const& data : launchData) {
+                    GPUInfo gpuInfo;
+                    gpuInfo.setType(backend->type().data());
+                    gpuInfo.setDeviceIdx(data.device.index());
+                    gpuInfo.setBusId(data.device.topology().toString().data());
+                    gpuInfo.setName(data.device.name().data());
+                    gpuInfo.setComputeUnits(data.device.computeUnits());
+                    gpuInfo.setFreeMem(data.device.freeMemSize());
+                    gpuInfo.setMemory(data.device.globalMemSize());
+                    gpuInfo.setIntensity(data.thread.intensity());
+                    gpuInfo.setWorkSize(data.thread.worksize());
+                    gpuInfo.setClock(data.device.clock());
+
+                    clientStatus.addGPUInfo(gpuInfo);
+                }
+#    endif
+            } else if (backend->type() == "cuda") {
+#   ifdef XMRIG_FEATURE_OPENCL
+                const auto cudaBackend = static_cast<CudaBackend *>(backend);
+                auto launchData = cudaBackend->getLaunchData();
+
+                for (auto const& data: launchData)
+                {
+                    GPUInfo gpuInfo;
+                    gpuInfo.setType(backend->type().data());
+                    gpuInfo.setDeviceIdx(data.device.index());
+                    gpuInfo.setBusId(data.device.topology().toString().data());
+                    gpuInfo.setName(data.device.name().data());
+                    gpuInfo.setComputeUnits(data.device.smx());
+                    gpuInfo.setFreeMem(data.device.freeMemSize());
+                    gpuInfo.setMemory(data.device.globalMemSize());
+                    gpuInfo.setIntensity(data.thread.threads()*data.thread.blocks());
+                    gpuInfo.setBlocks(data.thread.blocks());
+                    gpuInfo.setBfactor(data.thread.bfactor());
+                    gpuInfo.setBsleep(data.thread.bsleep());
+                    gpuInfo.setThreads(data.thread.threads());
+                    gpuInfo.setClock(data.device.clock());
+
+                    clientStatus.addGPUInfo(gpuInfo);
+                }
+#    endif
             }
         }
 

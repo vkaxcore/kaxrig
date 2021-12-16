@@ -1,12 +1,6 @@
 /* XMRig
- * Copyright 2010      Jeff Garzik <jgarzik@pobox.com>
- * Copyright 2012-2014 pooler      <pooler@litecoinpool.org>
- * Copyright 2014      Lucas Jones <https://github.com/lucasjones>
- * Copyright 2014-2016 Wolf9466    <https://github.com/OhGodAPet>
- * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
- * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
- * Copyright 2018-2019 SChernykh   <https://github.com/SChernykh>
- * Copyright 2016-2019 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright (c) 2018-2021 SChernykh   <https://github.com/SChernykh>
+ * Copyright (c) 2016-2021 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -22,6 +16,7 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 #ifndef XMRIG_CONFIG_DEFAULT_H
 #define XMRIG_CONFIG_DEFAULT_H
 
@@ -29,6 +24,7 @@
 namespace xmrig {
 
 
+// This feature require CMake option: -DWITH_EMBEDDED_CONFIG=ON
 #ifdef XMRIG_FEATURE_EMBEDDED_CONFIG
 const static char *default_config =
 R"===(
@@ -47,26 +43,49 @@ R"===(
     "autosave": true,
     "background": false,
     "colors": true,
+    "title": true,
     "randomx": {
         "init": -1,
+        "init-avx2": -1,
         "mode": "auto",
         "1gb-pages": false,
         "rdmsr": true,
         "wrmsr": true,
-        "numa": true
+        "cache_qos": false,
+        "numa": true,
+        "scratchpad_prefetch_mode": 1
     },
     "cpu": {
         "enabled": true,
         "huge-pages": true,
+        "huge-pages-jit": false,
         "hw-aes": null,
         "priority": null,
         "memory-pool": false,
         "yield": true,
         "force-autoconfig": false,
         "max-threads-hint": 100,
+        "max-cpu-usage": null,
         "asm": true,
         "argon2-impl": null,
         "astrobwt-max-size": 550,
+        "astrobwt-avx2": false,
+        "cn/0": false,
+        "cn-lite/0": false
+    },
+    "opencl": {
+        "enabled": false,
+        "cache": true,
+        "loader": null,
+        "platform": "AMD",
+        "adl": true,
+        "cn/0": false,
+        "cn-lite/0": false
+    },
+    "cuda": {
+        "enabled": false,
+        "loader": null,
+        "nvml": true,
         "cn/0": false,
         "cn-lite/0": false
     },
@@ -87,9 +106,9 @@ R"===(
             "tls": false,
             "tls-fingerprint": null,
             "daemon": false,
-            "spend-secret-key": null,
             "socks5": null,
-            "self-select": null
+            "self-select": null,
+            "submit-to-origin": false
         }
     ],
     "cc-client": {
@@ -105,12 +124,24 @@ R"===(
     },
     "print-time": 60,
     "health-print-time": 60,
+    "dmi": true,
     "retries": 5,
     "retry-pause": 5,
     "syslog": false,
+    "tls": {
+        "enabled": false,
+        "protocols": null,
+        "cert": null,
+        "cert_key": null,
+        "ciphers": null,
+        "ciphersuites": null,
+        "dhparam": null
+    },
     "user-agent": null,
     "verbose": 0,
-    "watch": true
+    "watch": true,
+    "pause-on-battery": false,
+    "pause-on-active": false
 }
 )===";
 #endif

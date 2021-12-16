@@ -37,7 +37,7 @@ public:
     static std::string getRows();
 
 protected:
-    void print(int level, const char *line, size_t offset, size_t size, bool colors) override;
+  void print(uint64_t timestamp, int level, const char *line, size_t offset, size_t size, bool colors) override;
 
 private:
     static RemoteLog* m_self;

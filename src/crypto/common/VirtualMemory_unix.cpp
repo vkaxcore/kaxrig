@@ -65,17 +65,12 @@
 #endif
 
 
-namespace xmrig {
-
-
 #if defined(XMRIG_OS_LINUX) || (!defined(XMRIG_OS_APPLE) && !defined(__FreeBSD__))
 static inline int hugePagesFlag(size_t size)
 {
-  return (static_cast<int>(log2(size)) & MAP_HUGE_MASK) << MAP_HUGE_SHIFT;
+    return (static_cast<int>(log2(size)) & MAP_HUGE_MASK) << MAP_HUGE_SHIFT;
 }
 #endif
-
-} // namespace xmrig
 
 
 bool xmrig::VirtualMemory::isHugepagesAvailable()

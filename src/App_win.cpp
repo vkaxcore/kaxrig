@@ -29,12 +29,11 @@
 
 #include "App.h"
 #include "core/Controller.h"
-#include "core/config/Config.h"
 
 
-bool xmrig::App::background(int &rc)
+bool xmrig::App::background(int &)
 {
-    if (!m_controller->config()->isBackground()) {
+    if (!m_controller->isBackground()) {
         return false;
     }
 
