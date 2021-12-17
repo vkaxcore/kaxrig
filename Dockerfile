@@ -8,7 +8,7 @@ RUN git clone https://github.com/Bendr0id/xmrigCC.git && \
         cd scripts && \
         ./build_deps.sh && \
         cd .. && \
-        cmake . -DWITH_ZLIB=ON -DXMRIG_DEPS=scripts/deps -DBUILD_STATIC=ON && \
+        cmake . -DWITH_ZLIB=ON -DXMRIG_DEPS=scripts/deps && \
         make
 
 COPY Dockerfile /Dockerfile
