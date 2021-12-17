@@ -135,7 +135,7 @@ static inline void aes_round(__m128i key, __m128i* x0, __m128i* x1, __m128i* x2,
         *x6 = soft_aesenc((uint32_t*)x6, key);
         *x7 = soft_aesenc((uint32_t*)x7, key);
     }
-#   ifndef XMRIG_ARMv7
+#	if (XMRIG_ARM == 8)
     else {
         *x0 = vaesmcq_u8(vaeseq_u8(*((uint8x16_t *) x0), key));
         *x1 = vaesmcq_u8(vaeseq_u8(*((uint8x16_t *) x1), key));
