@@ -166,6 +166,12 @@ bool xmrig::CpuWorker<N>::selfTest()
     }
 #   endif
 
+#   ifdef XMRIG_ALGO_CN_GPU
+    if (m_algorithm == Algorithm::CN_GPU) {
+        return verify(Algorithm::CN_GPU, test_output_gpu);
+    }
+#   endif
+
     if (m_algorithm.family() == Algorithm::CN) {
         const bool rc = verify(Algorithm::CN_0,      test_output_v0)   &&
                         verify(Algorithm::CN_1,      test_output_v1)   &&

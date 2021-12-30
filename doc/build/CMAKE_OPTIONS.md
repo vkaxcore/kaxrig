@@ -15,6 +15,7 @@
 * **`-DWITH_CN_FEMTO=OFF`** disable CryptoNight-Femto (UPX2)  algorithm (`cn/upx2`).
 * **`-DWITH_RANDOMX=OFF`** disable RandomX algorithms (`rx/0`, `rx/wow`, `rx/*`).
 * **`-DWITH_ARGON2=OFF`** disable Argon2 algorithms (`argon2/chukwa`, `argon2/wrkz`).
+* **`-DWITH_CN_GPU=OFF`** disable CryptoNight-GPU algorithm (`cn/gpu`).
 
 ## Features
 

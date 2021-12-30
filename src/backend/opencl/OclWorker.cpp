@@ -28,6 +28,9 @@
 #include "crypto/common/Nonce.h"
 #include "net/JobResults.h"
 
+#ifdef XMRIG_ALGO_CN_GPU
+#   include "backend/opencl/runners/OclCnGpuRunner.h"
+#endif
 
 #ifdef XMRIG_ALGO_RANDOMX
 #   include "backend/opencl/runners/OclRxJitRunner.h"
@@ -102,6 +105,12 @@ xmrig::OclWorker::OclWorker(size_t id, const OclLaunchData &data) :
         break;
 
     default:
+#       ifdef XMRIG_ALGO_CN_GPU
+        if (m_algorithm == Algorithm::CN_GPU) {
+            m_runner = new OclCnGpuRunner(id, data);
+        }
+        else
+#       endif
         m_runner = new OclCnRunner(id, data);
         break;
     }
