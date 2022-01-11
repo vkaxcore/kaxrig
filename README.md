@@ -295,4 +295,5 @@ ETH:  `0x799611a12F196848967E9002B7bF1d01872D88F8`
 * ben [at] graef.in
 * [telegram](https://t.me/XMRigCC)
 * [discord](https://discord.gg/r3rCKTB)
+* [twitter](https://twitter.com/XMRigCC)
 * [reddit](https://www.reddit.com/user/BenDr0id/)
