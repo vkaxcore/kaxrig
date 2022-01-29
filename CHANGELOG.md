@@ -1,3 +1,8 @@
+# 3.1.0
+* Rebase upstream 6.16.4-dev
+* Integrated cn/gpu algo (CPU/GPU) to support mining Equilibria (XEQ) and Conceal (CCX)
+* Integrated Lozzax RandomX variant "LOZZ" (`rx/lozz`)
+* Official FreeBSD binaries
 # 3.0.0
 * Full Rebase of XMRig 6.16.3-dev
   * Unified CPU & GPU (Cuda/OpenCL) support
