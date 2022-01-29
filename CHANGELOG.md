@@ -1,16 +1,16 @@
 # 3.1.0
 * Rebase upstream 6.16.4-dev
-* Integrated cn/gpu algo (CPU/GPU) to support mining Equilibria (XEQ) and Conceal (CCX)
-* Integrated Lozzax RandomX variant "LOZZ" (`rx/lozz`)
+* Integrated Equilibria (XEQ) and Conceal (CCX) CryptoNight variant GPU (`cn/gpu`) [CPU/GPU]
+* Integrated Lozzax RandomX variant "LOZZ" (`rx/lozz`) [CPU/GPU]
 * Official FreeBSD binaries
 # 3.0.0
 * Full Rebase of XMRig 6.16.3-dev
   * Unified CPU & GPU (Cuda/OpenCL) support
-  * Ghostrider support
+  * Ghostrider support [CPU-only]
   * KawPow (Ravencoin) [GPU-only] support
   * Tons of other improvements and optimizations
 * Improved max-cpu-usage parameter for better core utilization [MAX-CPU-USAGE](https://github.com/Bendr0id/xmrigCC/blob/master/doc/CPU_MAX_USAGE.md)
-* Reintegrated [Yadacoin](https://yadacoin.io/) RandomX variant (`rx/yada`) or coin (`yada`)
+* Reintegrated [Yadacoin](https://yadacoin.io/) RandomX variant (`rx/yada`) or coin (`yada`) [CPU-only]
 * Dropped support for `panthera` (XLA/scala), `cn/superfast`, `cn/cache_hash`
 # 2.9.7
 * AstroBWT speedup (upstream 6.15.3 -> up to +35%)
