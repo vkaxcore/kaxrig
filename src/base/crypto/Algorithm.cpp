@@ -74,6 +74,10 @@ const char *Algorithm::kCN_PICO_TLO     = "cn-pico/tlo";
 const char *Algorithm::kCN_UPX2         = "cn/upx2";
 #endif
 
+#ifdef XMRIG_ALGO_CN_GPU
+const char *Algorithm::kCN_GPU          = "cn/gpu";
+#endif
+
 #ifdef XMRIG_ALGO_RANDOMX
 const char *Algorithm::kRX              = "rx";
 const char *Algorithm::kRX_0            = "rx/0";
@@ -83,6 +87,7 @@ const char *Algorithm::kRX_GRAFT        = "rx/graft";
 const char *Algorithm::kRX_SFX          = "rx/sfx";
 const char *Algorithm::kRX_KEVA         = "rx/keva";
 const char *Algorithm::kRX_YADA         = "rx/yada";
+const char *Algorithm::kRX_LOZZ         = "rx/lozz";
 #endif
 
 #ifdef XMRIG_ALGO_ARGON2
@@ -147,6 +152,10 @@ static const std::map<uint32_t, const char *> kAlgorithmNames = {
     ALGO_NAME(CN_UPX2),
 #   endif
 
+#   ifdef XMRIG_ALGO_CN_GPU
+    ALGO_NAME(CN_GPU),
+#   endif
+
 #   ifdef XMRIG_ALGO_RANDOMX
     ALGO_NAME(RX_0),
     ALGO_NAME(RX_WOW),
@@ -155,6 +164,7 @@ static const std::map<uint32_t, const char *> kAlgorithmNames = {
     ALGO_NAME(RX_SFX),
     ALGO_NAME(RX_KEVA),
     ALGO_NAME(RX_YADA),
+    ALGO_NAME(RX_LOZZ),
 #   endif
 
 #   ifdef XMRIG_ALGO_ARGON2
@@ -259,6 +269,12 @@ static const std::map<const char *, Algorithm::Id, aliasCompare> kAlgorithmAlias
                                     ALGO_ALIAS(CN_UPX2,         "cn-extremelite"),
 #   endif
 
+#   ifdef XMRIG_ALGO_CN_GPU
+    ALGO_ALIAS_AUTO(CN_GPU),        ALGO_ALIAS(CN_GPU,          "cryptonight/gpu"),
+                                    ALGO_ALIAS(CN_GPU,          "cryptonight_gpu"),
+#   endif
+
+
 #   ifdef XMRIG_ALGO_RANDOMX
     ALGO_ALIAS_AUTO(RX_0),          ALGO_ALIAS(RX_0,            "randomx/0"),
                                     ALGO_ALIAS(RX_0,            "randomx/test"),
@@ -277,6 +293,8 @@ static const std::map<const char *, Algorithm::Id, aliasCompare> kAlgorithmAlias
                                     ALGO_ALIAS(RX_KEVA,         "randomkeva"),
     ALGO_ALIAS_AUTO(RX_YADA),       ALGO_ALIAS(RX_YADA,         "randomx/yada"),
                                     ALGO_ALIAS(RX_YADA,         "randomyada"),
+    ALGO_ALIAS_AUTO(RX_LOZZ),       ALGO_ALIAS(RX_LOZZ,         "randomx/lozz"),
+                                    ALGO_ALIAS(RX_LOZZ,         "randomL"),
 #   endif
 
 #   ifdef XMRIG_ALGO_ARGON2
@@ -368,7 +386,8 @@ std::vector<xmrig::Algorithm> xmrig::Algorithm::all(const std::function<bool(con
         CN_HEAVY_0, CN_HEAVY_TUBE, CN_HEAVY_XHV,
         CN_PICO_0, CN_PICO_TLO,
         CN_UPX2,
-        RX_0, RX_WOW, RX_ARQ, RX_GRAFT, RX_SFX, RX_KEVA, RX_YADA,
+        CN_GPU,
+        RX_0, RX_WOW, RX_ARQ, RX_GRAFT, RX_SFX, RX_KEVA, RX_YADA, RX_LOZZ,
         AR2_CHUKWA, AR2_CHUKWA_V2, AR2_WRKZ,
         ASTROBWT_DERO,
         KAWPOW_RVN,

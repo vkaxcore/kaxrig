@@ -52,6 +52,7 @@ function rx()
         'randomx_constants_arqma.h',
         'randomx_constants_keva.h',
         'randomx_constants_graft.h',
+        'randomx_constants_lozz.h',
         'aes.cl',
         'blake2b.cl',
         'randomx_vm.cl',
@@ -87,10 +88,20 @@ function kawpow()
 }
 
 
+function cn_gpu()
+{
+    const cn_gpu = opencl_minify(addIncludes('cryptonight_gpu.cl', [ 'wolf-aes.cl', 'keccak.cl' ]));
+
+    // fs.writeFileSync('cryptonight_gpu_gen.cl', cn_gpu);
+    fs.writeFileSync('cryptonight_gpu_cl.h', text2h(cn_gpu, 'xmrig', 'cryptonight_gpu_cl'));
+}
+
+
 process.chdir(path.resolve('src/backend/opencl/cl/cn'));
 
 cn();
 cn_r();
+cn_gpu();
 
 process.chdir(cwd);
 process.chdir(path.resolve('src/backend/opencl/cl/rx'));

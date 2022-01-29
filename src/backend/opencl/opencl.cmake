@@ -150,6 +150,23 @@ if (WITH_OPENCL)
              )
     endif()
 
+    if (WITH_CN_GPU AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+        list(APPEND HEADERS_BACKEND_OPENCL
+             src/backend/opencl/kernels/Cn00GpuKernel.h
+             src/backend/opencl/kernels/Cn1GpuKernel.h
+             src/backend/opencl/kernels/Cn2GpuKernel.h
+             src/backend/opencl/runners/OclCnGpuRunner.h
+             )
+
+        list(APPEND SOURCES_BACKEND_OPENCL
+             src/backend/opencl/generators/ocl_generic_cn_gpu_generator.cpp
+             src/backend/opencl/kernels/Cn00GpuKernel.cpp
+             src/backend/opencl/kernels/Cn1GpuKernel.cpp
+             src/backend/opencl/kernels/Cn2GpuKernel.cpp
+             src/backend/opencl/runners/OclCnGpuRunner.cpp
+             )
+    endif()
+
     if (WITH_STRICT_CACHE)
         add_definitions(/DXMRIG_STRICT_OPENCL_CACHE)
     else()

@@ -22,54 +22,49 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-#include "backend/opencl/cl/OclSource.h"
-#include "backend/opencl/cl/cn/cryptonight_cl.h"
-#include "base/crypto/Algorithm.h"
-
-#ifdef XMRIG_ALGO_CN_GPU
-#   include "backend/opencl/cl/cn/cryptonight_gpu_cl.h"
-#endif
-
-#ifdef XMRIG_ALGO_RANDOMX
-#   include "backend/opencl/cl/rx/randomx_cl.h"
-#endif
-
-#ifdef XMRIG_ALGO_ASTROBWT
-#   include "backend/opencl/cl/astrobwt/astrobwt_cl.h"
-#endif
-
-#ifdef XMRIG_ALGO_KAWPOW
-#   include "backend/opencl/cl/kawpow/kawpow_cl.h"
-#   include "backend/opencl/cl/kawpow/kawpow_dag_cl.h"
-#endif
+#ifndef XMRIG_OCLCNGPURUNNER_H
+#define XMRIG_OCLCNGPURUNNER_H
 
 
-const char *xmrig::OclSource::get(const Algorithm &algorithm)
+#include "backend/opencl/runners/OclBaseRunner.h"
+
+
+namespace xmrig {
+
+
+class Cn00GpuKernel;
+class Cn0Kernel;
+class Cn1GpuKernel;
+class Cn2GpuKernel;
+
+
+class OclCnGpuRunner : public OclBaseRunner
 {
-#   ifdef XMRIG_ALGO_CN_GPU
-    if (algorithm == Algorithm::CN_GPU) {
-        return cryptonight_gpu_cl;
-    }
-#   endif
+public:
+    XMRIG_DISABLE_COPY_MOVE_DEFAULT(OclCnGpuRunner)
 
-#   ifdef XMRIG_ALGO_RANDOMX
-    if (algorithm.family() == Algorithm::RANDOM_X) {
-        return randomx_cl;
-    }
-#   endif
+    OclCnGpuRunner(size_t index, const OclLaunchData &data);
 
-#   ifdef XMRIG_ALGO_ASTROBWT
-    if (algorithm.family() == Algorithm::ASTROBWT) {
-        return astrobwt_cl;
-    }
-#   endif
+    ~OclCnGpuRunner() override;
 
-#   ifdef XMRIG_ALGO_KAWPOW
-    if (algorithm.family() == Algorithm::KAWPOW) {
-        return kawpow_dag_cl;
-    }
-#   endif
+protected:
+    size_t bufferSize() const override;
+    void run(uint32_t nonce, uint32_t *hashOutput) override;
+    void set(const Job &job, uint8_t *blob) override;
+    void build() override;
+    void init() override;
 
-    return cryptonight_cl;
-}
+private:
+    cl_mem m_scratchpads      = nullptr;
+    cl_mem m_states           = nullptr;
+    Cn00GpuKernel *m_cn00   = nullptr;
+    Cn0Kernel *m_cn0          = nullptr;
+    Cn1GpuKernel *m_cn1     = nullptr;
+    Cn2GpuKernel *m_cn2     = nullptr;
+};
+
+
+} /* namespace xmrig */
+
+
+#endif // XMRIG_OCLCNGPURUNNER_H

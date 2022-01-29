@@ -65,6 +65,7 @@ public:
         CN_PICO_0       = 0x63120200,   // "cn-pico"          CryptoNight-Pico
         CN_PICO_TLO     = 0x63120274,   // "cn-pico/tlo"      CryptoNight-Pico (TLO)
         CN_UPX2         = 0x63110200,   // "cn/upx2"          Uplexa (UPX2)
+        CN_GPU          = 0x63150300,   // "cn/gpu"           CryptoNight-GPU.
         CN_GR_0         = 0x63130100,   // "cn/dark"          GhostRider
         CN_GR_1         = 0x63130101,   // "cn/dark-lite"     GhostRider
         CN_GR_2         = 0x63150102,   // "cn/fast"          GhostRider
@@ -78,7 +79,8 @@ public:
         RX_GRAFT        = 0x72151267,   // "rx/graft"         RandomGRAFT (Graft).
         RX_SFX          = 0x72151273,   // "rx/sfx"           RandomSFX (Safex Cash).
         RX_KEVA         = 0x7214116b,   // "rx/keva"          RandomKEVA (Keva).
-        RX_YADA         = 0x721512aa,   // "rx/yada"          RandomYADA (Yada).
+        RX_YADA         = 0x72151279,   // "rx/yada"          RandomYADA (Yada).
+        RX_LOZZ         = 0x7215126c,   // "rx/lozz"          RandomL (Lozzax).
         AR2_CHUKWA      = 0x61130000,   // "argon2/chukwa"    Argon2id (Chukwa).
         AR2_CHUKWA_V2   = 0x61140000,   // "argon2/chukwav2"  Argon2id (Chukwa v2).
         AR2_WRKZ        = 0x61120000,   // "argon2/wrkz"      Argon2id (WRKZ)
@@ -139,6 +141,10 @@ public:
     static const char *kCN_UPX2;
 #   endif
 
+#   ifdef XMRIG_ALGO_CN_GPU
+    static const char *kCN_GPU;
+#   endif
+
 #   ifdef XMRIG_ALGO_RANDOMX
     static const char *kRX;
     static const char *kRX_0;
@@ -148,6 +154,7 @@ public:
     static const char *kRX_SFX;
     static const char *kRX_KEVA;
     static const char *kRX_YADA;
+    static const char *kRX_LOZZ;
 #   endif
 
 #   ifdef XMRIG_ALGO_ARGON2
