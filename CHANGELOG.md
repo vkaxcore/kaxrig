@@ -1,7 +1,7 @@
 # 3.1.0
 * Rebase upstream 6.16.4-dev
 * Integrated Equilibria (XEQ) and Conceal (CCX) CryptoNight variant GPU (`cn/gpu`) [CPU/GPU]
-* Integrated Lozzax RandomX variant "LOZZ" (`rx/lozz`) [CPU/GPU]
+* Integrated Lozzax RandomX variant (`rx/lozz`) [CPU/GPU]
 * Official FreeBSD binaries
 # 3.0.0
 * Full Rebase of XMRig 6.16.3-dev
