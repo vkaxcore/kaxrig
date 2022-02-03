@@ -1,3 +1,6 @@
+# 3.1.1
+* Integrated Discord-Webhook push notifications #365
+* 
 # 3.1.0
 * Rebase upstream 6.16.4-dev
 * Integrated Equilibria (XEQ) and Conceal (CCX) CryptoNight variant GPU (`cn/gpu`) [CPU/GPU]

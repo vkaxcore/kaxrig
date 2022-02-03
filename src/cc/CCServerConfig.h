@@ -38,6 +38,7 @@ public:
   inline bool useTLS() const                      { return m_useTLS; }
   inline bool usePushover() const                 { return !m_pushoverUserKey.empty() && !m_pushoverApiToken.empty(); }
   inline bool useTelegram() const                 { return !m_telegramBotToken.empty() && !m_telegramChatId.empty(); }
+  inline bool useDiscord() const                  { return !m_discordWebhookUrl.empty(); }
   inline bool pushOfflineMiners() const           { return m_pushOfflineMiners; }
   inline bool pushZeroHashrateMiners() const      { return m_pushZeroHashrateMiners; }
   inline bool pushPeriodicStatus() const          { return m_pushPeriodicStatus; }
@@ -55,6 +56,7 @@ public:
   inline std::string pushoverUserKey() const      { return m_pushoverUserKey; }
   inline std::string telegramBotToken() const     { return m_telegramBotToken; }
   inline std::string telegramChatId() const       { return m_telegramChatId; }
+  inline std::string discordWebhookUrl() const    { return m_discordWebhookUrl; }
 
   inline int port() const                         { return m_port; }
   inline int clientLogHistory() const             { return m_clientLogHistory; }
@@ -90,6 +92,7 @@ private:
   std::string m_pushoverUserKey;
   std::string m_telegramBotToken;
   std::string m_telegramChatId;
+  std::string m_discordWebhookUrl;
 };
 
 #endif /* XMRIG_CC_SERVER_CONFIG_H */
