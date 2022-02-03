@@ -40,7 +40,9 @@
 #endif
 
 #ifdef _MSC_VER
-#   if (_MSC_VER >= 1920)
+#   if (_MSC_VER >= 1930)
+#       define MSVC_VERSION 2022
+#   elif (_MSC_VER >= 1920 && _MSC_VER < 1930)
 #       define MSVC_VERSION 2019
 #   elif (_MSC_VER >= 1910 && _MSC_VER < 1920)
 #       define MSVC_VERSION 2017
