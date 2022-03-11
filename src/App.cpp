@@ -38,6 +38,7 @@
 #include "core/config/Config.h"
 #include "core/Controller.h"
 #include "cc/ControlCommand.h"
+#include "cc/XMRigd.h"
 #include "Summary.h"
 #include "version.h"
 
@@ -102,7 +103,7 @@ int xmrig::App::exec()
     rc = uv_run(uv_default_loop(), UV_RUN_DEFAULT);
     uv_loop_close(uv_default_loop());
 
-    return m_restart ? EINTR : rc;
+    return m_rc > 0 ? m_rc : rc;
 }
 
 
@@ -110,7 +111,7 @@ void xmrig::App::onConsoleCommand(char command)
 {
     if (command == 3) {
         LOG_WARN("%s " YELLOW("Ctrl+C received, exiting"), Tags::signal());
-        close(false);
+        close(RC_OK);
     }
     else {
         m_controller->execCommand(command);
@@ -125,7 +126,7 @@ void xmrig::App::onSignal(int signum)
     case SIGHUP:
     case SIGTERM:
     case SIGINT:
-        return close(false);
+        return close(RC_OK);
 
     default:
         break;
@@ -143,11 +144,12 @@ void xmrig::App::onCommandReceived(ControlCommand& command)
         case ControlCommand::STOP:
             m_controller->execCommand('p');
             break;
+        case ControlCommand::UPDATE:
         case ControlCommand::RESTART:
-            close(true);
+            close(RC_RESTART);
             break;
         case ControlCommand::SHUTDOWN:
-            close(false);
+            close(RC_OK);
             break;
         case ControlCommand::REBOOT:
             reboot();
@@ -163,9 +165,9 @@ void xmrig::App::onCommandReceived(ControlCommand& command)
 }
 
 
-void xmrig::App::close(bool restart)
+void xmrig::App::close(int rc)
 {
-    m_restart = restart;
+    m_rc = rc;
 
     m_controller->stop();
     m_controller.reset();
@@ -186,7 +188,7 @@ void xmrig::App::reboot()
   auto rebootCmd = m_controller->config()->ccClient().rebootCmd();
   if (rebootCmd) {
     system(rebootCmd);
-    close(false);
+    close(RC_OK);
   }
 #   else
   LOG_EMERG("Shell execute disabled. Skipping REBOOT.");

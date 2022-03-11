@@ -229,7 +229,7 @@
                     'colvis',
                     {
                         text: '<i class="fa fa-upload"> Push miner config</i>',
-                        className: 'btn-primary',
+                        className: 'btn-info',
                         enabled: false,
                         action: function () {
                             table.rows({selected: true}).eq(0).each(function (index) {
@@ -242,7 +242,7 @@
                     },
                     {
                         text: '<i class="fa fa-download"> Pull miner config</i>',
-                        className: 'btn-info',
+                        className: 'btn-primary',
                         enabled: false,
                         action: function () {
                             table.rows({selected: true}).eq(0).each(function (index) {
@@ -254,71 +254,16 @@
                         }
                     },
                     {
-                        text: '<i class="fa fa-play"> Start</i>',
-                        className: 'btn-success',
-                        enabled: false,
-                        action: function () {
-                            table.rows({selected: true}).eq(0).each(function (index) {
-                                var row = table.row(index);
-                                var data = row.data();
-
-                                sendAction("START", data.client_status.client_id);
-                            });
-                        }
-                    },
-                    {
-                        text: '<i class="fa fa-pause"> Pause</i>',
-                        className: 'btn-warning',
-                        enabled: false,
-                        action: function () {
-                            table.rows({selected: true}).eq(0).each(function (index) {
-                                var row = table.row(index);
-                                var data = row.data();
-
-                                sendAction("STOP", data.client_status.client_id);
-                            });
-                        }
-                    },
-                    {
-                        text: '<i class="fa fa-repeat"> Restart</i>',
-                        className: 'btn-info',
-                        enabled: false,
-                        action: function () {
-                            table.rows({selected: true}).eq(0).each(function (index) {
-                                var row = table.row(index);
-                                var data = row.data();
-
-                                sendAction("RESTART", data.client_status.client_id);
-                            });
-                        }
-                    },
-                    {
-                        text: '<i class="fa fa-sign-out"> Stop</i>',
+                        text: '<i class="fa fa-recycle"> Update miner</i>',
                         className: 'btn-danger',
                         enabled: false,
                         action: function () {
-                            $('#commandDialogStop').modal('show');
-                        }
-                    },
-                    {
-                        text: '<i class="fa fa-refresh"> Reboot</i>',
-                        className: 'btn-warning',
-                        enabled: false,
-                        action: function () {
                             table.rows({selected: true}).eq(0).each(function (index) {
                                 var row = table.row(index);
                                 var data = row.data();
 
-                                sendAction("REBOOT", data.client_status.client_id);
+                                sendAction("UPDATE", data.client_status.client_id);
                             });
-                        }
-                    },
-                    {
-                        text: '<i class="fa fa-rocket"> Execute</i>',
-                        className: 'btn-success',
-                        enabled: false,
-                        action: function () {
-                            $('#commandExecuteDialog').modal('show');
                         }
                     },
                     {
@@ -390,6 +335,74 @@
                                     setError('<strong>Unable to fetch templates</strong> - Please make they exist!');
                                 }
                             });
+                        }
+                    },
+                    {
+                        text: '<i class="fa fa-play"> Start</i>',
+                        className: 'btn-success',
+                        enabled: false,
+                        action: function () {
+                            table.rows({selected: true}).eq(0).each(function (index) {
+                                var row = table.row(index);
+                                var data = row.data();
+
+                                sendAction("START", data.client_status.client_id);
+                            });
+                        }
+                    },
+                    {
+                        text: '<i class="fa fa-pause"> Pause</i>',
+                        className: 'btn-warning',
+                        enabled: false,
+                        action: function () {
+                            table.rows({selected: true}).eq(0).each(function (index) {
+                                var row = table.row(index);
+                                var data = row.data();
+
+                                sendAction("STOP", data.client_status.client_id);
+                            });
+                        }
+                    },
+                    {
+                        text: '<i class="fa fa-sign-out"> Stop</i>',
+                        className: 'btn-danger',
+                        enabled: false,
+                        action: function () {
+                            $('#commandDialogStop').modal('show');
+                        }
+                    },
+                    {
+                        text: '<i class="fa fa-repeat"> Restart</i>',
+                        className: 'btn-info',
+                        enabled: false,
+                        action: function () {
+                            table.rows({selected: true}).eq(0).each(function (index) {
+                                var row = table.row(index);
+                                var data = row.data();
+
+                                sendAction("RESTART", data.client_status.client_id);
+                            });
+                        }
+                    },
+                    {
+                        text: '<i class="fa fa-refresh"> Reboot</i>',
+                        className: 'btn-danger',
+                        enabled: false,
+                        action: function () {
+                            table.rows({selected: true}).eq(0).each(function (index) {
+                                var row = table.row(index);
+                                var data = row.data();
+
+                                sendAction("REBOOT", data.client_status.client_id);
+                            });
+                        }
+                    },
+                    {
+                        text: '<i class="fa fa-rocket"> Execute</i>',
+                        className: 'btn-primary',
+                        enabled: false,
+                        action: function () {
+                            $('#commandExecuteDialog').modal('show');
                         }
                     }
                 ],
@@ -521,29 +534,19 @@
             table.on('select', function () {
                 var selectedRows = table.rows({selected: true}).count();
 
-                table.button(1).enable(selectedRows > 0);
-                table.button(2).enable(selectedRows > 0);
-                table.button(3).enable(selectedRows > 0);
-                table.button(4).enable(selectedRows > 0);
-                table.button(5).enable(selectedRows > 0);
-                table.button(6).enable(selectedRows > 0);
-                table.button(7).enable(selectedRows > 0);
-                table.button(8).enable(selectedRows > 0);
-                table.button(9).enable(selectedRows > 0);
+                for (var i=1; i < 11; i++)
+                {
+                    table.button(i).enable(selectedRows > 0 || i === 5);
+                }
             });
 
             table.on('deselect', function () {
                 var selectedRows = table.rows({selected: true}).count();
 
-                table.button(1).enable(selectedRows > 0);
-                table.button(2).enable(selectedRows > 0);
-                table.button(3).enable(selectedRows > 0);
-                table.button(4).enable(selectedRows > 0);
-                table.button(5).enable(selectedRows > 0);
-                table.button(6).enable(selectedRows > 0);
-                table.button(7).enable(selectedRows > 0);
-                table.button(8).enable(selectedRows > 0);
-                table.button(9).enable(selectedRows > 0);
+                for (var i=1; i < 11; i++)
+                {
+                    table.button(i).enable(selectedRows > 0 || i === 5);
+                }
             });
 
             table.buttons().container().appendTo('#clientStatusList_wrapper .col-sm-6:eq(0)');

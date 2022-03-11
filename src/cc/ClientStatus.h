@@ -28,221 +28,270 @@ class ClientStatus
 {
 
 public:
-    enum Status {
-        RUNNING,
-        PAUSED
-    };
+  enum Status
+  {
+    RUNNING,
+    PAUSED
+  };
 
 public:
-    ClientStatus();
+  ClientStatus();
 
-    inline const char *toString (Status status)
+  inline const char* toString(Status status)
+  {
+    return status_str[static_cast<int>(status)];
+  }
+
+  inline Status toStatus(const char* status)
+  {
+    const int n = sizeof(status_str) / sizeof(status_str[0]);
+    for (int i = 0; i < n; ++i)
     {
-        return status_str[static_cast<int>(status)];
+      if (strcmp(status_str[i], status) == 0)
+      {
+        return (Status) i;
+      }
     }
+    return Status::RUNNING;
+  }
 
-    inline Status toStatus (const char *status)
-    {
-        const int n = sizeof(status_str) / sizeof(status_str[0]);
-        for (int i = 0; i < n; ++i)
-        {
-            if (strcmp(status_str[i], status) == 0)
-                return (Status) i;
-        }
-        return Status::RUNNING;
-    }
+  Status getCurrentStatus() const;
 
-    Status getCurrentStatus() const;
-    void setCurrentStatus(Status currentStatus);
+  void setCurrentStatus(Status currentStatus);
 
-    std::string getClientId() const;
-    void setClientId(const std::string& clientId);
+  std::string getClientId() const;
 
-    std::string getCurrentPool() const;
-    void setCurrentPool(const std::string& currentPool);
+  void setClientId(const std::string& clientId);
 
-    std::string getCurrentPoolUser() const;
-    void setCurrentPoolUser(const std::string& currentPoolUser);
+  std::string getCurrentPool() const;
 
-    std::string getCurrentPoolPass() const;
-    void setCurrentPoolPass(const std::string& currentPoolPass);
+  void setCurrentPool(const std::string& currentPool);
 
-    std::string getCurrentPoolRigId() const;
-    void setCurrentPoolRigId(const std::string& currentPoolRigId);
+  std::string getCurrentPoolUser() const;
 
-    std::string getCurrentAlgoName() const;
-    void setCurrentAlgoName(const std::string& algoName);
+  void setCurrentPoolUser(const std::string& currentPoolUser);
 
-    std::string getCurrentPowVariantName() const;
-    void setCurrentPowVariantName(const std::string& powVariantName);
+  std::string getCurrentPoolPass() const;
 
-    std::string getCpuBrand() const;
-    void setCpuBrand(const std::string& cpuBrand);
+  void setCurrentPoolPass(const std::string& currentPoolPass);
 
-    std::string getExternalIp() const;
-    void setExternalIp(const std::string& externalIp);
+  std::string getCurrentPoolRigId() const;
 
-    std::string getVersion() const;
-    void setVersion(const std::string& version);
+  void setCurrentPoolRigId(const std::string& currentPoolRigId);
 
-    std::string getLog() const;
-    void setLog(const std::string& log);
-    void clearLog();
+  std::string getCurrentAlgoName() const;
 
-    std::string getAssembly() const;
-    void setAssembly(const std::string& assembly);
+  void setCurrentAlgoName(const std::string& algoName);
 
-    bool hasHugepages() const;
-    void setHugepages(bool hasHugepages);
+  std::string getCurrentPowVariantName() const;
 
-    bool isHugepagesEnabled() const;
-    void setHugepagesEnabled(bool hugepagesEnabled);
+  void setCurrentPowVariantName(const std::string& powVariantName);
 
-    bool isCpuX64() const;
-    void setCpuX64(bool isCpuX64);
+  std::string getCpuBrand() const;
 
-    bool isVM() const;
-    void setVM(bool isVM);
+  void setCpuBrand(const std::string& cpuBrand);
 
-    bool hasCpuAES() const;
-    void setCpuAES(bool hasCpuAES);
+  std::string getExternalIp() const;
 
-    double getHashrateShort() const;
-    void setHashrateShort(double hashrateShort);
+  void setExternalIp(const std::string& externalIp);
 
-    double getHashrateMedium() const;
-    void setHashrateMedium(double hashrateMedium);
+  std::string getVersion() const;
 
-    double getHashrateLong() const;
-    void setHashrateLong(double hashrateLong);
+  void setVersion(const std::string& version);
 
-    void setHashrateHighest(double hashrateHighest);
-    double getHashrateHighest() const;
+  std::string getLog() const;
 
-    int getHashFactor() const;
-    void setHashFactor(int hashFactor);
+  void setLog(const std::string& log);
 
-    int getTotalPages() const;
-    void setTotalPages(int totalPages);
+  void clearLog();
 
-    int getTotalHugepages() const;
-    void setTotalHugepages(int totalHugepages);
+  std::string getAssembly() const;
 
-    int getCurrentThreads() const;
-    void setCurrentThreads(int currentThreads);
+  void setAssembly(const std::string& assembly);
 
-    int getCurrentWays() const;
-    void setCurrentWays(int currentWays);
+  bool hasHugepages() const;
 
-    int getCpuSockets() const;
-    void setCpuSockets(int cpuSockets);
+  void setHugepages(bool hasHugepages);
 
-    int getCpuCores() const;
-    void setCpuCores(int cpuCores);
+  bool isHugepagesEnabled() const;
 
-    int getCpuThreads() const;
-    void setCpuThreads(int cpuThreads);
+  void setHugepagesEnabled(bool hugepagesEnabled);
 
-    int getMaxCpuUsage() const;
-    void setMaxCpuUsage(int maxCpuUsage);
+  bool isCpuX64() const;
 
-    int getCpuL2() const;
-    void setCpuL2(int cpuL2);
+  void setCpuX64(bool isCpuX64);
 
-    int getCpuL3() const;
-    void setCpuL3(int cpuL3);
+  bool isVM() const;
 
-    uint64_t getTotalMemory() const;
-    void setTotalMemory(uint64_t totalMemory);
+  void setVM(bool isVM);
 
-    uint64_t getFreeMemory() const;
-    void setFreeMemory(uint64_t freeMemory);
+  bool hasCpuAES() const;
 
-    void setNodes(int nodes);
-    int getNodes();
+  void setCpuAES(bool hasCpuAES);
 
-    const std::list<GPUInfo> getGPUInfoList() const;
-    void addGPUInfo(const GPUInfo gpuInfo);
-    void clearGPUInfoList();
+  double getHashrateShort() const;
 
-    uint64_t getSharesGood() const;
-    void setSharesGood(uint64_t sharesGood);
+  void setHashrateShort(double hashrateShort);
 
-    uint64_t getSharesTotal() const;
-    void setSharesTotal(uint64_t sharesTotal);
+  double getHashrateMedium() const;
 
-    uint64_t getHashesTotal() const;
-    void setHashesTotal(uint64_t hashesTotal);
+  void setHashrateMedium(double hashrateMedium);
 
-    void setAvgTime(uint32_t avgTime);
-    uint32_t getAvgTime() const;
+  double getHashrateLong() const;
 
-    uint64_t getLastStatusUpdate() const;
+  void setHashrateLong(double hashrateLong);
 
-    void setUptime(uint64_t uptime);
-    uint64_t getUptime() const;
+  void setHashrateHighest(double hashrateHighest);
 
-    std::string toJsonString();
-    rapidjson::Value toJson(rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>& allocator);
-    bool parseFromJson(const rapidjson::Document& document);
+  double getHashrateHighest() const;
+
+  int getHashFactor() const;
+
+  void setHashFactor(int hashFactor);
+
+  int getTotalPages() const;
+
+  void setTotalPages(int totalPages);
+
+  int getTotalHugepages() const;
+
+  void setTotalHugepages(int totalHugepages);
+
+  int getCurrentThreads() const;
+
+  void setCurrentThreads(int currentThreads);
+
+  int getCurrentWays() const;
+
+  void setCurrentWays(int currentWays);
+
+  int getCpuSockets() const;
+
+  void setCpuSockets(int cpuSockets);
+
+  int getCpuCores() const;
+
+  void setCpuCores(int cpuCores);
+
+  int getCpuThreads() const;
+
+  void setCpuThreads(int cpuThreads);
+
+  int getMaxCpuUsage() const;
+
+  void setMaxCpuUsage(int maxCpuUsage);
+
+  int getCpuL2() const;
+
+  void setCpuL2(int cpuL2);
+
+  int getCpuL3() const;
+
+  void setCpuL3(int cpuL3);
+
+  uint64_t getTotalMemory() const;
+
+  void setTotalMemory(uint64_t totalMemory);
+
+  uint64_t getFreeMemory() const;
+
+  void setFreeMemory(uint64_t freeMemory);
+
+  void setNodes(int nodes);
+
+  int getNodes();
+
+  const std::list<GPUInfo> getGPUInfoList() const;
+
+  void addGPUInfo(const GPUInfo& gpuInfo);
+
+  void clearGPUInfoList();
+
+  uint64_t getSharesGood() const;
+
+  void setSharesGood(uint64_t sharesGood);
+
+  uint64_t getSharesTotal() const;
+
+  void setSharesTotal(uint64_t sharesTotal);
+
+  uint64_t getHashesTotal() const;
+
+  void setHashesTotal(uint64_t hashesTotal);
+
+  void setAvgTime(uint32_t avgTime);
+
+  uint32_t getAvgTime() const;
+
+  uint64_t getLastStatusUpdate() const;
+
+  void setUptime(uint64_t uptime);
+
+  uint64_t getUptime() const;
+
+  std::string toJsonString();
+
+  rapidjson::Value toJson(rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>& allocator);
+
+  bool parseFromJson(const rapidjson::Document& document);
 
 private:
-    const char* status_str[3] = {
-            "RUNNING",
-            "PAUSED",
-            "CONFIG_UPDATED"
-    };
+  const char* status_str[3] = {
+    "RUNNING",
+    "PAUSED",
+    "CONFIG_UPDATED"
+  };
 
-    Status m_currentStatus = Status::PAUSED;
+  Status m_currentStatus = Status::PAUSED;
 
-    std::string m_clientId;
-    std::string m_currentPool;
-    std::string m_currentPoolUser;
-    std::string m_currentPoolPass;
-    std::string m_currentPoolRigId;
-    std::string m_currentAlgoName;
-    std::string m_currentPowVariantName;
-    std::string m_cpuBrand;
-    std::string m_externalIp;
-    std::string m_version;
-    std::string m_log;
-    std::string m_assembly;
+  std::string m_clientId;
+  std::string m_currentPool;
+  std::string m_currentPoolUser;
+  std::string m_currentPoolPass;
+  std::string m_currentPoolRigId;
+  std::string m_currentAlgoName;
+  std::string m_currentPowVariantName;
+  std::string m_cpuBrand;
+  std::string m_externalIp;
+  std::string m_version;
+  std::string m_log;
+  std::string m_assembly;
 
-    bool m_hasHugepages = false;
-    bool m_isHugepagesEnabled = false;
-    bool m_isCpuX64 = false;
-    bool m_hasCpuAES = false;
-    bool m_isVM = false;
+  bool m_hasHugepages = false;
+  bool m_isHugepagesEnabled = false;
+  bool m_isCpuX64 = false;
+  bool m_hasCpuAES = false;
+  bool m_isVM = false;
 
-    double m_hashrateShort = 0;
-    double m_hashrateMedium = 0;
-    double m_hashrateLong = 0;
-    double m_hashrateHighest = 0;
+  double m_hashrateShort = 0;
+  double m_hashrateMedium = 0;
+  double m_hashrateLong = 0;
+  double m_hashrateHighest = 0;
 
-    int m_hashFactor = 0;
-    int m_totalPages = 0;
-    int m_totalHugepages = 0;
-    int m_currentThreads = 0;
-    int m_currentWays = 0;
-    int m_cpuSockets = 0;
-    int m_cpuCores = 0;
-    int m_cpuThreads = 0;
-    int m_cpuL2 = 0;
-    int m_cpuL3 = 0;
-    int m_nodes = 0;
-    int m_maxCpuUsage = 0;
+  int m_hashFactor = 0;
+  int m_totalPages = 0;
+  int m_totalHugepages = 0;
+  int m_currentThreads = 0;
+  int m_currentWays = 0;
+  int m_cpuSockets = 0;
+  int m_cpuCores = 0;
+  int m_cpuThreads = 0;
+  int m_cpuL2 = 0;
+  int m_cpuL3 = 0;
+  int m_nodes = 0;
+  int m_maxCpuUsage = 0;
 
-    std::list<GPUInfo> m_gpuInfoList;
+  std::list<GPUInfo> m_gpuInfoList;
 
-    uint64_t m_sharesGood = 0;
-    uint64_t m_sharesTotal = 0;
-    uint64_t m_hashesTotal = 0;
-    uint64_t m_uptime = 0;
-    uint64_t m_totalMemory = 0;
-    uint64_t m_freeMemory = 0;
+  uint64_t m_sharesGood = 0;
+  uint64_t m_sharesTotal = 0;
+  uint64_t m_hashesTotal = 0;
+  uint64_t m_uptime = 0;
+  uint64_t m_totalMemory = 0;
+  uint64_t m_freeMemory = 0;
 
-    uint32_t m_avgTime = 0;
-    uint64_t m_lastStatusUpdate = 0;
+  uint32_t m_avgTime = 0;
+  uint64_t m_lastStatusUpdate = 0;
 };
 
 #endif /* __CLIENT_STATUS_H__ */

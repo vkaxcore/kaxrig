@@ -52,7 +52,7 @@ public:
   using AlgoStatistic = std::map<uint64_t, Statistic>;
   using Statistics = std::map<std::string, AlgoStatistic>;
 
-  explicit Service(std::shared_ptr<CCServerConfig>  config);
+  explicit Service(std::shared_ptr<CCServerConfig> config);
   ~Service();
 
 public:

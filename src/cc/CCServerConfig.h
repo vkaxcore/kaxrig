@@ -30,7 +30,7 @@ public:
   explicit CCServerConfig(cxxopts::ParseResult& parseResult);
 
 public:
-  bool read(const xmrig::IJsonReader &reader);
+  bool read(const xmrig::IJsonReader& reader);
 
   inline bool colors() const                      { return m_colors; }
   inline bool background() const                  { return m_background; }
@@ -49,6 +49,7 @@ public:
   inline std::string token() const                { return m_token; }
   inline std::string customDashboard() const      { return m_customDashboard; }
   inline std::string clientConfigFolder() const   { return m_clientConfigFolder; }
+  inline std::string clientUpdateFolder() const   { return m_clientUpdateFolder; }
   inline std::string logFile() const              { return m_logFile; }
   inline std::string keyFile() const              { return m_keyFile; }
   inline std::string certFile() const             { return m_certFile; }
@@ -61,8 +62,7 @@ public:
   inline int port() const                         { return m_port; }
   inline int clientLogHistory() const             { return m_clientLogHistory; }
 
-  inline bool isValid() const                     { return !m_bindIp.empty() &&
-                                                            m_port > 0 && m_port < 65535; }
+  inline bool isValid() const                     { return !m_bindIp.empty() && m_port > 0 && m_port < 65535; }
 
 private:
   bool m_colors = true;
@@ -83,6 +83,7 @@ private:
 
   std::string m_customDashboard = "index.html";
   std::string m_clientConfigFolder;
+  std::string m_clientUpdateFolder = "client-updates";
   std::string m_logFile;
 
   std::string m_keyFile = "server.key";

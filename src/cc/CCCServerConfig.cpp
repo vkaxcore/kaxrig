@@ -23,7 +23,7 @@
 
 
 template<class T>
-T getParseResult(const cxxopts::ParseResult &parseResult, const std::string &propery, T defaultValue)
+T getParseResult(const cxxopts::ParseResult& parseResult, const std::string& propery, T defaultValue)
 {
   if (parseResult.count(propery) > 0)
   {
@@ -44,11 +44,11 @@ CCServerConfig::CCServerConfig(cxxopts::ParseResult& parseResult)
     auto m_configFile = getParseResult(parseResult, "config", std::string());
     if (!m_configFile.empty())
     {
-     chain.addFile(m_configFile.c_str());
+      chain.addFile(m_configFile.c_str());
     }
     else
     {
-     chain.addFile("config_cc.json");
+      chain.addFile("config_cc.json");
     }
 
     read(chain);
@@ -69,6 +69,7 @@ CCServerConfig::CCServerConfig(cxxopts::ParseResult& parseResult)
     m_clientLogHistory = getParseResult(parseResult, "client-log-lines-history", m_clientLogHistory);
     m_customDashboard = getParseResult(parseResult, "custom-dashboard", m_customDashboard);
     m_clientConfigFolder = getParseResult(parseResult, "client-config-folder", m_clientConfigFolder);
+    m_clientUpdateFolder = getParseResult(parseResult, "client-update-folder", m_clientUpdateFolder);
     m_logFile = getParseResult(parseResult, "log-file", m_logFile);
 
     m_pushoverApiToken = getParseResult(parseResult, "pushover-api-token", m_pushoverApiToken);
@@ -109,6 +110,7 @@ bool CCServerConfig::read(const xmrig::IJsonReader& reader)
   m_clientLogHistory = reader.getInt("client-log-lines-history", m_clientLogHistory);
   m_customDashboard = reader.getString("custom-dashboard", m_customDashboard.c_str());
   m_clientConfigFolder = reader.getString("client-config-folder", m_clientConfigFolder.c_str());
+  m_clientUpdateFolder = reader.getString("client-update-folder", m_clientUpdateFolder.c_str());
   m_logFile = reader.getString("log-file", m_logFile.c_str());
 
   m_pushoverApiToken = reader.getString("pushover-api-token", m_pushoverApiToken.c_str());

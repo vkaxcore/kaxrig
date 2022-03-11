@@ -21,60 +21,63 @@
 #include "base/tools/String.h"
 #include "3rdparty/rapidjson/fwd.h"
 
-namespace xmrig {
+namespace xmrig
+{
 
 class CCClientConfig
 {
 public:
-    static const char *kEnabled;
-    static const char *kUseTLS;
-    static const char *kUseRemoteLog;
-    static const char *kUploadConfigOnStartup;
-    static const char *kUrl;
-    static const char *kAccessToken;
-    static const char *kWorkerId;
-    static const char *kRebootCmd;
-    static const char *kUpdateInterval;
+  static const char* kEnabled;
+  static const char* kUseTLS;
+  static const char* kUseRemoteLog;
+  static const char* kUploadConfigOnStartup;
+  static const char* kUrl;
+  static const char* kAccessToken;
+  static const char* kWorkerId;
+  static const char* kRebootCmd;
+  static const char* kUpdateInterval;
 
-    bool load(const rapidjson::Value &value);
-    rapidjson::Value toJSON(rapidjson::Document &doc) const;
-    void print() const;
+  bool load(const rapidjson::Value& value);
 
-    inline bool enabled() const                  { return m_enabled; }
-    inline bool useTLS() const                   { return m_useTls; }
-    inline bool useRemoteLogging() const         { return m_useRemoteLogging; }
-    inline bool uploadConfigOnStartup() const    { return m_uploadConfigOnStartup; }
+  rapidjson::Value toJSON(rapidjson::Document& doc) const;
 
-    inline const char *url() const               { return m_url.data(); }
-    inline const char *host() const              { return m_host.data(); }
-    inline const char *token() const             { return m_token.data(); }
-    inline const char *workerId() const          { return m_workerId.data(); }
-    inline const char *rebootCmd() const         { return m_rebootCmd.data(); }
+  void print() const;
 
-    inline int updateInterval() const            { return m_updateInterval; }
-    inline int port() const                      { return m_port; }
+  inline bool enabled() const                               { return m_enabled; }
+  inline bool useTLS() const                                { return m_useTls; }
+  inline bool useRemoteLogging() const                      { return m_useRemoteLogging; }
+  inline bool uploadConfigOnStartup() const                 { return m_uploadConfigOnStartup; }
 
-    inline bool operator!=(const CCClientConfig &other) const    { return !isEqual(other); }
-    inline bool operator==(const CCClientConfig &other) const    { return isEqual(other); }
+  inline const char* url() const                            { return m_url.data(); }
+  inline const char* host() const                           { return m_host.data(); }
+  inline const char* token() const                          { return m_token.data(); }
+  inline const char* workerId() const                       { return m_workerId.data(); }
+  inline const char* rebootCmd() const                      { return m_rebootCmd.data(); }
 
-    bool isEqual(const CCClientConfig &other) const;
+  inline int updateInterval() const                         { return m_updateInterval; }
+  inline int port() const                                   { return m_port; }
+
+  inline bool operator!=(const CCClientConfig& other) const { return !isEqual(other); }
+  inline bool operator==(const CCClientConfig& other) const { return isEqual(other); }
+
+  bool isEqual(const CCClientConfig& other) const;
 
 private:
-    bool parseCCUrl(const char* url);
+  bool parseCCUrl(const char* url);
 
-    bool m_enabled = true;
-    bool m_useTls = false;
-    bool m_useRemoteLogging = true;
-    bool m_uploadConfigOnStartup = true;
+  bool m_enabled = true;
+  bool m_useTls = false;
+  bool m_useRemoteLogging = true;
+  bool m_uploadConfigOnStartup = true;
 
-    int m_updateInterval = 10;
-    int m_port = 3344;
+  int m_updateInterval = 10;
+  int m_port = 3344;
 
-    String m_url;
-    String m_host;
-    String m_token;
-    String m_workerId;
-    String m_rebootCmd;
+  String m_url;
+  String m_host;
+  String m_token;
+  String m_workerId;
+  String m_rebootCmd;
 };
 
 

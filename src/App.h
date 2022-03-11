@@ -32,6 +32,7 @@
 #include "base/cc/interfaces/ICommandListener.h"
 #include "base/tools/Object.h"
 #include "cc/ControlCommand.h"
+#include "cc/XMRigd.h"
 
 #if XMRIG_FEATURE_CC_CLIENT
 #include "cc/CCClient.h"
@@ -67,14 +68,14 @@ protected:
 
 private:
     bool background(int &rc);
-    void close(bool restart);
+    void close(int rc);
 
 #   ifdef XMRIG_FEATURE_CC_CLIENT
     void reboot();
     void execute(const std::string& command);
 #   endif
 
-    bool m_restart = false;
+    int m_rc {RC_OK};
 
     std::shared_ptr<Console> m_console;
     std::shared_ptr<Controller> m_controller;

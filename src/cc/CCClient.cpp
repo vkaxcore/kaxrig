@@ -26,6 +26,7 @@
 #include "base/tools/Chrono.h"
 #include "base/kernel/Base.h"
 #include "base/kernel/Platform.h"
+#include "base/kernel/Process.h"
 
 #include "base/cc/interfaces/IClientStatusListener.h"
 #include "base/cc/interfaces/ICommandListener.h"
@@ -46,6 +47,8 @@
 
 namespace
 {
+  constexpr static int HTTP_OK = 200;
+
   static std::string VersionString()
   {
     std::string version = std::to_string(APP_VER_MAJOR) + std::string(".") + std::to_string(APP_VER_MINOR) +
@@ -76,21 +79,10 @@ void xmrig::CCClient::start()
 {
   LOG_DEBUG("CCClient::start");
 
-  updateAuthorization();
   updateClientInfo();
 
   m_timer->start(static_cast<uint64_t>(m_base->config()->ccClient().updateInterval() * 1000),
                  static_cast<uint64_t>(m_base->config()->ccClient().updateInterval() * 1000));
-}
-
-void xmrig::CCClient::updateAuthorization()
-{
-  LOG_DEBUG("CCClient::updateAuthorization");
-
-  if (m_base->config()->ccClient().token() != nullptr)
-  {
-    m_authorization = std::string("Bearer ") + m_base->config()->ccClient().token();
-  }
 }
 
 void xmrig::CCClient::updateClientInfo()
@@ -172,9 +164,9 @@ void xmrig::CCClient::publishClientStatusReport()
   if (!res)
   {
     LOG_ERR(CLEAR "%s" RED("error:unable to performRequest POST [http%s://%s:%d%s]"), Tags::cc(),
-            config.useTLS() ? "s":"", config.host(), config.port(), requestUrl.c_str());
+            config.useTLS() ? "s" : "", config.host(), config.port(), requestUrl.c_str());
   }
-  else if (res->status != 200)
+  else if (res->status != HTTP_OK)
   {
     LOG_ERR(CLEAR "%s" RED("error:\"%d\" [http%s://%s:%d%s]"), Tags::cc(), res->status,
             config.useTLS() ? "s" : "", config.host(), config.port(), requestUrl.c_str());
@@ -220,8 +212,13 @@ void xmrig::CCClient::publishClientStatusReport()
       {
         LOG_WARN(CLEAR "%s" YELLOW("Command: EXECUTE received"), Tags::cc());
       }
+      else if (controlCommand.getCommand() == ControlCommand::UPDATE)
+      {
+        LOG_WARN(CLEAR "%s" YELLOW("Command: UPDATE received"), Tags::cc());
+        fetchUpdate();
+      }
 
-      for (ICommandListener *listener : m_Commandlisteners)
+      for (ICommandListener* listener : m_Commandlisteners)
       {
         listener->onCommandReceived(controlCommand);
       }
@@ -248,7 +245,7 @@ void xmrig::CCClient::fetchConfig()
     LOG_ERR(CLEAR "%s" RED("error:unable to performRequest GET [http%s://%s:%d%s]"), Tags::cc(),
             config.useTLS() ? "s" : "", config.host(), config.port(), requestUrl.c_str());
   }
-  else if (res->status != 200)
+  else if (res->status != HTTP_OK)
   {
     LOG_ERR(CLEAR "%s" RED("error:\"%d\" [http%s://%s:%d%s]"), Tags::cc(), res->status,
             config.useTLS() ? "s" : "", config.host(), config.port(), requestUrl.c_str());
@@ -263,7 +260,7 @@ void xmrig::CCClient::fetchConfig()
       std::ofstream clientConfigFile(m_base->config()->fileName());
       if (clientConfigFile)
       {
-        rapidjson::StringBuffer buffer(0, 65536);
+        rapidjson::StringBuffer buffer(0, 4096);
         rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
         writer.SetMaxDecimalPlaces(10);
         document.Accept(writer);
@@ -280,7 +277,8 @@ void xmrig::CCClient::fetchConfig()
       }
       else
       {
-        LOG_ERR(CLEAR "%s" RED("Not able to store client config to file %s."), Tags::cc(), m_base->config()->fileName().data());
+        LOG_ERR(CLEAR "%s" RED("Not able to store client config to file %s."), Tags::cc(),
+                m_base->config()->fileName().data());
       }
     }
     else
@@ -314,7 +312,7 @@ void xmrig::CCClient::publishConfig()
 
     if (!document.HasParseError())
     {
-      rapidjson::StringBuffer buffer(0, 65536);
+      rapidjson::StringBuffer buffer(0, 4096);
       rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
       writer.SetMaxDecimalPlaces(10);
       document.Accept(writer);
@@ -325,9 +323,9 @@ void xmrig::CCClient::publishConfig()
         LOG_ERR(CLEAR "%s" RED("error:unable to performRequest POST [http%s://%s:%d%s]"), Tags::cc(),
                 config.useTLS() ? "s" : "", config.host(), config.port(), requestUrl.c_str());
       }
-      else if (res->status != 200)
+      else if (res->status != HTTP_OK)
       {
-        LOG_ERR(CLEAR "%s" RED("error:\"%d\" [http%s://%s:%d%s]"), Tags::cc(), res->status, config.host(),
+        LOG_ERR(CLEAR "%s" RED("error:\"%d\" POST [http%s://%s:%d%s]"), Tags::cc(), res->status, config.host(),
                 config.useTLS() ? "s" : "", config.port(), requestUrl.c_str());
       }
       else
@@ -337,46 +335,123 @@ void xmrig::CCClient::publishConfig()
     }
     else
     {
-      LOG_ERR(CLEAR "%s" RED("Not able to send config. Client config %s is broken!"), Tags::cc(), m_base->config()->fileName().data());
+      LOG_ERR(CLEAR "%s" RED("Not able to send config. Client config %s is broken!"), Tags::cc(),
+              m_base->config()->fileName().data());
     }
   }
   else
   {
-    LOG_ERR(CLEAR "%s" RED("Not able to load client config %s. Please make sure it exists! Using embedded config."), Tags::cc(),
+    LOG_ERR(CLEAR "%s" RED("Not able to load client config %s. Please make sure it exists! Using embedded config."),
+            Tags::cc(),
             m_base->config()->fileName().data());
   }
 }
 
-std::shared_ptr<httplib::Response> xmrig::CCClient::performRequest(const std::string& requestUrl,
-                                                                   const std::string& requestBuffer,
-                                                                   const std::string& operation)
+
+void xmrig::CCClient::fetchUpdate()
 {
-  std::shared_ptr<httplib::ClientImpl> cli;
+  LOG_DEBUG("CCClient::fetchUpdate");
 
   auto config = m_base->config()->ccClient();
-
-#   ifdef XMRIG_FEATURE_TLS
-  if (config.useTLS())
-  {
-    cli = std::make_shared<httplib::SSLClient>(config.host(),
-                                               config.port());
-    cli->enable_server_certificate_verification(false);
-  }
-  else
-  {
-#   endif
-    cli = std::make_shared<httplib::ClientImpl>(config.host(),
-                                                config.port());
-#   ifdef XMRIG_FEATURE_TLS
-  }
-#   endif
-
   std::stringstream hostHeader;
   hostHeader << config.host()
              << ":"
              << config.port();
 
-  LOG_DEBUG("CCClient::performRequest %s [%s%s] send: '%.2048s'", operation.c_str(), hostHeader.str().c_str(), requestUrl.c_str(), requestBuffer.c_str());
+  auto updatePath = std::string("/client/updates/") + Platform::updatePath().data();
+
+  httplib::Headers headers;
+  headers.emplace("Host", hostHeader.str().c_str());
+  headers.emplace("Accept", "*//*");
+  headers.emplace("User-Agent", Platform::userAgent().data());
+
+  std::uint32_t lastProgress{0};
+
+  LOG_WARN(CLEAR "%s" YELLOW("Downloading update. [http%s://%s:%d%s]"), Tags::cc(),
+           config.useTLS() ? "s" : "", config.host(), config.port(), updatePath.c_str());
+
+  auto cli = getClient();
+  auto res = cli->Get(updatePath.c_str(), headers, [&lastProgress](uint64_t len, uint64_t total)
+  {
+    if (total > 0)
+    {
+      auto progress = static_cast<uint32_t>(static_cast<float>(len) / static_cast<float>(total) * 100);
+      if (lastProgress != progress && (progress % 10 == 0))
+      {
+        lastProgress = progress;
+        LOG_WARN(CLEAR "%s" WHITE("[%lu%%]"), Tags::cc(), progress);
+      }
+    }
+    return true;
+  });
+
+  if (!res)
+  {
+    LOG_ERR(CLEAR "%s" RED("error:unable to performRequest GET [http%s://%s:%d%s]"), Tags::cc(),
+            config.useTLS() ? "s" : "", config.host(), config.port(), updatePath.c_str());
+  }
+  else if(res->status == HTTP_OK)
+  {
+    std::string updateFile = std::string(xmrig::Process::exepath()) + UPDATE_EXTENSION;
+    std::ofstream os(updateFile, std::ofstream::out | std::ofstream::binary | std::ofstream::trunc);
+    if (os.is_open())
+    {
+      LOG_WARN(CLEAR "%s" YELLOW("Download completed. Trigger update."), Tags::cc());
+      os << res->body;
+    }
+    else
+    {
+      LOG_ERR(CLEAR "%s" RED("error: failed to write update file [%s]"), Tags::cc(), updateFile.c_str());
+    }
+  }
+  else
+  {
+    LOG_ERR(CLEAR "%s" RED("error:\"%d\" GET [http%s://%s:%d%s]"), Tags::cc(), res->status, config.host(),
+            config.useTLS() ? "s" : "", config.port(), updatePath.c_str());
+  }
+}
+
+
+std::shared_ptr<httplib::ClientImpl> xmrig::CCClient::getClient()
+{
+  std::shared_ptr<httplib::ClientImpl> cli;
+
+  auto config = m_base->config()->ccClient();
+# ifdef XMRIG_FEATURE_TLS
+  if (config.useTLS())
+  {
+    cli = std::make_shared<httplib::SSLClient>(config.host(), config.port());
+    cli->enable_server_certificate_verification(false);
+  }
+  else
+  {
+# endif
+    cli = std::make_shared<httplib::ClientImpl>(config.host(), config.port());
+# ifdef XMRIG_FEATURE_TLS
+  }
+#   endif
+
+  if (config.token() != nullptr)
+  {
+    cli->set_bearer_token_auth(config.token());
+  }
+
+  return cli;
+}
+
+
+std::shared_ptr<httplib::Response> xmrig::CCClient::performRequest(const std::string& requestUrl,
+                                                                   const std::string& requestBuffer,
+                                                                   const std::string& operation)
+{
+  auto config = m_base->config()->ccClient();
+  std::stringstream hostHeader;
+  hostHeader << config.host()
+             << ":"
+             << config.port();
+
+  LOG_DEBUG("CCClient::performRequest %s [%s%s] send: '%.2048s'", operation.c_str(), hostHeader.str().c_str(),
+            requestUrl.c_str(), requestBuffer.c_str());
 
   httplib::Request req;
   req.method = operation;
@@ -387,19 +462,14 @@ std::shared_ptr<httplib::Response> xmrig::CCClient::performRequest(const std::st
   req.set_header("Accept", "application/json");
   req.set_header("Content-Type", "application/json");
 
-  if (!m_authorization.empty())
-  {
-    req.set_header("Authorization", m_authorization.c_str());
-  }
-
   if (!requestBuffer.empty())
   {
     req.body = requestBuffer;
   }
 
+  auto err = httplib::Error::Success;
   auto res = std::make_shared<httplib::Response>();
-
-  httplib::Error err = httplib::Error::Success;
+  auto cli = getClient();
 
   return cli->send(req, *res, err) ? res : nullptr;
 }
