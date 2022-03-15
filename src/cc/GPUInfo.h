@@ -33,59 +33,45 @@ public:
   bool parseFromJson(const rapidjson::Value& gpuInfo);
 
   uint32_t getDeviceIdx() const;
-
   void setDeviceIdx(uint32_t deviceIdx);
 
   uint32_t getIntensity() const;
-
   void setIntensity(uint32_t intensity);
 
   uint32_t getWorkSize() const;
-
   void setWorkSize(uint32_t workSize);
 
   size_t getMemory() const;
-
   void setMemory(size_t memory);
 
   size_t getFreeMem() const;
-
   void setFreeMem(size_t freeMem);
 
   uint32_t getThreads() const;
-
   void setThreads(uint32_t threads);
 
   uint32_t getBlocks() const;
-
   void setBlocks(uint32_t blocks);
 
   uint32_t getBfactor() const;
-
   void setBfactor(uint32_t bfactor);
 
   uint32_t getBsleep() const;
-
   void setBsleep(uint32_t bsleep);
 
   uint32_t getComputeUnits() const;
-
   void setComputeUnits(uint32_t computeUnits);
 
   uint32_t getClock() const;
-
   void setClock(uint32_t clock);
 
   std::string getName() const;
-
   void setName(const std::string& name);
 
   std::string getType() const;
-
   void setType(const std::string& type);
 
   std::string getBusId() const;
-
   void setBusId(const std::string& busId);
 
 private:

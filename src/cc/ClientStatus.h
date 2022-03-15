@@ -56,149 +56,113 @@ public:
   }
 
   Status getCurrentStatus() const;
-
   void setCurrentStatus(Status currentStatus);
 
   std::string getClientId() const;
-
   void setClientId(const std::string& clientId);
 
   std::string getCurrentPool() const;
-
   void setCurrentPool(const std::string& currentPool);
 
   std::string getCurrentPoolUser() const;
-
   void setCurrentPoolUser(const std::string& currentPoolUser);
 
   std::string getCurrentPoolPass() const;
-
   void setCurrentPoolPass(const std::string& currentPoolPass);
 
   std::string getCurrentPoolRigId() const;
-
   void setCurrentPoolRigId(const std::string& currentPoolRigId);
 
   std::string getCurrentAlgoName() const;
-
   void setCurrentAlgoName(const std::string& algoName);
 
   std::string getCurrentPowVariantName() const;
-
   void setCurrentPowVariantName(const std::string& powVariantName);
 
   std::string getCpuBrand() const;
-
   void setCpuBrand(const std::string& cpuBrand);
 
   std::string getExternalIp() const;
-
   void setExternalIp(const std::string& externalIp);
 
   std::string getVersion() const;
-
   void setVersion(const std::string& version);
 
   std::string getLog() const;
-
   void setLog(const std::string& log);
 
   void clearLog();
 
   std::string getAssembly() const;
-
   void setAssembly(const std::string& assembly);
 
   bool hasHugepages() const;
-
   void setHugepages(bool hasHugepages);
 
   bool isHugepagesEnabled() const;
-
   void setHugepagesEnabled(bool hugepagesEnabled);
 
   bool isCpuX64() const;
-
   void setCpuX64(bool isCpuX64);
 
   bool isVM() const;
-
   void setVM(bool isVM);
 
   bool hasCpuAES() const;
-
   void setCpuAES(bool hasCpuAES);
 
   double getHashrateShort() const;
-
   void setHashrateShort(double hashrateShort);
 
   double getHashrateMedium() const;
-
   void setHashrateMedium(double hashrateMedium);
 
   double getHashrateLong() const;
-
   void setHashrateLong(double hashrateLong);
 
   void setHashrateHighest(double hashrateHighest);
-
   double getHashrateHighest() const;
 
   int getHashFactor() const;
-
   void setHashFactor(int hashFactor);
 
   int getTotalPages() const;
-
   void setTotalPages(int totalPages);
 
   int getTotalHugepages() const;
-
   void setTotalHugepages(int totalHugepages);
 
   int getCurrentThreads() const;
-
   void setCurrentThreads(int currentThreads);
 
   int getCurrentWays() const;
-
   void setCurrentWays(int currentWays);
 
   int getCpuSockets() const;
-
   void setCpuSockets(int cpuSockets);
 
   int getCpuCores() const;
-
   void setCpuCores(int cpuCores);
 
   int getCpuThreads() const;
-
   void setCpuThreads(int cpuThreads);
 
   int getMaxCpuUsage() const;
-
   void setMaxCpuUsage(int maxCpuUsage);
 
   int getCpuL2() const;
-
   void setCpuL2(int cpuL2);
 
   int getCpuL3() const;
-
   void setCpuL3(int cpuL3);
 
   uint64_t getTotalMemory() const;
-
   void setTotalMemory(uint64_t totalMemory);
 
   uint64_t getFreeMemory() const;
-
   void setFreeMemory(uint64_t freeMemory);
 
   void setNodes(int nodes);
-
   int getNodes();
 
   const std::list<GPUInfo> getGPUInfoList() const;
@@ -208,25 +172,20 @@ public:
   void clearGPUInfoList();
 
   uint64_t getSharesGood() const;
-
   void setSharesGood(uint64_t sharesGood);
 
   uint64_t getSharesTotal() const;
-
   void setSharesTotal(uint64_t sharesTotal);
 
   uint64_t getHashesTotal() const;
-
   void setHashesTotal(uint64_t hashesTotal);
 
   void setAvgTime(uint32_t avgTime);
-
   uint32_t getAvgTime() const;
 
   uint64_t getLastStatusUpdate() const;
 
   void setUptime(uint64_t uptime);
-
   uint64_t getUptime() const;
 
   std::string toJsonString();
