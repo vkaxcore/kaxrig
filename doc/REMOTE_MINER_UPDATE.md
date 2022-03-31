@@ -30,6 +30,6 @@ This helps you a lot when maintaining large farms. Single click on the Dashboard
     A: Starting with first release after 3.2.0 the release page will have a dedicated "-client-update-bundle-" package.
        Just download that one, extract into your server update folder (default: "/client-updates/"), don't rename anything here, it wont work.
 
-    Q: I have an os/arch/custom binaray which is not part of the update bundle can i still use the remote upgrade feature?
+    Q: I have an os/arch/custom binary which is not part of the update bundle can i still use the remote upgrade feature?
     A: Yes that is possible. If you follow the same naming/folder structure pattern you can use your own binares.
        For example MacOS-arm64: place your "xmrigMiner" binary (don't rename it) MacOS-arm build into a new folder "macos-arm64", and it will work.
