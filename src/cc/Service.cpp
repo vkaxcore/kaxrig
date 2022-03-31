@@ -20,11 +20,14 @@
 #include <cstring>
 #include <iostream>
 #include <utility>
+#include <regex>
 
 #ifdef WIN32
 #include "win_ports/dirent.h"
 #else
+
 #include <dirent.h>
+
 #endif
 
 #include "3rdparty/rapidjson/document.h"
@@ -36,22 +39,23 @@
 #include "base/io/log/Log.h"
 #include "version.h"
 #include "Service.h"
+#include "fmt/format.h"
 
 namespace
 {
-  std::string htmlEncode(const std::string& data)
-  {
-    auto result = std::regex_replace(data, std::regex("&"), "&amp;");
-    result = std::regex_replace(result, std::regex("<"), "&lt;");
-    result = std::regex_replace(result, std::regex(">"), "&gt;");
+std::string htmlEncode(const std::string& data)
+{
+  auto result = std::regex_replace(data, std::regex("&"), "&amp;");
+  result = std::regex_replace(result, std::regex("<"), "&lt;");
+  result = std::regex_replace(result, std::regex(">"), "&gt;");
 
-    return result;
-  }
+  return result;
+}
 
-  std::string sanitize(const std::string& data)
-  {
-    return std::regex_replace(data, std::regex(R"(([^\x20-~]+)|([\\/:?"<>|~;]+))"), "_");
-  }
+std::string sanitize(const std::string& data)
+{
+  return std::regex_replace(data, std::regex(R"(([^\x20-~]+)|([\\/:?"<>|~;]+))"), "_");
+}
 };
 
 constexpr static char DEFAULT_MINER[] = "default_miner";
@@ -75,7 +79,7 @@ bool Service::start()
     auto now = static_cast<uint64_t>(std::chrono::system_clock::to_time_t(time_point) * 1000);
 
 #ifdef XMRIG_FEATURE_TLS
-    if (m_config->usePushover() || m_config->useTelegram())
+    if (m_config->usePushover() || m_config->useTelegram() || m_config->useDiscord())
     {
       if (m_config->pushOfflineMiners())
       {
@@ -130,8 +134,6 @@ int Service::handleGET(const httplib::Request& req, httplib::Response& res)
 
   const auto clientId = req.get_param_value("clientId");
   const auto removeAddr = req.get_header_value("REMOTE_ADDR");
-
-  LOG_INFO("[%s] GET %s%s%s", removeAddr.c_str(), req.path.c_str(), clientId.empty() ? "" : "/?clientId=", clientId.c_str());
 
   if (req.path == "/")
   {
@@ -188,9 +190,7 @@ int Service::handlePOST(const httplib::Request& req, httplib::Response& res)
   int resultCode = HTTP_NOT_FOUND;
 
   const auto clientId = req.get_param_value("clientId");
-  const auto removeAddr = req.get_header_value("REMOTE_ADDR");
-
-  LOG_INFO("[%s] POST %s%s%s", removeAddr.c_str(), req.path.c_str(), clientId.empty() ? "" : "/?clientId=", clientId.c_str());
+  const auto remoteAddr = req.get_header_value("REMOTE_ADDR");
 
   if (!clientId.empty())
   {
@@ -213,7 +213,7 @@ int Service::handlePOST(const httplib::Request& req, httplib::Response& res)
     else
     {
       resultCode = HTTP_BAD_REQUEST;
-      LOG_WARN("[%s] 400 BAD REQUEST - Request does not contain clientId (%s)", removeAddr.c_str(), req.path.c_str());
+      LOG_WARN("[%s] 400 BAD REQUEST - Request does not contain clientId (%s)", remoteAddr.c_str(), req.path.c_str());
     }
   }
   else
@@ -224,7 +224,7 @@ int Service::handlePOST(const httplib::Request& req, httplib::Response& res)
     }
     else
     {
-      LOG_WARN("[%s] 404 NOT FOUND (%s)", removeAddr.c_str(), req.path.c_str());
+      LOG_WARN("[%s] 404 NOT FOUND (%s)", remoteAddr.c_str(), req.path.c_str());
     }
   }
 
@@ -271,7 +271,7 @@ int Service::getClientStatusList(httplib::Response& res)
   auto& allocator = respDocument.GetAllocator();
 
   rapidjson::Value clientStatusList(rapidjson::kArrayType);
-  for (auto& clientStatus : m_clientStatus)
+  for (auto& clientStatus: m_clientStatus)
   {
     rapidjson::Value clientStatusEntry(rapidjson::kObjectType);
     clientStatusEntry.AddMember("client_status", clientStatus.second.toJson(allocator), allocator);
@@ -297,45 +297,45 @@ int Service::getClientStatusList(httplib::Response& res)
 
 int Service::getClientStatistics(httplib::Response& res)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
+  std::lock_guard<std::mutex> lock(m_mutex);
 
-    rapidjson::Document respDocument;
-    respDocument.SetObject();
+  rapidjson::Document respDocument;
+  respDocument.SetObject();
 
-    auto& allocator = respDocument.GetAllocator();
+  auto& allocator = respDocument.GetAllocator();
 
-    rapidjson::Value clientStatistics(rapidjson::kArrayType);
+  rapidjson::Value clientStatistics(rapidjson::kArrayType);
 
-    for (const auto& statistics : m_statistics)
+  for (const auto& statistics: m_statistics)
+  {
+    rapidjson::Value algoStatistics(rapidjson::kObjectType);
+    algoStatistics.AddMember("algo", rapidjson::StringRef(statistics.first.c_str()), allocator);
+
+    rapidjson::Value algoStatisticEntries(rapidjson::kArrayType);
+    for (const auto& algoStatistic: statistics.second)
     {
-      rapidjson::Value algoStatistics(rapidjson::kObjectType);
-      algoStatistics.AddMember("algo", rapidjson::StringRef(statistics.first.c_str()), allocator);
+      rapidjson::Value algoStatisticEntry(rapidjson::kObjectType);
+      algoStatisticEntry.AddMember("timestamp", algoStatistic.first, allocator);
+      algoStatisticEntry.AddMember("hashrate", algoStatistic.second.first, allocator);
+      algoStatisticEntry.AddMember("miner", algoStatistic.second.second, allocator);
 
-      rapidjson::Value algoStatisticEntries(rapidjson::kArrayType);
-      for (const auto& algoStatistic : statistics.second)
-      {
-        rapidjson::Value algoStatisticEntry(rapidjson::kObjectType);
-        algoStatisticEntry.AddMember("timestamp", algoStatistic.first, allocator);
-        algoStatisticEntry.AddMember("hashrate", algoStatistic.second.first, allocator);
-        algoStatisticEntry.AddMember("miner", algoStatistic.second.second, allocator);
-
-        algoStatisticEntries.PushBack(algoStatisticEntry, allocator);
-      }
-
-      algoStatistics.AddMember("statistics", algoStatisticEntries, allocator);
-      clientStatistics.PushBack(algoStatistics, allocator);
+      algoStatisticEntries.PushBack(algoStatisticEntry, allocator);
     }
 
-    respDocument.AddMember("client_statistics", clientStatistics, allocator);
+    algoStatistics.AddMember("statistics", algoStatisticEntries, allocator);
+    clientStatistics.PushBack(algoStatistics, allocator);
+  }
 
-    rapidjson::StringBuffer buffer(0, 4096);
-    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-    writer.SetMaxDecimalPlaces(10);
-    respDocument.Accept(writer);
+  respDocument.AddMember("client_statistics", clientStatistics, allocator);
 
-    res.set_content(buffer.GetString(), CONTENT_TYPE_JSON);
+  rapidjson::StringBuffer buffer(0, 4096);
+  rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+  writer.SetMaxDecimalPlaces(10);
+  respDocument.Accept(writer);
 
-    return HTTP_OK;
+  res.set_content(buffer.GetString(), CONTENT_TYPE_JSON);
+
+  return HTTP_OK;
 }
 
 int Service::setClientStatus(const httplib::Request& req, const std::string& clientId, httplib::Response& res)
@@ -470,7 +470,7 @@ int Service::getClientConfigTemplates(httplib::Response& res)
   auto& allocator = respDocument.GetAllocator();
 
   rapidjson::Value templateList(rapidjson::kArrayType);
-  for (auto& templateFile : templateFiles)
+  for (auto& templateFile: templateFiles)
   {
     rapidjson::Value templateEntry(templateFile.c_str(), allocator);
     templateList.PushBack(templateEntry, allocator);
@@ -551,7 +551,7 @@ int Service::getClientLog(const std::string& clientId, httplib::Response& res)
     auto& allocator = respDocument.GetAllocator();
 
     std::stringstream data;
-    for (auto& m_row : m_clientLog[clientId])
+    for (auto& m_row: m_clientLog[clientId])
     {
       data << m_row.c_str() << std::endl;
     }
@@ -584,33 +584,35 @@ int Service::setClientConfig(const httplib::Request& req, const std::string& cli
 
     if (clientConfigFileName != defaultMinerConfigFileName)
     {
-        std::ofstream clientConfigFile(clientConfigFileName);
+      std::ofstream clientConfigFile(clientConfigFileName);
 
-        if (clientConfigFile)
-        {
-            rapidjson::StringBuffer buffer(0, 4096);
-            rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
-            writer.SetMaxDecimalPlaces(10);
-            respDocument.Accept(writer);
+      if (clientConfigFile)
+      {
+        rapidjson::StringBuffer buffer(0, 4096);
+        rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
+        writer.SetMaxDecimalPlaces(10);
+        respDocument.Accept(writer);
 
-            clientConfigFile << buffer.GetString();
-            clientConfigFile.close();
+        clientConfigFile << buffer.GetString();
+        clientConfigFile.close();
 
-            resultCode = HTTP_OK;
-        }
-        else
-        {
-            LOG_ERR("[%s] Not able to store client config to file %s.", remoteAddr.c_str(), clientConfigFileName.c_str());
-        }
+        resultCode = HTTP_OK;
+      }
+      else
+      {
+        LOG_ERR("[%s] Not able to store client config to file %s.", remoteAddr.c_str(), clientConfigFileName.c_str());
+      }
     }
     else
     {
-        LOG_WARN("[%s] Someone is trying to override our %s file. Rejected!", remoteAddr.c_str(), defaultMinerConfigFileName.c_str());
+      LOG_WARN("[%s] Someone is trying to override our %s file. Rejected!", remoteAddr.c_str(),
+               defaultMinerConfigFileName.c_str());
     }
   }
   else
   {
-    LOG_ERR("[%s] Not able to store client config. The received client config for client %s is broken!", remoteAddr.c_str(), clientId.c_str());
+    LOG_ERR("[%s] Not able to store client config. The received client config for client %s is broken!",
+            remoteAddr.c_str(), clientId.c_str());
   }
 
   return resultCode;
@@ -687,7 +689,7 @@ void Service::sendMinerOfflinePush(uint64_t now)
 {
   uint64_t offlineThreshold = now - OFFLINE_TRESHOLD_IN_MS;
 
-  for (const auto& clientStatus : m_clientStatus)
+  for (const auto& clientStatus: m_clientStatus)
   {
     uint64_t lastStatus = clientStatus.second.getLastStatusUpdate() * 1000;
     if (lastStatus < offlineThreshold)
@@ -723,7 +725,7 @@ void Service::sendMinerZeroHashratePush(uint64_t now)
 {
   uint64_t offlineThreshold = now - OFFLINE_TRESHOLD_IN_MS;
 
-  for (const auto& clientStatus : m_clientStatus)
+  for (const auto& clientStatus: m_clientStatus)
   {
     if (offlineThreshold < clientStatus.second.getLastStatusUpdate() * 1000)
     {
@@ -739,7 +741,8 @@ void Service::sendMinerZeroHashratePush(uint64_t now)
           if (m_zeroHashNotified[clientStatus.first] > 0 && m_zeroHashNotified[clientStatus.first] < now)
           {
             std::stringstream message;
-            message << "Miner: " << httplib::detail::encode_url(clientStatus.first) << " reported 0 h/s for over a minute!";
+            message << "Miner: " << httplib::detail::encode_url(clientStatus.first)
+                    << " reported 0 h/s for over a minute!";
 
             LOG_WARN("Send miner %s 0 hashrate push", httplib::detail::encode_url(clientStatus.first).c_str());
             triggerPush(APP_NAME " Hashrate Monitor", message.str());
@@ -787,7 +790,7 @@ void Service::sendServerStatusPush(uint64_t now)
   uint64_t sharesTotal = 0;
   uint64_t offlineThreshold = now - OFFLINE_TRESHOLD_IN_MS;
 
-  for (const auto& clientStatus : m_clientStatus)
+  for (const auto& clientStatus: m_clientStatus)
   {
     if (offlineThreshold < clientStatus.second.getLastStatusUpdate() * 1000)
     {
@@ -831,6 +834,11 @@ void Service::triggerPush(const std::string& title, const std::string& message)
   if (m_config->useTelegram())
   {
     sendViaTelegram(title, message);
+  }
+
+  if (m_config->useDiscord())
+  {
+    sendViaDiscord(title, message);
   }
 }
 
@@ -880,13 +888,49 @@ void Service::sendViaTelegram(const std::string& title, const std::string& messa
   }
 }
 
+void Service::sendViaDiscord(const std::string& title, const std::string& message)
+{
+  std::smatch matcher;
+
+  auto webHookUrl = m_config->discordWebhookUrl();
+  if (std::regex_match(webHookUrl, matcher, std::regex(R"((?:(https?):)?(?://(discord.com:\[([\d:]+)\]|([^:/?#]+))(?::(\d+))?)?([^?#]*(?:\?[^#]*)?)(?:#.*)?)")))
+  {
+    auto cli = std::make_shared<httplib::SSLClient>("discord.com", 443);
+    cli->enable_server_certificate_verification(false);
+
+    auto description = std::regex_replace(message, std::regex("\n"), "\\n");
+    auto body = fmt::format(R"({{"username": "{}", "embeds": [{{ "title": "{}", "description": "{}"}}]}})",
+                               APP_NAME,
+                               title,
+                               description);
+
+    auto path = matcher[5].str();
+    if (!path.empty())
+    {
+      auto res = cli->Post(path.c_str(), body, CONTENT_TYPE_JSON);
+      if (res)
+      {
+        LOG_WARN("Discord response: %s [%d]", res->body.c_str(), res->status);
+      }
+      else
+      {
+        LOG_ERR("Failed to connect to the Discord API");
+      }
+    }
+  }
+  else
+  {
+    LOG_ERR("Malformed Discord WebHook URL");
+  }
+}
+
 void Service::updateStatistics(uint64_t now)
 {
   std::lock_guard<std::mutex> lock(m_mutex);
 
   auto offlineThreshold = now - OFFLINE_TRESHOLD_IN_MS;
 
-  for (const auto& clientStatus : m_clientStatus)
+  for (const auto& clientStatus: m_clientStatus)
   {
     uint64_t lastStatus = clientStatus.second.getLastStatusUpdate() * 1000;
     if (lastStatus > offlineThreshold)

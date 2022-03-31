@@ -15,64 +15,112 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <string>
-#include <chrono>
+#include <fstream>
 #include <thread>
 #include <uv.h>
 
+#include "XMRigd.h"
+
 #ifdef WIN32
-    #define WIN32_LEAN_AND_MEAN  /* avoid including junk */
-    #include <windows.h>
-    #include <signal.h>
+#define WIN32_LEAN_AND_MEAN  /* avoid including junk */
+#include <windows.h>
+#include <signal.h>
 #else
-    #include <sys/wait.h>
-    #include <errno.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+#include <errno.h>
 #endif
 
 #ifndef MINER_EXECUTABLE_NAME
-  #define MINER_EXECUTABLE_NAME xmrigMiner
+#define MINER_EXECUTABLE_NAME xmrigMiner
 #endif
 #define VALUE_TO_STRING(x) #x
 #define VALUE(x) VALUE_TO_STRING(x)
 
-int main(int argc, char **argv) {
+bool fileFound(const std::string& filePath)
+{
+  std::ifstream file(filePath.c_str());
+  return file.good();
+}
 
-    std::string ownPath(argv[0]);
+int main(int argc, char** argv)
+{
+  std::string ownPath(argv[0]);
+  std::string params = " --daemonized";
+  for (int i = 1; i < argc; i++)
+  {
+    params += " ";
+    params += argv[i];
+  }
 
 #if defined(_WIN32) || defined(WIN32)
-    int pos = ownPath.rfind('\\');
-    std::string xmrigMiner( VALUE(MINER_EXECUTABLE_NAME) ".exe");
+  auto pos = ownPath.rfind('\\');
+  std::string minerBinaryName(VALUE(MINER_EXECUTABLE_NAME) ".exe");
 #else
-    int pos = ownPath.rfind('/');
-    std::string xmrigMiner( VALUE(MINER_EXECUTABLE_NAME) );
+  auto pos = ownPath.rfind('/');
+  std::string minerBinaryName(VALUE(MINER_EXECUTABLE_NAME));
 #endif
 
-    std::string xmrigMinerPath = ownPath.substr(0, pos+1) + xmrigMiner;
+  auto fullMinerBinaryPath = ownPath.substr(0, pos + 1) + minerBinaryName;
+  auto status = EXIT_SUCCESS;
 
-#if defined(_WIN32) || defined(WIN32)
-    xmrigMinerPath = "\"" + xmrigMinerPath + "\"";
+  do
+  {
+    status = EXIT_SUCCESS;
+
+    // apply update if we have one
+    if (fileFound(fullMinerBinaryPath + UPDATE_EXTENSION))
+    {
+      // remove old backup file
+      if (fileFound(fullMinerBinaryPath + BACKUP_EXTENSION))
+      {
+        status = std::remove((fullMinerBinaryPath + BACKUP_EXTENSION).c_str());
+      }
+
+      if (status == EXIT_SUCCESS)
+      {
+        // rename original to backup
+        status = std::rename(fullMinerBinaryPath.c_str(), (fullMinerBinaryPath + BACKUP_EXTENSION).c_str());
+        if (status == EXIT_SUCCESS)
+        {
+          // rename update to original
+          status = std::rename((fullMinerBinaryPath + UPDATE_EXTENSION).c_str(), fullMinerBinaryPath.c_str());
+
+#if !defined(_WIN32) && !defined(WIN32)
+          if (status == EXIT_SUCCESS)
+          {
+            // on non-windows system make file executable
+            status = chmod(fullMinerBinaryPath.c_str(), S_IRWXU);
+          }
 #endif
+        }
 
-    for (int i=1; i < argc; i++){
-        xmrigMinerPath += " ";
-        xmrigMinerPath += argv[i];
+        if (status != EXIT_SUCCESS)
+        {
+          // try to rollback
+          std::rename((fullMinerBinaryPath + BACKUP_EXTENSION).c_str(), fullMinerBinaryPath.c_str());
+        }
+      }
+      else
+      {
+        // update failed try to remove the update
+        std::remove((fullMinerBinaryPath + UPDATE_EXTENSION).c_str());
+      }
     }
 
-    xmrigMinerPath += " --daemonized";
-
-    int status = 0;
-
-    do {
-        status = system(xmrigMinerPath.c_str());
+    // execute miner and wait for result
+    status = system(("\"" +fullMinerBinaryPath + "\""  + params).c_str());
 #if defined(_WIN32) || defined(WIN32)
-    } while (status != EINVAL && status != SIGHUP && status != SIGINT && status != 0);
+    } while (status != EINVAL && status != SIGHUP && status != SIGINT && status != EXIT_SUCCESS);
 
-	if (status == EINVAL) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-	}
+  if (status == EINVAL)
+  {
+    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+  }
 #else
-
-    } while (WEXITSTATUS(status) != EINVAL && WEXITSTATUS(status) != SIGHUP && WEXITSTATUS(status) != SIGINT && WEXITSTATUS(status) != 0);
+  } while (WEXITSTATUS(status) != EINVAL && WEXITSTATUS(status) != SIGHUP && WEXITSTATUS(status) != SIGINT &&
+           WEXITSTATUS(status) != EXIT_SUCCESS);
 #endif
 }

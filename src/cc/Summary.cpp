@@ -28,7 +28,7 @@
 
 static void printVersions()
 {
-  char buf[256] = { 0 };
+  char buf[256] = {0};
 
 #   if defined(__clang__)
   snprintf(buf, sizeof buf, "clang/%d.%d.%d", __clang_major__, __clang_minor__, __clang_patchlevel__);
@@ -38,16 +38,17 @@ static void printVersions()
   snprintf(buf, sizeof buf, "MSVC/%d", MSVC_VERSION);
 #   endif
 
-  xmrig::Log::print(GREEN_BOLD(" * ") WHITE_BOLD("%-13s") CYAN_BOLD("%s/%s") WHITE_BOLD(" %s") BLUE_BOLD(" (%s)"), "ABOUT", APP_NAME, APP_VERSION, buf, BUILD_TYPE);
+  xmrig::Log::print(GREEN_BOLD(" * ") WHITE_BOLD("%-13s") CYAN_BOLD("%s/%s") WHITE_BOLD(" %s") BLUE_BOLD(" (%s)"),
+                    "ABOUT", APP_NAME, APP_VERSION, buf, BUILD_TYPE);
 
   std::string libs;
 
 #if defined(XMRIG_FEATURE_TLS) && defined(OPENSSL_VERSION_TEXT)
-{
-  constexpr const char *v = OPENSSL_VERSION_TEXT + 8;
-  snprintf(buf, sizeof buf, "OpenSSL/%.*s ", static_cast<int>(strchr(v, ' ') - v), v);
-  libs += buf;
-}
+  {
+    constexpr const char* v = OPENSSL_VERSION_TEXT + 8;
+    snprintf(buf, sizeof buf, "OpenSSL/%.*s ", static_cast<int>(strchr(v, ' ') - v), v);
+    libs += buf;
+  }
 #endif
 }
 
@@ -58,14 +59,37 @@ static void printCommands()
 
 static void printPushinfo(const std::shared_ptr<CCServerConfig>& config)
 {
-  if (config->usePushover() || config->useTelegram())
+  if (config->usePushover() || config->useTelegram() || config->useDiscord())
   {
 #ifdef XMRIG_FEATURE_TLS
-    xmrig::Log::print(GREEN_BOLD(" * ") WHITE_BOLD("%-13s") CYAN_BOLD("%s%s%s"), "PUSHSERVICE",
-                   config->usePushover() ? "Pushover" : "",
-                   config->usePushover() && config->useTelegram() ? ", " : "",
-                   config->useTelegram() ? "Telegram" : "");
+    std::string pushServices;
 
+    if (config->usePushover())
+    {
+      pushServices = "Pushover";
+    }
+
+    if (config->useTelegram())
+    {
+      if (!pushServices.empty())
+      {
+        pushServices += ", ";
+      }
+
+      pushServices += "Telegram";
+    }
+
+    if (config->useDiscord())
+    {
+      if (!pushServices.empty())
+      {
+        pushServices += ", ";
+      }
+
+      pushServices += "Discord";
+    }
+
+    xmrig::Log::print(GREEN_BOLD(" * ") WHITE_BOLD("%-13s") CYAN_BOLD("%s"), "PUSHSERVICE", pushServices.c_str());
 #else
     xmrig::Log::print(GREEN_BOLD(" * ") WHITE_BOLD("%-13s") RED_BOLD("Unavailable requires TLS"), "PUSHSERVICE");
 #endif

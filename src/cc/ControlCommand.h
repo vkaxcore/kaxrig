@@ -21,66 +21,76 @@
 #include <string>
 #include "3rdparty/rapidjson/document.h"
 
-static const char* command_str[8] = {
-        "START",
-        "STOP",
-        "UPDATE_CONFIG",
-        "PUBLISH_CONFIG",
-        "RESTART",
-        "SHUTDOWN",
-        "REBOOT",
-        "EXECUTE"
+static const char* command_str[9] = {
+  "START",
+  "STOP",
+  "UPDATE_CONFIG",
+  "PUBLISH_CONFIG",
+  "RESTART",
+  "SHUTDOWN",
+  "REBOOT",
+  "EXECUTE",
+  "UPDATE"
 };
 
 class ControlCommand
 {
 public:
-    enum Command {
-        START,
-        STOP,
-        UPDATE_CONFIG,
-        PUBLISH_CONFIG,
-        RESTART,
-        SHUTDOWN,
-        REBOOT,
-        EXECUTE
-    };
+  enum Command
+  {
+    START,
+    STOP,
+    UPDATE_CONFIG,
+    PUBLISH_CONFIG,
+    RESTART,
+    SHUTDOWN,
+    REBOOT,
+    EXECUTE,
+    UPDATE
+  };
 
 public:
-    ControlCommand();
-    explicit ControlCommand(Command command);
+  ControlCommand();
 
-    static inline const char *toString (Command command)
+  explicit ControlCommand(Command command);
+
+  static inline const char* toString(Command command)
+  {
+    return command_str[static_cast<int>(command)];
+  }
+
+  static inline Command toCommand(const char* command)
+  {
+    const int n = sizeof(command_str) / sizeof(command_str[0]);
+    for (int i = 0; i < n; ++i)
     {
-        return command_str[static_cast<int>(command)];
+      if (strcmp(command_str[i], command) == 0)
+      {
+        return (Command) i;
+      }
     }
+    return Command::START;
+  }
 
-    static inline Command toCommand (const char *command)
-    {
-        const int n = sizeof(command_str) / sizeof(command_str[0]);
-        for (int i = 0; i < n; ++i)
-        {
-            if (strcmp(command_str[i], command) == 0)
-                return (Command) i;
-        }
-        return Command::START;
-    }
+  rapidjson::Value toJson(rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>& allocator);
 
-    rapidjson::Value toJson(rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>& allocator);
-    bool parseFromJsonString(const std::string& json);
-    bool parseFromJson(const rapidjson::Document& document);
+  bool parseFromJsonString(const std::string& json);
 
-    Command getCommand() const;
-    void setCommand(const Command& command);
+  bool parseFromJson(const rapidjson::Document& document);
 
-    std::string getPayload() const;
-    void setPayload(const std::string& payload);
+  Command getCommand() const;
 
-    bool isOneTimeCommand() const;
+  void setCommand(const Command& command);
+
+  std::string getPayload() const;
+
+  void setPayload(const std::string& payload);
+
+  bool isOneTimeCommand() const;
 
 private:
-    Command m_command;
-    std::string m_payload;
+  Command m_command;
+  std::string m_payload;
 };
 
 #endif /* __CONTROL_COMMAND_H__ */

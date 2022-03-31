@@ -24,71 +24,73 @@
 class GPUInfo
 {
 public:
-    GPUInfo();
-    ~GPUInfo();
+  GPUInfo();
 
-    rapidjson::Value toJson(rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>& allocator);
-    bool parseFromJson(const rapidjson::Value& gpuInfo);
+  ~GPUInfo();
 
-    uint32_t getDeviceIdx() const;
-    void setDeviceIdx(uint32_t deviceIdx);
+  rapidjson::Value toJson(rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>& allocator);
 
-    uint32_t getIntensity() const;
-    void setIntensity(uint32_t intensity);
+  bool parseFromJson(const rapidjson::Value& gpuInfo);
 
-    uint32_t getWorkSize() const;
-    void setWorkSize(uint32_t workSize);
+  uint32_t getDeviceIdx() const;
+  void setDeviceIdx(uint32_t deviceIdx);
 
-    size_t getMemory() const;
-    void setMemory(size_t memory);
+  uint32_t getIntensity() const;
+  void setIntensity(uint32_t intensity);
 
-    size_t getFreeMem() const;
-    void setFreeMem(size_t freeMem);
+  uint32_t getWorkSize() const;
+  void setWorkSize(uint32_t workSize);
 
-    uint32_t getThreads() const;
-    void setThreads(uint32_t threads);
+  size_t getMemory() const;
+  void setMemory(size_t memory);
 
-    uint32_t getBlocks() const;
-    void setBlocks(uint32_t blocks);
+  size_t getFreeMem() const;
+  void setFreeMem(size_t freeMem);
 
-    uint32_t getBfactor() const;
-    void setBfactor(uint32_t bfactor);
+  uint32_t getThreads() const;
+  void setThreads(uint32_t threads);
 
-    uint32_t getBsleep() const;
-    void setBsleep(uint32_t bsleep);
+  uint32_t getBlocks() const;
+  void setBlocks(uint32_t blocks);
 
-    uint32_t getComputeUnits() const;
-    void setComputeUnits(uint32_t computeUnits);
+  uint32_t getBfactor() const;
+  void setBfactor(uint32_t bfactor);
 
-    uint32_t getClock() const;
-    void setClock(uint32_t clock);
+  uint32_t getBsleep() const;
+  void setBsleep(uint32_t bsleep);
 
-    std::string getName() const;
-    void setName(const std::string& name);
+  uint32_t getComputeUnits() const;
+  void setComputeUnits(uint32_t computeUnits);
 
-    std::string getType() const;
-    void setType(const std::string& type);
+  uint32_t getClock() const;
+  void setClock(uint32_t clock);
 
-    std::string getBusId() const;
-    void setBusId(const std::string& busId);
+  std::string getName() const;
+  void setName(const std::string& name);
+
+  std::string getType() const;
+  void setType(const std::string& type);
+
+  std::string getBusId() const;
+  void setBusId(const std::string& busId);
 
 private:
-    size_t m_memory {0};
-    size_t m_freeMem {0};
+  size_t m_memory{0};
+  size_t m_freeMem{0};
 
-    uint32_t m_deviceIdx {0};
-    uint32_t m_intensity {0};
-    uint32_t m_workSize {0};
-    uint32_t m_threads {0};
-    uint32_t m_computeUnits {0};
-    uint32_t m_blocks {0};
-    uint32_t m_bfactor {0};
-    uint32_t m_bsleep {0};
-    uint32_t m_clock {0};
+  uint32_t m_deviceIdx{0};
+  uint32_t m_intensity{0};
+  uint32_t m_workSize{0};
+  uint32_t m_threads{0};
+  uint32_t m_computeUnits{0};
+  uint32_t m_blocks{0};
+  uint32_t m_bfactor{0};
+  uint32_t m_bsleep{0};
+  uint32_t m_clock{0};
 
-    std::string m_name;
-    std::string m_type;
-    std::string m_busId;
+  std::string m_name;
+  std::string m_type;
+  std::string m_busId;
 };
 
 

@@ -52,7 +52,7 @@ public:
   using AlgoStatistic = std::map<uint64_t, Statistic>;
   using Statistics = std::map<std::string, AlgoStatistic>;
 
-  explicit Service(std::shared_ptr<CCServerConfig>  config);
+  explicit Service(std::shared_ptr<CCServerConfig> config);
   ~Service();
 
 public:
@@ -88,6 +88,7 @@ private:
   void triggerPush(const std::string& title, const std::string& message);
   void sendViaPushover(const std::string& title, const std::string& message);
   void sendViaTelegram(const std::string& title, const std::string& message);
+  void sendViaDiscord(const std::string& title, const std::string& message);
   void updateStatistics(uint64_t now);
 
 private:

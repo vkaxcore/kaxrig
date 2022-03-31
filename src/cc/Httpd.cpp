@@ -30,14 +30,14 @@
 
 namespace
 {
-  void addResponseHeader(httplib::Response& res)
-  {
-    res.set_header("Access-Control-Allow-Origin", "*");
-    res.set_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
-    res.set_header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    res.set_header("WWW-Authenticate", "Basic");
-    res.set_header("WWW-Authenticate", "Bearer");
-  }
+void addResponseHeader(httplib::Response& res)
+{
+  res.set_header("Access-Control-Allow-Origin", "*");
+  res.set_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+  res.set_header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.set_header("WWW-Authenticate", "Basic");
+  res.set_header("WWW-Authenticate", "Bearer");
+}
 }
 
 Httpd::Httpd(const std::shared_ptr<CCServerConfig>& config)
@@ -88,29 +88,24 @@ int Httpd::start()
 
   m_srv->Get(R"(/.*)", [this](const httplib::Request& req, httplib::Response& res)
   {
-    int status;
-
-    if (req.path.find("/client/") == 0)
-    {
-      status = this->bearerAuth(req, res);
-    }
-    else
-    {
-      status = this->basicAuth(req, res);
-    }
-
-    if (status == HTTP_OK)
-    {
-      status = this->m_service->handleGET(req, res);
-    }
-
-    res.status = status;
-
+    res.status = this->m_service->handleGET(req, res);;
     addResponseHeader(res);
   });
 
   m_srv->Post(R"(/.*)", [this](const httplib::Request& req, httplib::Response& res)
   {
+    res.status = m_service->handlePOST(req, res);;
+    addResponseHeader(res);
+  });
+
+  auto ret = m_srv->set_mount_point("/client/updates", m_config->clientUpdateFolder());
+  if (!ret) {
+    LOG_ERR("Unable to find client-updates mount point");
+  }
+
+  m_srv->set_pre_routing_handler([this](const httplib::Request& req, httplib::Response& res) {
+    auto handlerResponse = httplib::Server::HandlerResponse::Unhandled;
+
     int status;
     if (req.path.find("/client/") == 0)
     {
@@ -121,14 +116,22 @@ int Httpd::start()
       status = this->basicAuth(req, res);
     }
 
-    if (status == HTTP_OK)
+    if (status != HTTP_OK)
     {
-      status = this->m_service->handlePOST(req, res);
+      res.status = status;
+      addResponseHeader(res);
+      handlerResponse =  httplib::Server::HandlerResponse::Handled;
+    }
+    else
+    {
+      const auto clientId = req.get_param_value("clientId");
+      const auto remoteAddr = req.get_header_value("REMOTE_ADDR");
+
+      LOG_INFO("[%s] %s %s%s%s", remoteAddr.c_str(), req.method.c_str(), req.path.c_str(),
+               clientId.empty() ? "" : "/?clientId=", clientId.c_str());
     }
 
-    res.status = status;
-
-    addResponseHeader(res);
+    return handlerResponse;
   });
 
   return m_srv->listen(m_config->bindIp().c_str(), m_config->port()) ? 0 : 1;
@@ -144,9 +147,8 @@ void Httpd::stop()
 
 int Httpd::basicAuth(const httplib::Request& req, httplib::Response& res)
 {
-  int result = HTTP_UNAUTHORIZED;
-
-  std::string removeAddr = req.get_header_value("REMOTE_ADDR");
+  auto result = HTTP_UNAUTHORIZED;
+  auto remoteAddr = req.get_header_value("REMOTE_ADDR");
 
   if (m_config->adminUser().empty() || m_config->adminPass().empty())
   {
@@ -154,8 +156,10 @@ int Httpd::basicAuth(const httplib::Request& req, httplib::Response& res)
                                 "Please configure admin user and pass to view this Page."
                                 "</body><html\\>"), CONTENT_TYPE_HTML);
 
-    LOG_ERR("[%s] 403 FORBIDDEN - Admin user/password not set!", removeAddr.c_str());
     result = HTTP_FORBIDDEN;
+
+    LOG_ERR("[%s] %s %s (403 FORBIDDEN) - Admin user/password not set!",
+            remoteAddr.c_str(), req.method.c_str(), req.path.c_str());
   }
   else
   {
@@ -168,11 +172,13 @@ int Httpd::basicAuth(const httplib::Request& req, httplib::Response& res)
     }
     else if (authHeader.empty())
     {
-      LOG_WARN("[%s] 401 UNAUTHORIZED", removeAddr.c_str());
+      LOG_WARN("[%s] %s %s (401 UNAUTHORIZED)",
+               remoteAddr.c_str(), req.method.c_str(), req.path.c_str());
     }
     else
     {
-      LOG_ERR("[%s] 403 FORBIDDEN - Admin user/password wrong!", removeAddr.c_str());
+      LOG_ERR("[%s] %s %s (403 FORBIDDEN) - Admin user/password wrong!",
+              remoteAddr.c_str(), req.method.c_str(), req.path.c_str());
     }
   }
 
@@ -183,13 +189,14 @@ int Httpd::basicAuth(const httplib::Request& req, httplib::Response& res)
 
 int Httpd::bearerAuth(const httplib::Request& req, httplib::Response& res)
 {
-  int result = HTTP_UNAUTHORIZED;
-
-  std::string removeAddr = req.get_header_value("REMOTE_ADDR");
+  auto result = HTTP_UNAUTHORIZED;
+  auto remoteAddr = req.get_header_value("REMOTE_ADDR");
 
   if (m_config->token().empty())
   {
-    LOG_WARN("[%s] 200 OK - WARNING AccessToken not set!", removeAddr.c_str());
+    LOG_WARN("[%s] %s %s (200 OK) - WARNING AccessToken not set!",
+             remoteAddr.c_str(), req.method.c_str(), req.path.c_str());
+
     result = HTTP_OK;
   }
   else
@@ -203,11 +210,14 @@ int Httpd::bearerAuth(const httplib::Request& req, httplib::Response& res)
     }
     else if (authHeader.empty())
     {
-      LOG_WARN("[%s] 401 UNAUTHORIZED", removeAddr.c_str());
+      LOG_WARN("[%s] %s %s (401 UNAUTHORIZED)",
+               remoteAddr.c_str(), req.method.c_str(), req.path.c_str());
     }
     else
     {
-      LOG_ERR("[%s] 403 FORBIDDEN - AccessToken wrong!", removeAddr.c_str());
+      LOG_ERR("[%s] %s %s (403 FORBIDDEN) - AccessToken wrong!",
+             remoteAddr.c_str(), req.method.c_str(), req.path.c_str());
+
       result = HTTP_FORBIDDEN;
     }
   }

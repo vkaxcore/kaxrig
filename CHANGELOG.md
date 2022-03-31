@@ -1,3 +1,8 @@
+# 3.2.0
+* Rebase upstream 6.16.5-dev
+  * **Dero HE (astrobwt/v2)** CPU/OpenCL/Cuda support #378
+* **Finally!! Integrated remote miner upgrade via Dashboard** #4 #239
+* Integrated Discord-Webhook push notifications #365
 # 3.1.0
 * Rebase upstream 6.16.4-dev
 * Integrated Equilibria (XEQ) and Conceal (CCX) CryptoNight variant GPU (`cn/gpu`) [CPU/GPU]

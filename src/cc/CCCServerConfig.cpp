@@ -23,7 +23,7 @@
 
 
 template<class T>
-T getParseResult(const cxxopts::ParseResult &parseResult, const std::string &propery, T defaultValue)
+T getParseResult(const cxxopts::ParseResult& parseResult, const std::string& propery, T defaultValue)
 {
   if (parseResult.count(propery) > 0)
   {
@@ -44,11 +44,11 @@ CCServerConfig::CCServerConfig(cxxopts::ParseResult& parseResult)
     auto m_configFile = getParseResult(parseResult, "config", std::string());
     if (!m_configFile.empty())
     {
-     chain.addFile(m_configFile.c_str());
+      chain.addFile(m_configFile.c_str());
     }
     else
     {
-     chain.addFile("config_cc.json");
+      chain.addFile("config_cc.json");
     }
 
     read(chain);
@@ -69,12 +69,14 @@ CCServerConfig::CCServerConfig(cxxopts::ParseResult& parseResult)
     m_clientLogHistory = getParseResult(parseResult, "client-log-lines-history", m_clientLogHistory);
     m_customDashboard = getParseResult(parseResult, "custom-dashboard", m_customDashboard);
     m_clientConfigFolder = getParseResult(parseResult, "client-config-folder", m_clientConfigFolder);
+    m_clientUpdateFolder = getParseResult(parseResult, "client-update-folder", m_clientUpdateFolder);
     m_logFile = getParseResult(parseResult, "log-file", m_logFile);
 
     m_pushoverApiToken = getParseResult(parseResult, "pushover-api-token", m_pushoverApiToken);
     m_pushoverUserKey = getParseResult(parseResult, "pushover-user-key", m_pushoverUserKey);
     m_telegramBotToken = getParseResult(parseResult, "telegram-bot-token", m_telegramBotToken);
     m_telegramChatId = getParseResult(parseResult, "telegram-chat-id", m_telegramChatId);
+    m_discordWebhookUrl = getParseResult(parseResult, "discord-webhook-url", m_discordWebhookUrl);
     m_pushOfflineMiners = getParseResult(parseResult, "push-miner-offline-info", m_pushOfflineMiners);
     m_pushZeroHashrateMiners = getParseResult(parseResult, "push-miner-zero-hash-info", m_pushZeroHashrateMiners);
     m_pushPeriodicStatus = getParseResult(parseResult, "push-periodic-mining-status", m_pushPeriodicStatus);
@@ -108,12 +110,14 @@ bool CCServerConfig::read(const xmrig::IJsonReader& reader)
   m_clientLogHistory = reader.getInt("client-log-lines-history", m_clientLogHistory);
   m_customDashboard = reader.getString("custom-dashboard", m_customDashboard.c_str());
   m_clientConfigFolder = reader.getString("client-config-folder", m_clientConfigFolder.c_str());
+  m_clientUpdateFolder = reader.getString("client-update-folder", m_clientUpdateFolder.c_str());
   m_logFile = reader.getString("log-file", m_logFile.c_str());
 
   m_pushoverApiToken = reader.getString("pushover-api-token", m_pushoverApiToken.c_str());
   m_pushoverUserKey = reader.getString("pushover-user-key", m_pushoverUserKey.c_str());
   m_telegramBotToken = reader.getString("telegram-bot-token", m_telegramBotToken.c_str());
   m_telegramChatId = reader.getString("telegram-chat-id", m_telegramChatId.c_str());
+  m_discordWebhookUrl = reader.getString("discord-webhook-url", m_discordWebhookUrl.c_str());
   m_pushOfflineMiners = reader.getBool("push-miner-offline-info", m_pushOfflineMiners);
   m_pushZeroHashrateMiners = reader.getBool("push-miner-zero-hash-info", m_pushZeroHashrateMiners);
   m_pushPeriodicStatus = reader.getBool("push-periodic-mining-status", m_pushPeriodicStatus);

@@ -42,47 +42,60 @@ class ICommandListener;
 class CCClient : public IBaseListener, public ITimerListener
 {
 public:
-    CCClient(Base *base);
-    ~CCClient();
+  CCClient(Base* base);
+  ~CCClient();
 
-    inline void addClientStatusListener(IClientStatusListener *listener) { m_ClientStatuslisteners.push_back(listener); }
-    inline void addCommandListener(ICommandListener *listener) { m_Commandlisteners.push_back(listener); }
+  inline void addClientStatusListener(IClientStatusListener* listener)
+  {
+    m_ClientStatuslisteners.push_back(listener);
+  }
 
-    void start();
-    void stop();
+  inline void addCommandListener(ICommandListener* listener)
+  {
+    m_Commandlisteners.push_back(listener);
+  }
+
+  void start();
+  void stop();
 
 protected:
-    void onConfigChanged(Config *config, Config *previousConfig) override;
-    void onTimer(const Timer *timer) override;
+  void onConfigChanged(Config* config, Config* previousConfig) override;
+
+  void onTimer(const Timer* timer) override;
 
 private:
-    void publishThread();
+  void publishThread();
+  void publishClientStatusReport();
 
-    void publishClientStatusReport();
-    void updateAuthorization();
-    void updateClientInfo();
-    void updateUptime();
-    void updateLog();
-    void updateStatistics();
-    void fetchConfig();
-    void publishConfig();
+  void updateClientInfo();
+  void updateUptime();
+  void updateLog();
+  void updateStatistics();
 
-    std::shared_ptr<httplib::Response> performRequest(const std::string &requestUrl,
-                                                      const std::string &requestBuffer,
-                                                      const std::string &operation);
+  void fetchConfig();
+  void publishConfig();
+
+  std::shared_ptr<httplib::Response> performRequest(const std::string& requestUrl,
+                                                    const std::string& requestBuffer,
+                                                    const std::string& operation);
+
+  std::shared_ptr<httplib::ClientImpl> getClient();
+
 private:
-    Base *m_base;
+  Base* m_base;
 
-    const uint64_t m_startTime;
-    ClientStatus m_clientStatus;
+  const uint64_t m_startTime;
+  ClientStatus m_clientStatus;
 
-    std::string m_authorization;
-    bool m_configPublishedOnStart;
+  bool m_configPublishedOnStart;
 
-    Timer* m_timer;
-    std::thread m_thread;
-    std::vector<ICommandListener *> m_Commandlisteners;
-    std::vector<IClientStatusListener *> m_ClientStatuslisteners;
+  Timer* m_timer;
+  std::thread m_thread;
+  std::vector<ICommandListener*> m_Commandlisteners;
+  std::vector<IClientStatusListener*> m_ClientStatuslisteners;
+
+  void fetchUpdate();
+
 };
 }
 

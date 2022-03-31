@@ -52,7 +52,12 @@ char *xmrig::Platform::createUserAgent()
     constexpr const size_t max = 256;
 
     char *buf = new char[max]();
+
+#   if defined(__FreeBSD__)
+    int length = snprintf(buf, max, "%s/%s (FreeBSD ", APP_NAME, APP_VERSION);
+#   else
     int length = snprintf(buf, max, "%s/%s (Linux ", APP_NAME, APP_VERSION);
+#   endif
 
 #   if defined(__x86_64__)
     length += snprintf(buf + length, max - length, "x86_64) libuv/%s", uv_version_string());
@@ -69,6 +74,40 @@ char *xmrig::Platform::createUserAgent()
 #   elif defined(__GNUC__)
     length += snprintf(buf + length, max - length, " gcc/%d.%d.%d", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
 #   endif
+
+    return buf;
+}
+
+
+char *xmrig::Platform::createUpdatePath()
+{
+    constexpr const size_t max = 256;
+
+    char *buf = new char[max]();
+
+#   if defined(__FreeBSD__)
+    int length = snprintf(buf, max, "freebsd");
+#   else
+    int length = snprintf(buf, max, "linux");
+#   endif
+
+#   if defined(XMRIG_FEATURE_OPENCL) || defined(XMRIG_FEATURE_CUDA)
+    length += snprintf(buf + length, max - length, "-dynamic");
+#   else
+    length += snprintf(buf + length, max - length, "-static");
+#   endif
+
+#   if defined(__x86_64__)
+    length += snprintf(buf + length, max - length, "-amd64");
+#   elif defined(__aarch64__)
+    length += snprintf(buf + length, max - length, "-arm64");
+#   elif defined(__arm__)
+    length += snprintf(buf + length, max - length, "-arm");
+#   else
+    length += snprintf(buf + length, max - length, "-i386");
+#   endif
+
+    snprintf(buf + length, max - length, "/xmrigMiner");
 
     return buf;
 }
