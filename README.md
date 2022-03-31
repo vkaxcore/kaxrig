@@ -30,7 +30,7 @@ Full Windows/Linux/OSx/Android compatible, and you can mix all on a single XMRig
 
 List of all supported algos can be found [here](doc/ALGORITHMS.md)
 
-* **Dero** AstroBWTv2 (Algo: "astrobwtv2x)
+* **Dero HE** Astrobwt variant (Algo: "astrobwt/v2)
 * **Lozzax** RX variant (Algo: "rx/lozz")
 * **Conceal (CCX), Equilibria (XEQ), ...** CN variant (Algo: "cn/gpu")
 * **Ghostrider (Raptoreum)** (Algo: "gr")
