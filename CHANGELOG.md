@@ -1,7 +1,9 @@
 # 3.2.0
 * Rebase upstream 6.16.5-dev
   * **Dero HE (astrobwt/v2)** CPU/OpenCL/Cuda support #378
+  * Big astrobwt/v2 speedup on non-AVX2 CPUs: **Core i7-2600 +64% (17 -> 28 kh/s)**
 * **Finally!! Integrated remote miner upgrade via Dashboard** #4 #239
+* New Dashboard design including Night/Day-Mode toggle #370
 * Integrated Discord-Webhook push notifications #365
 # 3.1.0
 * Rebase upstream 6.16.4-dev
