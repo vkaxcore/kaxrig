@@ -87,6 +87,8 @@ char *xmrig::Platform::createUpdatePath()
 
 #   if defined(__FreeBSD__)
     int length = snprintf(buf, max, "freebsd");
+#   elif defined(XMRIG_OS_ANDROID)
+    int length = snprintf(buf, max, "android");
 #   else
     int length = snprintf(buf, max, "linux");
 #   endif
