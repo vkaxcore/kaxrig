@@ -709,6 +709,11 @@ body.dark .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon {
 	}
 }
 
+.dialog-close-scheme {
+    filter: invert(1) grayscale(100%) brightness(200%);
+    opacity: 1;
+}
+
 
 #light-mode{
 	color:#02ABE4;
@@ -856,7 +861,8 @@ table.dataTable tbody tr {
 
                                 <li class="nav-item nav-button">
                                     <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
-                                        <i class="fa fa-wrench">&nbsp;Settings</i></a>
+                                        <i class="fa fa-wrench"></i>&nbsp;Settings
+                                    </a>
                                     <div class="dropdown-menu">
                                        <form style="width: auto">
                                         <table style="display: table;">
@@ -1093,7 +1099,7 @@ table.dataTable tbody tr {
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <button type="button" class="close dialog-close" data-dismiss="modal">&times;</button>
                     <h4 class="modal-title">Miner editor</h4>
                 </div>
                 <div class="modal-body">
@@ -1112,7 +1118,7 @@ table.dataTable tbody tr {
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <button type="button" class="close dialog-close" data-dismiss="modal">&times;</button>
                     <h4 class="modal-title">Miner log</h4>
                 </div>
                 <div class="modal-body">
@@ -1130,7 +1136,7 @@ table.dataTable tbody tr {
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <button type="button" class="close dialog-close" data-dismiss="modal">&times;</button>
                     <h4 class="modal-title">Template Editor</h4>
                 </div>
                 <div class="modal-body">
@@ -1159,7 +1165,7 @@ table.dataTable tbody tr {
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <button type="button" class="close dialog-close" data-dismiss="modal">&times;</button>
                     <h4 class="modal-title">Save As...</h4>
                 </div>
                 <div class="modal-body">
@@ -1181,7 +1187,7 @@ table.dataTable tbody tr {
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <button type="button" class="close dialog-close" data-dismiss="modal">&times;</button>
                     <h4 class="modal-title">Delete</h4>
                 </div>
                 <div class="modal-body">
@@ -1202,7 +1208,7 @@ table.dataTable tbody tr {
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <button type="button" class="close dialog-close" data-dismiss="modal">&times;</button>
                     <h4 class="modal-title">Stop Command</h4>
                 </div>
                 <div class="modal-body">
@@ -1222,7 +1228,7 @@ table.dataTable tbody tr {
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <button type="button" class="close dialog-close" data-dismiss="modal">&times;</button>
                     <h4 class="modal-title">Assign template</h4>
                 </div>
                 <div class="modal-body">
@@ -1256,7 +1262,7 @@ table.dataTable tbody tr {
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <button type="button" class="close dialog-close" data-dismiss="modal">&times;</button>
                     <h4 class="modal-title">Remote Execute...</h4>
                 </div>
                 <div class="modal-body">
@@ -1380,7 +1386,9 @@ table.dataTable tbody tr {
             $("#dark-mode").css("fill", "#000");
             $(".contact-item").css("color", "#171515");
             $(".navbar-brand").removeClass("dark-mode-logo");
-            $(".select-checkbox").css("color", "#000")
+            $(".select-checkbox").css("color", "#000");
+            $(".modal-content").css("background-color", "#fff");
+            $(".dialog-close").removeClass("dialog-close-scheme");
         }
         else {
             $("body").addClass("dark");
@@ -1388,8 +1396,10 @@ table.dataTable tbody tr {
             $("#light-mode").css("fill", "#fff");
             $("#dark-mode").css("fill", "#02ABE4");
             $(".contact-item").css("color", "#fff");
-            $(".navbar-brand").addClass("dark-mode-logo")
-            $(".select-checkbox").css("color", "#fff")
+            $(".navbar-brand").addClass("dark-mode-logo");
+            $(".select-checkbox").css("color", "#fff");
+            $(".modal-content").css("background-color", "#202020");
+            $(".dialog-close").addClass("dialog-close-scheme");
         }
     });		
         
@@ -1433,8 +1443,10 @@ table.dataTable tbody tr {
             $("#light-mode").css("fill", "#02ABE4");
             $("#dark-mode").css("fill", "#000");
             $("#github").css("color", "#171515");
-            $(".navbar-brand").removeClass("dark-mode-logo")
-            $(".select-checkbox").css("color", "#000")
+            $(".navbar-brand").removeClass("dark-mode-logo");
+            $(".select-checkbox").css("color", "#000");
+            $(".modal-content").css("background-color", "#fff");
+            $(".dialog-close").removeClass("dialog-close-scheme");
             setCookie('mode', 'light', 90);    
         }
         else {
@@ -1444,7 +1456,9 @@ table.dataTable tbody tr {
             $("#dark-mode").css("fill", "#02ABE4");
             $("#github").css("color", "#fff");
             $(".navbar-brand").addClass("dark-mode-logo");
-            $(".select-checkbox").css("color", "#fff")
+            $(".select-checkbox").css("color", "#fff");
+            $(".modal-content").css("background-color", "#202020");
+            $(".dialog-close").addClass("dialog-close-scheme");
             setCookie('mode', 'dark', 90) 
         }    
     });  
