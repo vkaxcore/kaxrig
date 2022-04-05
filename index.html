@@ -1398,7 +1398,7 @@ table.dataTable tbody tr {
             $(".contact-item").css("color", "#fff");
             $(".navbar-brand").addClass("dark-mode-logo");
             $(".select-checkbox").css("color", "#fff");
-            $(".modal-content").css("background-color", "#202020");
+            $(".modal-content").css("background-color", "#1f2029");
             $(".dialog-close").addClass("dialog-close-scheme");
         }
     });		
@@ -1921,7 +1921,7 @@ table.dataTable tbody tr {
     
                 table.on('select', function () {
                     var selectedRows = table.rows({selected: true}).count();
-                    for (var i=1; i < 11; i++)
+                    for (var i=1; i < 12; i++)
                     {
                         table.button(i).enable(selectedRows > 0 || i === 5);
                     }
@@ -1930,7 +1930,7 @@ table.dataTable tbody tr {
                 table.on('deselect', function () {
                     var selectedRows = table.rows({selected: true}).count();
 
-                    for (var i=1; i < 11; i++)
+                    for (var i=1; i < 12; i++)
                     {
                         table.button(i).enable(selectedRows > 0 || i === 5);
                     }
