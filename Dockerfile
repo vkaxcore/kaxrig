@@ -7,6 +7,7 @@ RUN git clone https://github.com/Bendr0id/xmrigCC.git && \
         cd xmrigCC && \
         cd scripts && \
         ./build_deps.sh && \
+        rm -rf build && \
         cd .. && \
         cmake . -DWITH_ZLIB=ON -DXMRIG_DEPS=scripts/deps && \
         make -j
