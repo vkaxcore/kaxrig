@@ -30,7 +30,8 @@ Full Windows/Linux/OSx/Android compatible, and you can mix all on a single XMRig
 
 List of all supported algos can be found [here](doc/ALGORITHMS.md)
 
-* **Dero HE** Astrobwt variant (Algo: "astrobwt/v2)
+* **XDagger** RX variant (Algo: "rx/xdag")
+* **Dero HE** Astrobwt variant (Algo: "astrobwt/v2")
 * **Lozzax** RX variant (Algo: "rx/lozz")
 * **Conceal (CCX), Equilibria (XEQ), ...** CN variant (Algo: "cn/gpu")
 * **Ghostrider (Raptoreum)** (Algo: "gr")
@@ -55,7 +56,7 @@ List of all supported algos can be found [here](doc/ALGORITHMS.md)
     * statistics of all connected miners with graphs (CPU+GPU)
     * remote control miners (start/stop/restart/shutdown/execute)
     * remote configure miners
-    * remote miner upgrade
+    * remote miner upgrade **[Howto](doc/REMOTE_MINER_UPDATE.md)**
     * simple config editor for miner / config templates / apply to all
     * monitoring
     * remote logging 
