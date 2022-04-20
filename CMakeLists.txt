@@ -275,4 +275,17 @@ endif()
 if (WITH_CC_SERVER)
     add_executable(xmrigServer ${SOURCES_CC_SERVER} ${SOURCES_CC_COMMON} ${SOURCES_SYSLOG} res/app.rc)
     target_link_libraries(xmrigServer ${XMRIG_ASM_LIBRARY} ${OPENSSL_LIBRARIES} ${UV_LIBRARIES} ${EXTRA_LIBS} ${CPUID_LIB} ${ARGON2_LIBRARY} ${ZLIB_LIBRARIES})
+
+    set(CLIENT_VERSIONS
+            client-updates/linux-static-amd64
+            client-updates/linux-static-arm64
+            client-updates/linux-static-i386
+            client-updates/linux-dynamic-amd64
+            client-updates/freebsd-static-amd64
+            client-updates/android-dynamic-arm64
+            client-updates/macos-x64_64
+            client-updates/gcc-win64
+            client-updates/gcc-win32
+            client-updates/mvc-win64)
+    add_custom_command(TARGET xmrigServer POST_BUILD COMMAND ${CMAKE_COMMAND} -E make_directory ${CLIENT_VERSIONS})
 endif()

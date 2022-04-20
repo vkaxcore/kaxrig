@@ -58,11 +58,6 @@ public:
     static const char *kArgon2Impl;
 #   endif
 
-#   ifdef XMRIG_ALGO_ASTROBWT
-    static const char *kAstroBWTMaxSize;
-    static const char *kAstroBWTAVX2;
-#   endif
-
     CpuConfig() = default;
 
     bool isHwAES() const;
@@ -71,7 +66,6 @@ public:
     std::vector<CpuLaunchData> get(const Miner *miner, const Algorithm &algorithm) const;
     void read(const rapidjson::Value &value);
 
-    inline bool astrobwtAVX2() const                    { return m_astrobwtAVX2; }
     inline bool isEnabled() const                       { return m_enabled; }
     inline bool isHugePages() const                     { return m_hugePageSize > 0; }
     inline bool isHugePagesJit() const                  { return m_hugePagesJit; }
@@ -81,7 +75,6 @@ public:
     inline const Assembly &assembly() const             { return m_assembly; }
     inline const String &argon2Impl() const             { return m_argon2Impl; }
     inline const Threads<CpuThreads> &threads() const   { return m_threads; }
-    inline int astrobwtMaxSize() const                  { return m_astrobwtMaxSize; }
     inline int priority() const                         { return m_priority; }
     inline size_t hugePageSize() const                  { return m_hugePageSize * 1024U; }
     inline int maxCpuUsage() const                      { return m_maxCpuUsage; }
@@ -101,13 +94,11 @@ private:
 
     AesMode m_aes           = AES_AUTO;
     Assembly m_assembly;
-    bool m_astrobwtAVX2     = false;
     bool m_enabled          = true;
     bool m_hugePagesJit     = false;
     bool m_shouldSave       = false;
     bool m_yield            = true;
     bool m_forceAutoconfig  = false;
-    int m_astrobwtMaxSize   = 550;
     int m_memoryPool        = 0;
     int m_priority          = -1;
     int m_maxCpuUsage       = -1;

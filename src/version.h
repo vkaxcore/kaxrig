@@ -1,7 +1,6 @@
 /* XMRig
- * Copyright 2018-2021 SChernykh   <https://github.com/SChernykh>
- * Copyright 2016-2021 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
- * Copyright 2016-2021 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright (c) 2018-2022 SChernykh   <https://github.com/SChernykh>
+ * Copyright (c) 2016-2022 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -23,7 +22,7 @@
 #define APP_ID        "XMRigCC"
 #define APP_NAME      "XMRigCC"
 #define APP_DESC      "XMRigCC miner"
-#define APP_VERSION   "3.2.0"
+#define APP_VERSION   "3.2.1-dev"
 #define APP_DOMAIN    ""
 #define APP_SITE      "https://github.com/BenDr0id/xmrigCC/"
 #define APP_COPYRIGHT "Copyright (C) 2017- XMRigCC"

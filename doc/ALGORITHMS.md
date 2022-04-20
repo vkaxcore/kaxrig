@@ -12,18 +12,19 @@ Option `coin` useful for pools without algorithm negotiation support or daemon t
 
 | Name                  | Memory | Version     | Notes                                                                     | Info      |
 |-----------------------|--------|-------------|---------------------------------------------------------------------------|-----------|
+| `rx/xdag`             | 2 MB   | 3.2.1       | RandomXDAG (xdagger).                                                     | CPU only
+| `astroBWT/v2`         | -      | 3.2.0       | AstroBWT v2 (Dero HE).                                                 | 
 | `rx/lozz`             | 2 MB   | 3.1.0       | RandomL (Lozzax).                                                         |
 | `cn/gpu`              | -      | 3.1.0       | Equilibria (XEQ) & Conceal (CCX).                                         |
-| `ghostrider`          | 2 MB   | 3.0.0       | GhostRider (Raptoreum).                                                   | CPU only  
-| `kawpow`              | -      | 3.0.0       | KawPow (Ravencoin).                                                       | GPU only  |
+| `ghostrider`          | 2 MB   | 3.0.0       | GhostRider (Raptoreum).                                                   | CPU only
+| `kawpow`              | -      | 3.0.0       | KawPow (Ravencoin).                                                       | GPU only
 | `rx/graft`            | 2 MB   | 2.9.6       | RandomGRAFT.                                                              |
-| `rx/yada`             | 2 MB   | 2.9.3       | RandomYADA.                                                               | CPU only  
+| `rx/yada`             | 2 MB   | 2.9.3       | RandomYADA.                                                               | CPU only
 | `cn/superfast`        | 2 MB   | 2.9.1-2.9.7 | CryptoNight variant 0 (modified)                                          | removed
 | `cn/cache_hash`       | 2 MB   | 2.8.4-2.9.7 | CryptoNight variant 0 (modified)                                          | removed
-| `argon2/chukwav2`     | 1 MB   | 2.8.2       | Argon2id (Chukwa v2).                                                     | CPU only  
+| `argon2/chukwav2`     | 1 MB   | 2.8.2       | Argon2id (Chukwa v2).                                                     | CPU only
 | `panthera`            | 256 KB | 2.8.0-2.9.7 | RandomX variant Panthera (Scala [XLA]).                                   | removed
 | `ninja`               | 256 KB | 2.7.0       | Chukwa variant NinjaCoin.                                                 |
-| `astroBWT`            | 20 MB  | 2.6.0       | AstroBWT.                                                                 |
 | `astroBWT`            | 20 MB  | 2.6.0       | AstroBWT.                                                                 |
 | `rx/keva`             | 1 MB   | 2.6.0       | RandomKEVA.                                                               |
 | `cn-pico/tlo`         | 256 KB | 2.5.0       | CryptoNight-Pico (Talleo).                                                |
@@ -33,8 +34,8 @@ Option `coin` useful for pools without algorithm negotiation support or daemon t
 | `rx/wow`              | 1 MB   | 2.0.0       | RandomWOW.                                                                |
 | `rx/loki`             | 2 MB   | 2.0.0-2.8.2 | RandomXL.                                                                 | removed
 | `cn/conceal`          | 2 MB   | 1.9.5       | CryptoNight variant 0 (modified).                                         |
-| `argon2/chukwa`       | 512 KB | 1.9.5       | Argon2id (Chukwa).                                                        | CPU only  
-| `argon2/wrkz`         | 256 KB | 1.9.5       | Argon2id (WRKZ).                                                          | CPU only  
+| `argon2/chukwa`       | 512 KB | 1.9.5       | Argon2id (Chukwa).                                                        | CPU only
+| `argon2/wrkz`         | 256 KB | 1.9.5       | Argon2id (WRKZ).                                                          | CPU only
 | `cn-extremelite/upx2` | 128 KB | <1.9.5      | CryptoNight-Extremelite variant UPX2 with reversed shuffle.               |
 | `cn/fast`             | 2 MB   | <1.9.5+     | CryptoNight variant 1 with half iterations.                               |
 | `cn/rwz`              | 2 MB   | <1.9.5+     | CryptoNight variant 2 with 3/4 iterations and reversed shuffle operation. |
