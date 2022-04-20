@@ -177,7 +177,6 @@ static const std::map<uint32_t, const char *> kAlgorithmNames = {
 #   endif
 
 #   ifdef XMRIG_ALGO_ASTROBWT
-    ALGO_NAME(ASTROBWT_DERO),
     ALGO_NAME(ASTROBWT_DERO_2),
 #   endif
 
@@ -310,7 +309,6 @@ static const std::map<const char *, Algorithm::Id, aliasCompare> kAlgorithmAlias
 #   endif
 
 #   ifdef XMRIG_ALGO_ASTROBWT
-    ALGO_ALIAS_AUTO(ASTROBWT_DERO), ALGO_ALIAS(ASTROBWT_DERO,   "astrobwt/dero"),
     ALGO_ALIAS_AUTO(ASTROBWT_DERO_2), ALGO_ALIAS(ASTROBWT_DERO_2, "astrobwt/v2"),
     ALGO_ALIAS_AUTO(ASTROBWT_DERO_2), ALGO_ALIAS(ASTROBWT_DERO_2, "astrobwt/dero_he"),
     ALGO_ALIAS_AUTO(ASTROBWT_DERO_2), ALGO_ALIAS(ASTROBWT_DERO_2, "astrobwt/derohe"),
@@ -398,7 +396,7 @@ std::vector<xmrig::Algorithm> xmrig::Algorithm::all(const std::function<bool(con
         CN_GPU,
         RX_0, RX_WOW, RX_ARQ, RX_GRAFT, RX_SFX, RX_KEVA, RX_YADA, RX_LOZZ, RX_XDAG,
         AR2_CHUKWA, AR2_CHUKWA_V2, AR2_WRKZ,
-        ASTROBWT_DERO, ASTROBWT_DERO_2,
+        ASTROBWT_DERO_2,
         KAWPOW_RVN,
         GHOSTRIDER_RTM
     };
