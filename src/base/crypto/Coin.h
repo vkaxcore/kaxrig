@@ -43,6 +43,7 @@ public:
         WOWNERO,
         YADA,
         LOZZAX,
+        XDAG,
         MAX
     };
 
