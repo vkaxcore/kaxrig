@@ -1,7 +1,7 @@
 # 3.2.1
 * Rebase upstream 6.17.1-dev
 * Integrated XDagger Randomx variant (`rx/xdag`)
-  * **! Please use a pool supporting the stratum protocol or host your own [xmrig2xdag](https://github.com/XDagger/xmrig2xdag)**
+  * **! Please use a pool supporting the stratum protocol or host your own [xmrig2xdag](https://github.com/XDagger/xmrig2xdag) proxy**
   * Working stratum proxies:
     * pool: stratum.xdag.org:13656
     * solo: stratum.xdag.org:13655
