@@ -1,6 +1,6 @@
 # Remote Miner Update
 
-Staring with version 3.2.0 onwards the miner is remote upgradable without user interaction on the miner.
+Starting with version 3.2.0 onwards the miner is remote upgradable without user interaction on the miner.
 This helps you a lot when maintaining large farms. Single click on the Dashboard and the miner will update to the latest version. \o/ Yeay!
 
 ## Requirements
