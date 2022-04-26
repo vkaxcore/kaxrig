@@ -406,8 +406,8 @@ void xmrig::CCClient::fetchUpdate()
   }
   else
   {
-    LOG_ERR(CLEAR "%s" RED("error:\"%d\" GET [http%s://%s:%d%s]"), Tags::cc(), res->status, config.host(),
-            config.useTLS() ? "s" : "", config.port(), updatePath.c_str());
+    LOG_ERR(CLEAR "%s" RED("error:\"%d\" GET [http%s://%s:%d%s]"), Tags::cc(), res->status, config.useTLS() ? "s" : "",
+            config.host(), config.port(), updatePath.c_str());
   }
 }
 

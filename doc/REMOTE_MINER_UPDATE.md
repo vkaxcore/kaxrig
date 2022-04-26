@@ -1,16 +1,16 @@
 # Remote Miner Update
 
-Staring with version 3.2.0 onwards the miner is remote upgradable without user interaction on the miner.
+Starting with version 3.2.0 onwards the miner is remote upgradable without user interaction on the miner.
 This helps you a lot when maintaining large farms. Single click on the Dashboard and the miner will update to the latest version. \o/ Yeay!
 
 ## Requirements
 
 * Server AND Miner (xmrigDaemon + xmrigMiner) running at least v3.2.0
-* Latest update bundle extracted on the Server
+* Latest update bundle (*-CLIENT-UPDATE-PACKAGE_only.*) extracted on the Server into the defined `client-updates/` folder
 
 ## Howto
 
-1. Download the latest "-client-update-bundle-" (will be available the release after v.3.2.0 [here](https://github.com/Bendr0id/xmrigCC/releases))
+1. Download the latest "*-CLIENT-UPDATE-PACKAGE_only.*" ([here](https://github.com/Bendr0id/xmrigCC/releases))
 2. Extract everything inside that bundle into your xmrigCC-Server "/client-updates/" folder
 3. If it asks to override (older version), press [YES]
 4. Don't change folder-structure or namings here, it will break it.
