@@ -1567,7 +1567,7 @@ table.dataTable tbody tr {
                         {data: "client_status.cpu_l2", render: cache, className: "right", visible: false},
                         {data: "client_status.cpu_l3", render: cache, className: "right", visible: false},
                         {data: "client_status.cpu_nodes", className: "right", visible: false},
-                        {data: "client_status.max_cpu_usage", className: "right", visible: false},
+                        {data: "client_status.max_cpu_usage", render: percent, className: "right", visible: false},
     
                         {data: "client_status.hashrate_short", render: round, className: "right"},
                         {data: "client_status.hashrate_medium", render: round, className: "right"},
@@ -2307,10 +2307,18 @@ table.dataTable tbody tr {
             });
             
             function clientHPpercent(data, type, row) {
-            if (!row.client_status.hugepages_enabled || row.client_status.total_pages == 0) return 0;
+                if (!row.client_status.hugepages_enabled || row.client_status.total_pages == 0) return 0;
                 return Math.round(1000 * row.client_status.total_hugepages / row.client_status.total_pages) / 10;
             }
-    
+
+            function percent(data, type, row) {
+                if (row.client_status.max_cpu_usage === -1) {
+                    return 100;
+                } else {
+                    return row.client_status.max_cpu_usage;
+                }
+            }
+
             function sendAction(action, clientId, payload) {
                 var payloadContent = payload == null ? '' : ' [payload=\'' + payload +'\']';
                 $.ajax({
