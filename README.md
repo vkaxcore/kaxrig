@@ -70,17 +70,13 @@ List of all supported algos can be found [here](doc/ALGORITHMS.md)
      - XMRig's official [CUDA plugin](https://github.com/xmrig/xmrig-cuda/releases) 
      - MoneroOcean's [CUDA plugin](https://github.com/MoneroOcean/xmrig-cuda/releases) **with CN/GPU** support
 
+**XMRigCC Server/Dashboard**
+
+<img src="doc/screenshot_dashboard.png" width="800" >
+
 **XMRigCC Miner**
 
 <img src="doc/screenshot.png" width="800" >
-
-**XMRigCC Server**
-
-<img src="doc/screenshot_server.png" width="800" >
-
-**XMRigCC Dashboard**
-
-<img src="doc/screenshot_dashboard.png" width="800" >
 
 #### Table of contents
 * [Download](#download)
