@@ -1309,63 +1309,60 @@ table.dataTable tbody tr {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-colorschemes"></script>
 <script>
-    var THRESHOLD_IN_MS = 60 * 1000;
-            var RELOAD_INTERVAL_IN_MS = 10 * 1000;
-            var CHART_RELOAD_INTERVAL_IN_MS = 60 * 1000;
-    
-            var latestRelease = "";
-            var currentServerTime = 0;
-            var clockDrift = 0;
-    
-            var latestVersion = 0;
-            var currentVersion = 0;
-    
-            function setCookie(name, value, days) {
-                var expires = "";
-                if (days) {
-                  var date = new Date();
-                  date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-                  expires = "; expires=" + date.toUTCString();
-                }
-                document.cookie = name + "=" + (value.toString() || "") + expires + "; path=/";
-              }
-              
-              function getCookie(name) {
-                var nameEQ = name + "=";
-                var ca = document.cookie.split(';');
-                for (var i = 0; i < ca.length; i++) {
-                  var c = ca[i];
-                  while (c.charAt(0) == ' ') c = c.substring(1, c.length);
-                  if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
-                }
-                
-                return null;
-              }
+    let THRESHOLD_IN_MS = 60 * 1000;
+    let RELOAD_INTERVAL_IN_MS = 10 * 1000;
+    let CHART_RELOAD_INTERVAL_IN_MS = 60 * 1000;
 
-              function toggle() {
-                let hideOffline = getCookie('hideOffline');
-                let showOfflineNotification = getCookie('showOfflineNotification');
-                let groupByAlgo = getCookie('groupByAlgo');
-                if(hideOffline){
-                    $( "#hideOffline" ).prop( "checked", JSON.parse(hideOffline)).trigger('change');
-                }
-                if(showOfflineNotification){
-                    $( "#showOfflineNotification" ).prop( "checked", JSON.parse(showOfflineNotification)).trigger('change');
-                }
-                if(groupByAlgo){
-                    $( "#groupByAlgo" ).prop( "checked", JSON.parse(groupByAlgo)).trigger('change');
-                }
-              }
-              
+    let latestRelease = "";
+    let currentServerTime = 0;
+    let clockDrift = 0;
+
+    let latestVersion = 0;
+    let currentVersion = 0;
+
+    function setCookie(name, value, days) {
+        let expires = "";
+        if (days) {
+          let date = new Date();
+          date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+          expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = name + "=" + (value.toString() || "") + expires + "; path=/";
+      }
+
+      function getCookie(name) {
+        let nameEQ = name + "=";
+        let ca = document.cookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+          let c = ca[i];
+          while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+          if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+        }
+
+        return null;
+      }
+
+      function toggle() {
+        let hideOffline = getCookie('hideOffline');
+        let showOfflineNotification = getCookie('showOfflineNotification');
+        let groupByAlgo = getCookie('groupByAlgo');
+        if(hideOffline){
+            $( "#hideOffline" ).prop( "checked", JSON.parse(hideOffline)).trigger('change');
+        }
+        if(showOfflineNotification){
+            $( "#showOfflineNotification" ).prop( "checked", JSON.parse(showOfflineNotification)).trigger('change');
+        }
+        if(groupByAlgo){
+            $( "#groupByAlgo" ).prop( "checked", JSON.parse(groupByAlgo)).trigger('change');
+        }
+      }
 
     (function($) { "use strict";
 
-
-    
     $(function() {
-        var header = $(".start-style");
+        let header = $(".start-style");
         $(window).scroll(function() {    
-            var scroll = $(window).scrollTop();
+            let scroll = $(window).scrollTop();
         
             if (Math.floor(scroll) >= 10) {
                 header.removeClass("scroll-on").addClass('start-style');
@@ -1413,7 +1410,7 @@ table.dataTable tbody tr {
         
     $('body').on('mouseenter mouseleave','.nav-item',function(e){
             if ($(window).width() > 750) {
-                var _d=$(e.target).closest('.nav-item');_d.addClass('show');
+                let _d=$(e.target).closest('.nav-item');_d.addClass('show');
                 setTimeout(function(){
                 _d[_d.is(':hover')?'addClass':'removeClass']('show');
                 },1);
@@ -1466,7 +1463,7 @@ table.dataTable tbody tr {
     })(jQuery);
     
     document.onreadystatechange = function () {
-  var state = document.readyState
+  let state = document.readyState
   if (state == 'interactive') {
              document.getElementById('loader-parent').style.display="none";
              document.getElementById('loader-parent').style.visibility="hidden";
@@ -1485,16 +1482,16 @@ table.dataTable tbody tr {
             $.fn.dataTable.ext.search.push(
                 function (settings, data, dataIndex) {
     
-                    var hideOffline = $('#hideOffline').prop('checked');
-                    var showNotification = $('#showOfflineNotification').prop('checked');
+                    let hideOffline = $('#hideOffline').prop('checked');
+                    let showNotification = $('#showOfflineNotification').prop('checked');
     
-                    var clientId = settings.aoData[dataIndex]._aData.client_status.client_id;
-                    var lastStatus = settings.aoData[dataIndex]._aData.client_status.last_status_update * 1000;
+                    let clientId = settings.aoData[dataIndex]._aData.client_status.client_id;
+                    let lastStatus = settings.aoData[dataIndex]._aData.client_status.last_status_update * 1000;
     
-                    var online = isOnline(lastStatus);
+                    let online = isOnline(lastStatus);
     
                     if (!online) {
-                        var threshold = currentServerTime - (THRESHOLD_IN_MS + RELOAD_INTERVAL_IN_MS);
+                        let threshold = currentServerTime - (THRESHOLD_IN_MS + RELOAD_INTERVAL_IN_MS);
                         if (lastStatus > threshold && showNotification) {
                             $("#notificationBar").after('<div class="alert alert-danger alert-dismissable fade in">' +
                                 '<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>' +
@@ -1510,7 +1507,7 @@ table.dataTable tbody tr {
            
     
             $(document).ready(function () {
-                var table = $('#clientStatusList').DataTable({
+                let table = $('#clientStatusList').DataTable({
                     dom: "<'row'<'col-sm-12'B>><'row rowPadded'<'col-sm-9'l><'col-sm-3'f>><'row'<'col-sm-12't>><'row'<'col-sm-4'i><'col-sm-8'p>><'col-sm-13'<'#serverTime'>>",
                     lengthMenu: [ [10, 25, 50, 100, -1], [10, 25, 50, 100, "All"] ],
                     pageLength: -1,
@@ -1607,8 +1604,8 @@ table.dataTable tbody tr {
                             enabled: false,
                             action: function () {
                                 table.rows({selected: true}).eq(0).each(function (index) {
-                                    var row = table.row(index);
-                                    var data = row.data();
+                                    let row = table.row(index);
+                                    let data = row.data();
     
                                     sendAction("UPDATE_CONFIG", data.client_status.client_id);
                                 });
@@ -1620,8 +1617,8 @@ table.dataTable tbody tr {
                             enabled: false,
                             action: function () {
                                 table.rows({selected: true}).eq(0).each(function (index) {
-                                    var row = table.row(index);
-                                    var data = row.data();
+                                    let row = table.row(index);
+                                    let data = row.data();
     
                                     sendAction("PUBLISH_CONFIG", data.client_status.client_id);
                                 });
@@ -1633,8 +1630,8 @@ table.dataTable tbody tr {
                             enabled: false,
                             action: function () {
                                 table.rows({selected: true}).eq(0).each(function (index) {
-                                    var row = table.row(index);
-                                    var data = row.data();
+                                    let row = table.row(index);
+                                    let data = row.data();
 
                                     sendAction("UPDATE", data.client_status.client_id);
                                 });
@@ -1650,10 +1647,10 @@ table.dataTable tbody tr {
                                     url: "/admin/getClientConfigTemplates",
                                     dataType: "json",
                                     success: function (data) {
-                                        var htmlContent = "";
+                                        let htmlContent = "";
 
-                                        var arrayLength = data["templates"].length;
-                                        for (var i = 0; i < arrayLength; i++) {
+                                        let arrayLength = data["templates"].length;
+                                        for (let i = 0; i < arrayLength; i++) {
                                             htmlContent += "<option>" + data["templates"][i] + "</option>";
                                         }
 
@@ -1684,10 +1681,10 @@ table.dataTable tbody tr {
                                     url: "/admin/getClientConfigTemplates",
                                     dataType: "json",
                                     success: function (data) {
-                                        var htmlContent = "";
+                                        let htmlContent = "";
 
-                                        var arrayLength = data["templates"].length;
-                                        for (var i = 0; i < arrayLength; i++) {
+                                        let arrayLength = data["templates"].length;
+                                        for (let i = 0; i < arrayLength; i++) {
                                             htmlContent += "<option>" + data["templates"][i] + "</option>";
                                         }
 
@@ -1717,8 +1714,8 @@ table.dataTable tbody tr {
                             enabled: false,
                             action: function () {
                                 table.rows({selected: true}).eq(0).each(function (index) {
-                                    var row = table.row(index);
-                                    var data = row.data();
+                                    let row = table.row(index);
+                                    let data = row.data();
     
                                     sendAction("START", data.client_status.client_id);
                                 });
@@ -1730,8 +1727,8 @@ table.dataTable tbody tr {
                             enabled: false,
                             action: function () {
                                 table.rows({selected: true}).eq(0).each(function (index) {
-                                    var row = table.row(index);
-                                    var data = row.data();
+                                    let row = table.row(index);
+                                    let data = row.data();
     
                                     sendAction("STOP", data.client_status.client_id);
                                 });
@@ -1751,8 +1748,8 @@ table.dataTable tbody tr {
                             enabled: false,
                             action: function () {
                                 table.rows({selected: true}).eq(0).each(function (index) {
-                                    var row = table.row(index);
-                                    var data = row.data();
+                                    let row = table.row(index);
+                                    let data = row.data();
 
                                     sendAction("RESTART", data.client_status.client_id);
                                 });
@@ -1764,8 +1761,8 @@ table.dataTable tbody tr {
                             enabled: false,
                             action: function () {
                                 table.rows({selected: true}).eq(0).each(function (index) {
-                                    var row = table.row(index);
-                                    var data = row.data();
+                                    let row = table.row(index);
+                                    let data = row.data();
     
                                     sendAction("REBOOT", data.client_status.client_id);
                                 });
@@ -1774,7 +1771,7 @@ table.dataTable tbody tr {
                         {
                             text: '<i class="fa fa-rocket"> Execute</i>',
                             className: 'btn-primary',
-                            enabled: false,
+                            enabled: true,
                             action: function () {
                                 $('#commandExecuteDialog').modal('show');
                             }
@@ -1782,18 +1779,18 @@ table.dataTable tbody tr {
                     ],
     
                     "footerCallback": function (row, data, start, end, display) {
-                        var api = this.api();
+                        let api = this.api();
     
-                        var sumHashrateShort = 0;
-                        var sumHashrateMedium = 0;
-                        var sumHashrateLong = 0;
-                        var sumHashrateHighest = 0;
-                        var sumHashesTotal = 0;
-                        var avgTimeTotal = 0;
-                        var sumSharesGood = 0;
-                        var sumSharedTotal = 0;
+                        let sumHashrateShort = 0;
+                        let sumHashrateMedium = 0;
+                        let sumHashrateLong = 0;
+                        let sumHashrateHighest = 0;
+                        let sumHashesTotal = 0;
+                        let avgTimeTotal = 0;
+                        let sumSharesGood = 0;
+                        let sumSharedTotal = 0;
     
-                        var colOffset = 30;
+                        let colOffset = 30;
     
                         sumHashrateShort = api
                             .column(colOffset, {page: 'current'})
@@ -1920,17 +1917,17 @@ table.dataTable tbody tr {
                 });
     
                 table.on('select', function () {
-                    var selectedRows = table.rows({selected: true}).count();
-                    for (var i=1; i < 12; i++)
+                    let selectedRows = table.rows({selected: true}).count();
+                    for (let i=1; i < 12; i++)
                     {
                         table.button(i).enable(selectedRows > 0 || i === 5);
                     }
                 });
     
                 table.on('deselect', function () {
-                    var selectedRows = table.rows({selected: true}).count();
+                    let selectedRows = table.rows({selected: true}).count();
 
-                    for (var i=1; i < 12; i++)
+                    for (let i=1; i < 12; i++)
                     {
                         table.button(i).enable(selectedRows > 0 || i === 5);
                     }
@@ -1963,15 +1960,15 @@ table.dataTable tbody tr {
                 
     
                 $('#clientStatusList tbody ').on('click', 'button#EDIT', function () {
-                    var data = table.row($(this).parents('tr')).data();
-                    var clientId = data['client_status']['client_id'];
+                    let data = table.row($(this).parents('tr')).data();
+                    let clientId = data['client_status']['client_id'];
     
                     $.ajax({
                         type: "GET",
                         url: "/admin/getClientConfig?clientId=" + htmlDecode(clientId),
                         dataType: "json",
                         success: function (jsonClientConfig) {
-                            var htmlContent = "<div class='form-group' id='editor' data-value='" + clientId + "'>" +
+                            let htmlContent = "<div class='form-group' id='editor' data-value='" + clientId + "'>" +
                                 "<label for='config'>Config for: " + clientId + "</label>" +
                                 "<textarea class='form-control' rows='20' id='config'>" +
                                 JSON.stringify(jsonClientConfig, undefined, 2) +
@@ -1988,15 +1985,15 @@ table.dataTable tbody tr {
                 });
     
                 $('#minerEditorSave').click(function (event) {
-                    var clientId = htmlEncode($('#minerEditor').find('.form-group')["0"].dataset.value);
-                    var clientConfig = $('#config').val();
+                    let clientId = htmlEncode($('#minerEditor').find('.form-group')["0"].dataset.value);
+                    let clientConfig = $('#config').val();
     
                     setClientConfig(clientId, clientConfig);
                 });
     
                 $('#templateEditorSave').click(function (event) {
-                    var templateId = htmlEncode($('#templateSelector').val());
-                    var template = $('#template').val();
+                    let templateId = htmlEncode($('#templateSelector').val());
+                    let template = $('#template').val();
     
                     setTemplateConfig(templateId, template);
                 });
@@ -2010,8 +2007,8 @@ table.dataTable tbody tr {
                 });
     
                 $('#templateEditorSaveAs').click(function (event) {
-                    var templateId = htmlEncode($('#templateName').val());
-                    var template = $('#template').val();
+                    let templateId = htmlEncode($('#templateName').val());
+                    let template = $('#template').val();
     
                     setTemplateConfig(templateId, template);
     
@@ -2019,42 +2016,42 @@ table.dataTable tbody tr {
                 });
     
                 $('#templateEditorDelete').click(function (event) {
-                    var templateId = htmlEncode($('#templateSelector').val());
+                    let templateId = htmlEncode($('#templateSelector').val());
     
                     deleteTemplateConfig(templateId, template);
                 });
     
                 $('#commandStop').click(function (event) {
                     table.rows({selected: true}).eq(0).each(function (index) {
-                        var row = table.row(index);
-                        var data = row.data();
+                        let row = table.row(index);
+                        let data = row.data();
     
                         sendAction("SHUTDOWN", data.client_status.client_id);
                     });
                 });
     
                 $('#commandExecuteDialogExecute').click(function (event) {
-                    var command = $('#executeCommand').val();
+                    let command = $('#executeCommand').val();
     
                     table.rows({selected: true}).eq(0).each(function (index) {
-                        var row = table.row(index);
-                        var data = row.data();
+                        let row = table.row(index);
+                        let data = row.data();
     
                         sendAction("EXECUTE", data.client_status.client_id, command);
                     });
                 });
     
                 $('#clientStatusList tbody').on('click', 'button#LOG', function () {
-                    var data = table.row($(this).parents('tr')).data();
-                    var clientId = data['client_status']['client_id'];
-                    var clientIp = data['client_status']['external_ip'];
+                    let data = table.row($(this).parents('tr')).data();
+                    let clientId = data['client_status']['client_id'];
+                    let clientIp = data['client_status']['external_ip'];
     
                     $.ajax({
                         type: "GET",
                         url: "/admin/getClientLog?clientId=" + htmlDecode(clientId),
                         dataType: "json",
                         success: function (data) {
-                            var htmlContent = "<div class='form-group' id='viewer' data-value='" + clientId + "'>" +
+                            let htmlContent = "<div class='form-group' id='viewer' data-value='" + clientId + "'>" +
                                 "<label for='config'>Log of: " + clientId + " (" + clientIp + ")</label>" +
                                 "<textarea class='form-control' rows='20' id='log'>" + data.client_log + "</textarea>" +
                                 "</div>";
@@ -2069,11 +2066,11 @@ table.dataTable tbody tr {
                 });
     
                 $('#minerLogRefresh').click(function (event) {
-                    var clientId = htmlEncode($('#minerLog').find('.form-group')["0"].dataset.value);
+                    let clientId = htmlEncode($('#minerLog').find('.form-group')["0"].dataset.value);
     
                     table.rows().eq(0).each(function (index) {
-                        var row = table.row(index);
-                        var data = row.data();
+                        let row = table.row(index);
+                        let data = row.data();
     
                         $.ajax({
                             type: "GET",
@@ -2090,7 +2087,7 @@ table.dataTable tbody tr {
                 });
     
                 $('#templateSelector').on('changed.bs.select', function (e, clickedIndex, newValue, oldValue) {
-                    var selected = $(e.currentTarget).val();
+                    let selected = $(e.currentTarget).val();
                     $.ajax({
                         type: "GET",
                         url: "/admin/getClientConfig?clientId=template_" + selected,
@@ -2105,16 +2102,16 @@ table.dataTable tbody tr {
                 });
     
                 $('#assignTemplate').click(function (event) {
-                    var template = $('#assignTemplateSelector').val();
+                    let template = $('#assignTemplateSelector').val();
                     $.ajax({
                         type: "GET",
                         url: "/admin/getClientConfig?clientId=template_" + template,
                         dataType: "json",
                         success: function (jsonTemplate) {
                             table.rows({selected: true}).eq(0).each(function (index) {
-                                var row = table.row(index);
-                                var data = row.data();
-                                var clientId = data['client_status']['client_id'];
+                                let row = table.row(index);
+                                let data = row.data();
+                                let clientId = data['client_status']['client_id'];
     
                                 if ($('#mergeTemplate').prop('checked')) {
                                     setMergedClientConfig(jsonTemplate, clientId);
@@ -2152,7 +2149,7 @@ table.dataTable tbody tr {
                 });
     
     
-                var hashrateChart = new Chart(document.getElementById("hashrateChart").getContext("2d"), {
+                let hashrateChart = new Chart(document.getElementById("hashrateChart").getContext("2d"), {
                     type: "line",
                     data: {
                         datasets: []
@@ -2165,6 +2162,38 @@ table.dataTable tbody tr {
                         tooltips: {
                             mode: 'nearest',
                             intersect: false,
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                generateLabels: function (chart) {
+                                    let data = chart.data;
+                                    return Chart.helpers.isArray(data.datasets) ? data.datasets.map(function (dataset, i) {
+                                        let total = 0;
+                                        dataset.data.forEach(item => {
+                                            total += item.y;
+                                        });
+
+                                        let avg = (dataset.data.length > 0) ? (total / dataset.data.length).toFixed(2) : 0;
+                                        return {
+                                            text: dataset.label + " (avg.: " + avg + " h/s)",
+                                            fillStyle: (!Chart.helpers.isArray(dataset.backgroundColor) ? dataset.backgroundColor : dataset.backgroundColor[0]),
+                                            hidden: !chart.isDatasetVisible(i),
+                                            lineCap: dataset.borderCapStyle,
+                                            lineDash: dataset.borderDash,
+                                            lineDashOffset: dataset.borderDashOffset,
+                                            lineJoin: dataset.borderJoinStyle,
+                                            lineWidth: dataset.borderWidth,
+                                            strokeStyle: dataset.borderColor,
+                                            pointStyle: dataset.pointStyle,
+
+                                            // Below is extra data used for toggling the datasets
+                                            datasetIndex: i
+                                        };
+                                    }, this) : [];
+                                },
+                            },
                         },
                         scales: {
                             yAxes: [
@@ -2214,7 +2243,7 @@ table.dataTable tbody tr {
                     }
                 });
     
-                var minerChart = new Chart(document.getElementById("minerChart").getContext("2d"), {
+                let minerChart = new Chart(document.getElementById("minerChart").getContext("2d"), {
                     type: "line",
                     data: {
                         datasets: []
@@ -2281,10 +2310,10 @@ table.dataTable tbody tr {
                     afterDraw: function(chart) {
                         if (chart.data.datasets.length === 0) {
                             // No data is present
-                            var ctx = chart.chart.ctx;
-                            var width = chart.chart.width;
-                            var height = chart.chart.height
-    
+                            let ctx = chart.chart.ctx;
+                            let width = chart.chart.width;
+                            let height = chart.chart.height
+
                             ctx.save();
                             ctx.textAlign = 'center';
                             ctx.textBaseline = 'middle';
@@ -2320,7 +2349,7 @@ table.dataTable tbody tr {
             }
 
             function sendAction(action, clientId, payload) {
-                var payloadContent = payload == null ? '' : ' [payload=\'' + payload +'\']';
+                let payloadContent = payload == null ? '' : ' [payload=\'' + payload +'\']';
                 $.ajax({
                     type: "POST",
                     url: "/admin/setClientCommand?clientId=" + htmlDecode(clientId),
@@ -2352,7 +2381,7 @@ table.dataTable tbody tr {
     
             function uptime(data, type, row) {
                 if (type !== 'sort') {
-                    var lastStatus = row.client_status.last_status_update * 1000;
+                    let lastStatus = row.client_status.last_status_update * 1000;
     
                     if (isOnline(lastStatus)) {
                         return numeral(data / 1000).format('00:00:00:00');
@@ -2388,7 +2417,7 @@ table.dataTable tbody tr {
     
             function laststatus(data, type, row) {
                 if (type !== 'sort') {
-                    var date = new Date(data * 1000 - clockDrift);
+                    let date = new Date(data * 1000 - clockDrift);
                     return '<span data-toggle="tooltip" title="' + date + '">' + jQuery.timeago(date) + '</span>';
                 }
     
@@ -2396,8 +2425,8 @@ table.dataTable tbody tr {
             }
     
             function algoAndPowVariantName(data, type, row) {
-                var algo = row.client_status.current_algo_name;
-                var powVariant = row.client_status.current_pow_variant_name;
+                let algo = row.client_status.current_algo_name;
+                let powVariant = row.client_status.current_pow_variant_name;
     
                 if (powVariant !== "") {
                     return algo + " / " + powVariant
@@ -2407,7 +2436,7 @@ table.dataTable tbody tr {
             }
     
             function version(data, type, row) {
-                var clientVersion = parseInt(row.client_status.version.split('.').join(""));
+                let clientVersion = parseInt(row.client_status.version.split('.').join(""));
     
                 if (clientVersion < 1000) {
                     clientVersion = clientVersion * 10;
@@ -2421,7 +2450,7 @@ table.dataTable tbody tr {
             }
     
             function clientStatus(data, type, row) {
-                var lastStatus = row.client_status.last_status_update * 1000;
+                let lastStatus = row.client_status.last_status_update * 1000;
     
                 if (isOnline(lastStatus)) {
                     return data;
@@ -2436,10 +2465,10 @@ table.dataTable tbody tr {
     
             function clientInfo(data, type, row) {
                 if (type !== 'sort') {
-                    var lastStatus = row.client_status.last_status_update * 1000;
-                    var online = isOnline(lastStatus);
+                    let lastStatus = row.client_status.last_status_update * 1000;
+                    let online = isOnline(lastStatus);
     
-                    var tooltip = "CPU: " + row.client_status.cpu_brand + " (" + row.client_status.cpu_sockets + ") [" + row.client_status.cpu_cores + " cores / " + row.client_status.cpu_threads + " threads]";
+                    let tooltip = "CPU: " + row.client_status.cpu_brand + " (" + row.client_status.cpu_sockets + ") [" + row.client_status.cpu_cores + " cores / " + row.client_status.cpu_threads + " threads]";
                     tooltip += '\n';
                     tooltip += "CPU Flags: " + (row.client_status.cpu_has_aes ? "AES-NI " : "");
                     tooltip += (row.client_status.cpu_is_x64 ? "x64 " : "");
@@ -2461,7 +2490,7 @@ table.dataTable tbody tr {
                     tooltip += '\n';
     
                     if (row.client_status.gpu_info_list) {
-                        for (var id in row.client_status.gpu_info_list) {
+                        for (let id in row.client_status.gpu_info_list) {
                             tooltip += "GPU #" + row.client_status.gpu_info_list[id].gpu_info.device_idx + ": ";
                             tooltip += row.client_status.gpu_info_list[id].gpu_info.name + ", "
                             tooltip += "intensity: " + row.client_status.gpu_info_list[id].gpu_info.raw_intensity + " ";
@@ -2500,7 +2529,7 @@ table.dataTable tbody tr {
             }
     
             function isOnline(lastStatus) {
-                var threshold = currentServerTime - THRESHOLD_IN_MS;
+                let threshold = currentServerTime - THRESHOLD_IN_MS;
                 if (lastStatus > threshold) {
                     return true;
                 } else {
@@ -2584,24 +2613,24 @@ table.dataTable tbody tr {
                     dataType: 'json',
                 }).done(function (results) {
     
-                    var algos = results["client_statistics"].map(function(e) {
+                    let algos = results["client_statistics"].map(function(e) {
                         return e.algo;
                     });
     
-                    var statistics = results["client_statistics"].map(function(e) {
+                    let statistics = results["client_statistics"].map(function(e) {
                         return e.statistics;
                     });
     
-                    var hashrateDatasets=[], minerDatasets=[];
-                    for(var j = 0; j < results["client_statistics"].length; j++) {
-                        var hashrates = statistics[j].map(function(e) {
+                    let hashrateDatasets=[], minerDatasets=[];
+                    for(let j = 0; j < results["client_statistics"].length; j++) {
+                        let hashrates = statistics[j].map(function(e) {
                             return {
                                 x: new Date(e.timestamp),
                                 y: Math.round(e.hashrate * 100) / 100
                             }
                         });
     
-                        var miners = statistics[j].map(function(e) {
+                        let miners = statistics[j].map(function(e) {
                             return {
                                 x: new Date(e.timestamp),
                                 y: e.miner
@@ -2621,7 +2650,7 @@ table.dataTable tbody tr {
             }
     
             function htmlDecode(input) {
-                var doc = new DOMParser().parseFromString(input, "text/html");
+                let doc = new DOMParser().parseFromString(input, "text/html");
                 return doc.documentElement.textContent;
             }
     
