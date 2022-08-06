@@ -173,9 +173,8 @@ int32_t xmrig::Job::nonceOffset() const
    if (f == Algorithm::GHOSTRIDER) return 76;
 
    auto id = algorithm().id();
-   if (id == Algorithm::ASTROBWT_DERO_2) return 44;
-   if (id == Algorithm::RX_YADA)         return 147;
-   if (id == Algorithm::RX_XDAG)         return 60;
+   if (id == Algorithm::RX_YADA)   return 147;
+   if (id == Algorithm::RX_XDAG)   return 60;
 
    return 39;
 }

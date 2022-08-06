@@ -45,9 +45,6 @@
 #endif
 
 
-#ifdef XMRIG_ALGO_ASTROBWT
-#   include "crypto/astrobwt/AstroBWT.h"
-#endif
 
 
 namespace xmrig {
@@ -224,10 +221,6 @@ bool xmrig::CpuWorker<N>::selfTest()
     }
 #   endif
 
-#   ifdef XMRIG_ALGO_ASTROBWT
-    if (m_algorithm.id() == Algorithm::ASTROBWT_DERO_2) return verify(Algorithm::ASTROBWT_DERO_2, astrobwt_dero_2_test_out);
-#   endif
-
     return false;
 }
 
@@ -306,14 +299,6 @@ void xmrig::CpuWorker<N>::start()
 #           endif
             {
                 switch (job.algorithm().family()) {
-
-#               ifdef XMRIG_ALGO_ASTROBWT
-                case Algorithm::ASTROBWT:
-                    if (!astrobwt::astrobwt_dero_v2(m_job.blob(), job.size(), m_ctx[0]->memory, m_hash)) {
-                        valid = false;
-                    }
-                    break;
-#               endif
 
 #               ifdef XMRIG_ALGO_GHOSTRIDER
                 case Algorithm::GHOSTRIDER:
