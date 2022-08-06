@@ -92,6 +92,8 @@ private:
     void setJob(IClient *client, const Job &job, const rapidjson::Value &params);
     void setResult(IClient *client, const SubmitResult &result, const char *error);
     void setState(State state);
+    bool hasEnabledAlgos() const;
+
 
     Algorithm m_algorithm;
     bool m_tls                      = false;

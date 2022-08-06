@@ -110,7 +110,6 @@ void xmrig::DonateStrategy::connect()
     if (m_proxy) {
         m_proxy->connect();
     }
-
     else {
         m_strategy->connect();
     }
@@ -186,7 +185,6 @@ void xmrig::DonateStrategy::onLogin(IClient *, rapidjson::Document &doc, rapidjs
     setAlgorithms(doc, params);
 }
 
-
 void xmrig::DonateStrategy::onLogin(IStrategy *, IClient *, rapidjson::Document &doc, rapidjson::Value &params)
 {
     setAlgorithms(doc, params);
@@ -226,7 +224,12 @@ void xmrig::DonateStrategy::onVerifyAlgorithm(IStrategy *, const  IClient *clien
 
 void xmrig::DonateStrategy::onTimer(const Timer *)
 {
+  if (hasEnabledAlgos()) {
     setState(isActive() ? STATE_WAIT : STATE_CONNECT);
+  }
+  else {
+    idle(0.2, 1.0); // schedule retry
+  }
 }
 
 
@@ -315,7 +318,7 @@ void xmrig::DonateStrategy::setState(State state)
 
     case STATE_IDLE:
         if (prev == STATE_NEW) {
-            idle(0.5, 1.5);
+            idle(0.2, 1.0);
         }
         else if (prev == STATE_CONNECT) {
             m_timer->start(20000, 0);
@@ -344,4 +347,9 @@ void xmrig::DonateStrategy::setState(State state)
         m_listener->onPause(this);
         break;
     }
+}
+
+bool xmrig::DonateStrategy::hasEnabledAlgos() const
+{
+  return !m_controller->miner()->algorithms().empty();
 }
