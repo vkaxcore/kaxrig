@@ -39,6 +39,10 @@ if (WITH_CC_SERVER)
     add_definitions("/DCXXOPTS_NO_RTTI")
 
     if (WITH_TLS)
+        set(SOURCES_CC_SERVER
+                "${SOURCES_CC_SERVER}"
+                src/base/net/tls/TlsGen.cpp
+                )
         add_definitions(/DCPPHTTPLIB_OPENSSL_SUPPORT)
     endif()
 else()

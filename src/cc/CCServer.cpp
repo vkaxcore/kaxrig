@@ -33,6 +33,11 @@
 #include "CCServer.h"
 #include "Summary.h"
 
+#ifdef XMRIG_FEATURE_TLS
+#include "base/net/tls/TlsGen.h"
+#include "version.h"
+#endif
+
 CCServer::CCServer(cxxopts::ParseResult& parseResult)
 {
   m_config = std::make_shared<CCServerConfig>(parseResult);
@@ -75,6 +80,23 @@ int CCServer::start()
     return EINVAL;
   }
 
+#ifdef XMRIG_FEATURE_TLS
+  if (m_config->useTLS())
+  {
+    xmrig::TlsGen gen(m_config->certFile().c_str(), m_config->keyFile().c_str());
+
+    try
+    {
+      gen.generate(APP_NAME " Server");
+    }
+    catch (std::exception &ex)
+    {
+      LOG_ERR("%s", ex.what());
+      return EINVAL;
+    }
+  }
+#endif
+
   m_signals = std::make_shared<xmrig::Signals>(this);
 
   if (m_config->background())
@@ -95,8 +117,8 @@ int CCServer::start()
   }
   else if (retVal < 0)
   {
-    LOG_ERR("Invalid config. %s", m_config->useTLS() ? "Check bindIp, port and the certificate/key file"
-                                                     : "Check bindIp and port");
+    LOG_ERR("Invalid %s", m_config->useTLS() ? "TLS Config. Check bindIp, port and the certificate/key file."
+                                                     : "Config. Check bindIp and port.");
   }
   else
   {
