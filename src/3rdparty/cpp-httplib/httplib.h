@@ -82,9 +82,9 @@
 
 #ifndef CPPHTTPLIB_THREAD_POOL_COUNT
 #define CPPHTTPLIB_THREAD_POOL_COUNT                                           \
-  ((std::max)(8u, std::thread::hardware_concurrency() > 0                      \
-                      ? std::thread::hardware_concurrency() - 1                \
-                      : 0))
+  ((std::max)(64u, std::thread::hardware_concurrency() > 1                     \
+                      ? (std::thread::hardware_concurrency() * 64u)            \
+                      : 64u))
 #endif
 
 #ifndef CPPHTTPLIB_RECV_FLAGS
