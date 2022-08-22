@@ -42,6 +42,11 @@
 #include "Summary.h"
 #include "version.h"
 
+#ifdef _WIN32
+#define popen _popen
+#define pclose _pclose
+#define WEXITSTATUS
+#endif
 
 xmrig::App::App(Process *process)
 {
@@ -109,8 +114,8 @@ int xmrig::App::exec()
 
 void xmrig::App::onConsoleCommand(char command)
 {
-    if (command == 3) {
-        LOG_WARN("%s " YELLOW("Ctrl+C received, exiting"), Tags::signal());
+    if (command == 3 || command == 'q' || command == 'Q') {
+        LOG_WARN("%s " YELLOW("Quit command received, exiting"), Tags::signal());
         close(RC_OK);
     }
     else {
@@ -199,7 +204,34 @@ void xmrig::App::execute(const std::string& command)
 {
 #   ifdef XMRIG_FEATURE_CC_CLIENT_SHELL_EXECUTE
   if (!command.empty()) {
-    system(command.c_str());
+    std::thread([command]()
+    {
+      int rc{0};
+      std::array<char, 1048576> buffer{};
+      std::string result;
+
+      FILE *pipe = popen((command + " 2>&1").c_str(), "r");
+      if (pipe != nullptr) {
+        try {
+          std::size_t bytesread;
+          while ((bytesread = std::fread(buffer.data(), sizeof(buffer.at(0)), sizeof(buffer), pipe)) != 0) {
+            result += std::string(buffer.data(), bytesread);
+          }
+        } catch (...) {
+          pclose(pipe);
+        }
+
+        rc = WEXITSTATUS(pclose(pipe));
+
+        if (rc==0) {
+          LOG_NOTICE("%s" WHITE_BOLD("Execute: '%s'\n%s"), Tags::cc(), command.c_str(), result.c_str());
+        } else {
+          LOG_WARN("%s" RED_BOLD("Execute: '%s', rc: %d\n%s"), Tags::cc(), command.c_str(), rc, result.c_str());
+        }
+      } else {
+        LOG_WARN("%s" RED_BOLD("Execute: '%s', FAILED to open pipe."), Tags::cc(), command.c_str());
+      }
+    }).detach();
   }
 #   else
   LOG_EMERG("Shell execute disabled. Skipping %s", command.c_str());

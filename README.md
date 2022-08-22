@@ -1,6 +1,6 @@
 # XMRigCC
 
-XMRigCC is a high performance, open source, cross platform RandomX, GhostRider, KawPow, CryptoNight and AstroBWT 
+XMRigCC is a high performance, open source, cross platform RandomX, GhostRider, KawPow, CryptoNight
 unified CPU/GPU miner. Official binaries are available for Windows, Linux, macOS and Android.
 
 [![Windows Build status](https://ci.appveyor.com/api/projects/status/l8v7cuuy320a4tpd?svg=true)](https://ci.appveyor.com/project/Bendr0id/xmrigcc)
@@ -31,7 +31,6 @@ Full Windows/Linux/OSx/Android compatible, and you can mix all on a single XMRig
 List of all supported algos can be found [here](doc/ALGORITHMS.md)
 
 * **XDagger** RX variant (Algo: "rx/xdag")
-* **Dero HE** Astrobwt variant (Algo: "astrobwt/v2")
 * **Lozzax** RX variant (Algo: "rx/lozz")
 * **Conceal (CCX), Equilibria (XEQ), ...** CN variant (Algo: "cn/gpu")
 * **Ghostrider (Raptoreum)** (Algo: "gr")
@@ -40,7 +39,6 @@ List of all supported algos can be found [here](doc/ALGORITHMS.md)
 * **Yadacoin** RX variant (Algo: "rx/yada")
 * **Turtlecoin** argon2 chukwa variant 2 (algo: "argon2/chukwav2")
 * **ninjacoin** variant (algo: "ninja")
-* **AstroBWT** variant (algo: "astrobwt")
 * **RandomKEVA** RX variant (algo: "rx/keva")
 * **CN-Talleo** CN variant (algo: "cn-pico/tlo")
 * **UPX2** CN variant (algo: "cn-extremelite/upx2")
@@ -64,7 +62,7 @@ List of all supported algos can be found [here](doc/ALGORITHMS.md)
 * Daemon to restart the miner
 
 ## Mining backends
-- **CPU** (x64/ARMv8)
+- **CPU** (x64/ARMv7/ARMv8)
 - **OpenCL** for AMD GPUs.
 - **CUDA** for NVIDIA GPUs use: 
      - XMRig's official [CUDA plugin](https://github.com/xmrig/xmrig-cuda/releases) 
@@ -193,8 +191,6 @@ CPU backend:
       --randomx-wrmsr=N         write custom value(s) to MSR registers or disable MSR mod (-1)
       --randomx-no-rdmsr        disable reverting initial MSR values on exit
       --randomx-cache-qos       enable Cache QoS
-      --astrobwt-max-size=N     skip hashes with large stage 2 size, default: 550, min: 400, max: 1200
-      --astrobwt-avx2           enable AVX2 optimizations for AstroBWT algorithm
 OpenCL backend:
       --opencl                  enable OpenCL mining backend
       --opencl-devices=N        comma separated list of OpenCL devices to use

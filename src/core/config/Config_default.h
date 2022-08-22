@@ -68,8 +68,6 @@ R"===(
         "max-cpu-usage": null,
         "asm": true,
         "argon2-impl": null,
-        "astrobwt-max-size": 550,
-        "astrobwt-avx2": false,
         "cn/0": false,
         "cn-lite/0": false
     },

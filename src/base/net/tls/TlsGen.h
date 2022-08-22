@@ -37,6 +37,7 @@ public:
     XMRIG_DISABLE_COPY_MOVE(TlsGen)
 
     TlsGen() : m_cert("cert.pem"), m_certKey("cert_key.pem") {}
+    TlsGen(const String& cert, const String& certKey) : m_cert(cert), m_certKey(certKey) {}
     ~TlsGen();
 
     inline const String &cert() const       { return m_cert; }

@@ -66,13 +66,13 @@ xmrig::DonateStrategy::DonateStrategy(Controller *controller, IStrategyListener 
     constexpr Pool::Mode mode = Pool::MODE_POOL;
 
 #   ifdef XMRIG_FEATURE_TLS
-    m_pools.emplace_back(kDonateHost, 443, m_userId, nullptr, nullptr, 0, true, true, false, mode);
-    m_pools.emplace_back(kDonateHost, 4000, m_userId, nullptr, nullptr, 0, true, true, false, mode);
-    m_pools.emplace_back(kDonateFallback, 443, m_userId, nullptr, nullptr, 0, true, true, false, mode);
+    m_pools.emplace_back(kDonateHost, 443, m_userId, nullptr, nullptr, 0, true, true, mode);
+    m_pools.emplace_back(kDonateHost, 4000, m_userId, nullptr, nullptr, 0, true, true, mode);
+    m_pools.emplace_back(kDonateFallback, 443, m_userId, nullptr, nullptr, 0, true, true, mode);
 #   endif
-    m_pools.emplace_back(kDonateHost, 80, m_userId, nullptr, nullptr, 0, true, false, false, mode);
-    m_pools.emplace_back(kDonateHost, 4100, m_userId, nullptr, nullptr, 0, true, false, false, mode);
-    m_pools.emplace_back(kDonateFallback, 80, m_userId, nullptr, nullptr, 0, true, false, false, mode);
+    m_pools.emplace_back(kDonateHost, 80, m_userId, nullptr, nullptr, 0, true, false, mode);
+    m_pools.emplace_back(kDonateHost, 4100, m_userId, nullptr, nullptr, 0, true, false, mode);
+    m_pools.emplace_back(kDonateFallback, 80, m_userId, nullptr, nullptr, 0, true, false, mode);
 
     if (m_pools.size() > 1) {
         m_strategy = new FailoverStrategy(m_pools, 10, 2, this, true);
@@ -110,7 +110,6 @@ void xmrig::DonateStrategy::connect()
     if (m_proxy) {
         m_proxy->connect();
     }
-
     else {
         m_strategy->connect();
     }
@@ -186,7 +185,6 @@ void xmrig::DonateStrategy::onLogin(IClient *, rapidjson::Document &doc, rapidjs
     setAlgorithms(doc, params);
 }
 
-
 void xmrig::DonateStrategy::onLogin(IStrategy *, IClient *, rapidjson::Document &doc, rapidjson::Value &params)
 {
     setAlgorithms(doc, params);
@@ -226,7 +224,12 @@ void xmrig::DonateStrategy::onVerifyAlgorithm(IStrategy *, const  IClient *clien
 
 void xmrig::DonateStrategy::onTimer(const Timer *)
 {
+  if (hasEnabledAlgos()) {
     setState(isActive() ? STATE_WAIT : STATE_CONNECT);
+  }
+  else {
+    idle(0.2, 1.0); // schedule retry
+  }
 }
 
 
@@ -244,7 +247,7 @@ xmrig::IClient *xmrig::DonateStrategy::createProxy()
     const IClient *client = strategy->client();
     m_tls                 = client->hasExtension(IClient::EXT_TLS);
 
-    Pool pool(client->pool().proxy().isValid() ? client->pool().host() : client->ip(), client->pool().port(), m_userId, client->pool().password(), client->pool().spendSecretKey(), 0, true, client->isTLS(), client->isWSS(), Pool::MODE_POOL);
+    Pool pool(client->pool().proxy().isValid() ? client->pool().host() : client->ip(), client->pool().port(), m_userId, client->pool().password(), client->pool().spendSecretKey(), 0, true, client->isTLS(), Pool::MODE_POOL);
     pool.setAlgo(client->pool().algorithm());
     pool.setProxy(client->pool().proxy());
 
@@ -315,7 +318,7 @@ void xmrig::DonateStrategy::setState(State state)
 
     case STATE_IDLE:
         if (prev == STATE_NEW) {
-            idle(0.5, 1.5);
+            idle(0.2, 1.0);
         }
         else if (prev == STATE_CONNECT) {
             m_timer->start(20000, 0);
@@ -344,4 +347,9 @@ void xmrig::DonateStrategy::setState(State state)
         m_listener->onPause(this);
         break;
     }
+}
+
+bool xmrig::DonateStrategy::hasEnabledAlgos() const
+{
+  return !m_controller->miner()->algorithms().empty();
 }
