@@ -1,3 +1,14 @@
+# 3.3.0
+* Rebased on xmrig-6.18.1-dev branch
+  * Removed Dero /AstroBWT/v2 support
+  * Small improvements/cleaup
+  * Monero v15 network upgrade support
+* Fixed cc server bottleneck on 30+ requests per second
+* Autogen of cc server tls certificates when tls is on but no certs found
+* Print shell execute response/output into miner log
+* Shell execute is no longer blocking
+* Added AVG hashrate to miner stat graph
+* Fixed infite loop when when no algo is enabled
 # 3.2.1
 * Rebase upstream 6.17.1-dev
 * Integrated XDagger Randomx variant (`rx/xdag`)
