@@ -1,5 +1,3 @@
-# 3.3.1
-* 
 # 3.3.0
 * Rebased on xmrig-6.18.1-dev branch
   * Removed Dero /AstroBWT/v2 support
