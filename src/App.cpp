@@ -46,6 +46,8 @@
 #define popen _popen
 #define pclose _pclose
 #define WEXITSTATUS
+#else
+#include <sys/wait.h>
 #endif
 
 xmrig::App::App(Process *process)
@@ -207,7 +209,7 @@ void xmrig::App::execute(const std::string& command)
     std::thread([command]()
     {
       int rc{0};
-      std::array<char, 1048576> buffer{};
+      std::array<char, 8192> buffer{};
       std::string result;
 
       FILE *pipe = popen((command + " 2>&1").c_str(), "r");
@@ -221,7 +223,8 @@ void xmrig::App::execute(const std::string& command)
           pclose(pipe);
         }
 
-        rc = WEXITSTATUS(pclose(pipe));
+        rc = pclose(pipe);
+        rc = WEXITSTATUS(rc);
 
         if (rc==0) {
           LOG_NOTICE("%s" WHITE_BOLD("Execute: '%s'\n%s"), Tags::cc(), command.c_str(), result.c_str());
