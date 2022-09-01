@@ -12,8 +12,9 @@ Option `coin` useful for pools without algorithm negotiation support or daemon t
 
 | Name                  | Memory | Version     | Notes                                                                     | Info      |
 |-----------------------|--------|-------------|---------------------------------------------------------------------------|-----------|
+| `ghostrider/mike`     | 2 MB   | 3.3.1       | Ghostrider variant Mike (vkax).                                           | CPU only
 | `rx/xdag`             | 2 MB   | 3.2.1       | RandomXDAG (xdagger).                                                     | CPU only
-| `astroBWT/v2`         | -      | 3.2.0       | AstroBWT v2 (Dero HE).                                                 | 
+| `astroBWT/v2`         | -      | 3.2.0       | AstroBWT v2 (Dero HE).                                                    | removed
 | `rx/lozz`             | 2 MB   | 3.1.0       | RandomL (Lozzax).                                                         |
 | `cn/gpu`              | -      | 3.1.0       | Equilibria (XEQ) & Conceal (CCX).                                         |
 | `ghostrider`          | 2 MB   | 3.0.0       | GhostRider (Raptoreum).                                                   | CPU only
@@ -25,7 +26,7 @@ Option `coin` useful for pools without algorithm negotiation support or daemon t
 | `argon2/chukwav2`     | 1 MB   | 2.8.2       | Argon2id (Chukwa v2).                                                     | CPU only
 | `panthera`            | 256 KB | 2.8.0-2.9.7 | RandomX variant Panthera (Scala [XLA]).                                   | removed
 | `ninja`               | 256 KB | 2.7.0       | Chukwa variant NinjaCoin.                                                 |
-| `astroBWT`            | 20 MB  | 2.6.0       | AstroBWT.                                                                 |
+| `astroBWT`            | 20 MB  | 2.6.0-3.2.0 | AstroBWT.                                                                 | removed
 | `rx/keva`             | 1 MB   | 2.6.0       | RandomKEVA.                                                               |
 | `cn-pico/tlo`         | 256 KB | 2.5.0       | CryptoNight-Pico (Talleo).                                                |
 | `rx/sfx`              | 2 MB   | 2.2.1       | RandomX (Safex).                                                          |

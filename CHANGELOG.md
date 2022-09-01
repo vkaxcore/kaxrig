@@ -1,3 +1,7 @@
+# 3.3.1
+* Integrated VKAX Ghostrider variant Mike (`mike`)
+* Rebase latest xmrig-6.18.1-dev changes
+  * RandomX Blake2 AVX2 version +0.1% speedup on AMD Zen2/Zen3 and Intel CPUs which support AVX2.
 # 3.3.0
 * Rebased on xmrig-6.18.1-dev branch
   * Removed Dero /AstroBWT/v2 support
