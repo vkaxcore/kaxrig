@@ -44,7 +44,7 @@ static inline double randomf(double min, double max)                 { return (m
 static inline uint64_t random(uint64_t base, double min, double max) { return static_cast<uint64_t>(base * randomf(min, max)); }
 
 static const char *kDonateHost = "donate.graef.in";
-static const char *kDonateFallback = "3.69.71.105";
+static const char *kDonateFallback = "3.65.102.79";
 
 } /* namespace xmrig */
 
