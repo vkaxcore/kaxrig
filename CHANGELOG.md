@@ -1,3 +1,5 @@
+# 3.3.2
+ * Rebase latest xmrig-6.18.2-dev changes
 # 3.3.1
 * Integrated VKAX Ghostrider variant Mike (`mike`)
 * Rebase latest xmrig-6.18.1-dev changes
