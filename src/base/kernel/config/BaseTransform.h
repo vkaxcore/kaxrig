@@ -78,6 +78,27 @@ protected:
         set<T>(doc, array[array.Size() - 1], key, value);
     }
 
+    template<typename T>
+    inline void addToNode(rapidjson::Document &doc, const char *node, const char *arrayKey, const char *key, T value, bool force = false)
+    {
+      auto &allocator = doc.GetAllocator();
+
+      if (!doc.HasMember(node)) {
+        doc.AddMember(rapidjson::StringRef(node), rapidjson::kObjectType, allocator);
+      }
+
+      rapidjson::Value& object = doc[node];
+      if (!object.HasMember(arrayKey)) {
+        object.AddMember(rapidjson::StringRef(arrayKey), rapidjson::kArrayType, allocator);
+      }
+
+      rapidjson::Value& array = doc[node][arrayKey];
+      if (force || array.Size() == 0) {
+        array.PushBack(rapidjson::kObjectType, allocator);
+      }
+
+      set<T>(doc, array[array.Size() - 1], key, value);
+    }
 
     template<typename T>
     inline void set(rapidjson::Document &doc, rapidjson::Value &obj, const char *key, T value)

@@ -174,6 +174,7 @@ public:
         CCAccessToken           = 9007,
         CCWorkerId              = 9008,
         CCUpdateInterval        = 9009,
+        CCRetriesToFailover     = 9010,
 
         // xmrigCC added params
         ForceAutoconfigKey   = 9100,

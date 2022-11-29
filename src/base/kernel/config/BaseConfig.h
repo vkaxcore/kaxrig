@@ -85,7 +85,7 @@ public:
     inline uint32_t printTime() const                       { return m_printTime; }
 
 #   ifdef XMRIG_FEATURE_CC_CLIENT
-    inline const CCClientConfig& ccClient() const  { return m_ccClient; }
+    inline CCClientConfig& ccClient()                       { return m_ccClient; }
 #   endif
 
 #   ifdef XMRIG_FEATURE_TLS

@@ -232,14 +232,31 @@ void xmrig::BaseTransform::transform(rapidjson::Document &doc, int key, const ch
     case IConfig::CCRebootCmd: /* --cc-reboot-cmd */
         return set(doc, BaseConfig::kCCClient, CCClientConfig::kRebootCmd, arg);
 
-    case IConfig::CCAccessToken: /* --cc-access-token */
-        return set(doc, BaseConfig::kCCClient, CCClientConfig::kAccessToken, arg);
-
-    case IConfig::CCUrl: /* --cc-url */
-        return set(doc, BaseConfig::kCCClient, CCClientConfig::kUrl, arg);
-
     case IConfig::CCWorkerId: /* --cc-worker-id */
         return set(doc, BaseConfig::kCCClient, CCClientConfig::kWorkerId, arg);
+
+    case IConfig::CCUrl: /* --cc-url */
+    {
+      if (!doc.HasMember(BaseConfig::kCCClient)) {
+        doc.AddMember(rapidjson::StringRef(BaseConfig::kCCClient), rapidjson::kObjectType, doc.GetAllocator());
+      }
+
+      rapidjson::Value& object = doc[BaseConfig::kCCClient];
+      if (!object.HasMember(CCClientConfig::kServers)) {
+        object.AddMember(rapidjson::StringRef(CCClientConfig::kServers), rapidjson::kArrayType, doc.GetAllocator());
+      }
+
+      rapidjson::Value& array = doc[BaseConfig::kCCClient][CCClientConfig::kServers];
+      if (array.Size() == 0 || CCClientConfig::Server(array[array.Size() - 1]).isValid()) {
+        array.PushBack(rapidjson::kObjectType, doc.GetAllocator());
+      }
+
+      set(doc, array[array.Size() - 1], CCClientConfig::kUrl, arg);
+      break;
+    }
+
+    case IConfig::CCAccessToken: /* --cc-access-token */
+      return addToNode(doc, BaseConfig::kCCClient, CCClientConfig::kServers, CCClientConfig::kAccessToken, arg);
 #   endif
 
     case IConfig::RetriesKey:       /* --retries */
@@ -251,6 +268,7 @@ void xmrig::BaseTransform::transform(rapidjson::Document &doc, int key, const ch
     case IConfig::DnsTtlKey:        /* --dns-ttl */
     case IConfig::DaemonZMQPortKey: /* --daemon-zmq-port */
     case IConfig::CCUpdateInterval: /* --cc-update-interval-s */
+    case IConfig::CCRetriesToFailover: /* --cc-retries-to-failover */
         return transformUint64(doc, key, static_cast<uint64_t>(strtol(arg, nullptr, 10)));
 
     case IConfig::BackgroundKey:  /* --background */
@@ -280,7 +298,6 @@ void xmrig::BaseTransform::transform(rapidjson::Document &doc, int key, const ch
         break;
     }
 }
-
 
 void xmrig::BaseTransform::transformBoolean(rapidjson::Document &doc, int key, bool enable)
 {
@@ -346,7 +363,7 @@ void xmrig::BaseTransform::transformBoolean(rapidjson::Document &doc, int key, b
         return set(doc, BaseConfig::kCCClient, CCClientConfig::kUseRemoteLog, enable);
 
     case IConfig::CCUseTLS:   /* --cc-use-tls */
-        return set(doc, BaseConfig::kCCClient, CCClientConfig::kUseTLS, enable);
+        return addToNode<bool>(doc, BaseConfig::kCCClient, CCClientConfig::kServers, CCClientConfig::kUseTLS, enable);
 #endif
 
     default:
@@ -387,7 +404,9 @@ void xmrig::BaseTransform::transformUint64(rapidjson::Document &doc, int key, ui
 
 #   ifdef XMRIG_FEATURE_CC_CLIENT
     case IConfig::CCUpdateInterval:  /* --cc-update-interval-s */
-        return add(doc, BaseConfig::kCCClient, CCClientConfig::kUpdateInterval, "update-interval-s", arg);
+        return set(doc, BaseConfig::kCCClient, CCClientConfig::kUpdateInterval, arg);
+    case IConfig::CCRetriesToFailover:  /* --cc-retries-to-failover */
+        return set(doc, BaseConfig::kCCClient, CCClientConfig::kRetriesToFailover, arg);
 #   endif
 
     default:

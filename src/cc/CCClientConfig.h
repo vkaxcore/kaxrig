@@ -18,8 +18,10 @@
 #ifndef XMRIG_CC_CLIENT_CONFIG_H
 #define XMRIG_CC_CLIENT_CONFIG_H
 
+#include <memory>
 #include "base/tools/String.h"
 #include "3rdparty/rapidjson/fwd.h"
+#include "base/io/json/Json.h"
 
 namespace xmrig
 {
@@ -28,56 +30,134 @@ class CCClientConfig
 {
 public:
   static const char* kEnabled;
-  static const char* kUseTLS;
   static const char* kUseRemoteLog;
   static const char* kUploadConfigOnStartup;
+  static const char* kServers;
   static const char* kUrl;
   static const char* kAccessToken;
+  static const char* kUseTLS;
   static const char* kWorkerId;
   static const char* kRebootCmd;
   static const char* kUpdateInterval;
+  static const char* kRetriesToFailover;
 
   bool load(const rapidjson::Value& value);
+  void switchCurrentServer();
 
   rapidjson::Value toJSON(rapidjson::Document& doc) const;
 
   void print() const;
 
   inline bool enabled() const                               { return m_enabled; }
-  inline bool useTLS() const                                { return m_useTls; }
   inline bool useRemoteLogging() const                      { return m_useRemoteLogging; }
   inline bool uploadConfigOnStartup() const                 { return m_uploadConfigOnStartup; }
+  inline bool useTLS() const                                { return getCurrentServer()->m_useTls; }
+  inline bool hasFailover() const                           { return m_servers.size() > 1; }
+  inline bool isValid() const                               { return getCurrentServer()->isValid(); }
 
-  inline const char* url() const                            { return m_url.data(); }
-  inline const char* host() const                           { return m_host.data(); }
-  inline const char* token() const                          { return m_token.data(); }
   inline const char* workerId() const                       { return m_workerId.data(); }
   inline const char* rebootCmd() const                      { return m_rebootCmd.data(); }
+  inline const char* host() const                           { return getCurrentServer()->m_host; }
+  inline const char* token() const                          { return getCurrentServer()->m_token; }
+  inline const char* url() const                            { return getCurrentServer()->m_url; }
 
   inline int updateInterval() const                         { return m_updateInterval; }
-  inline int port() const                                   { return m_port; }
+  inline int retriesToFailover() const                      { return m_retriesToFailover; }
+  inline int port() const                                   { return getCurrentServer()->m_port; }
 
   inline bool operator!=(const CCClientConfig& other) const { return !isEqual(other); }
   inline bool operator==(const CCClientConfig& other) const { return isEqual(other); }
 
   bool isEqual(const CCClientConfig& other) const;
 
+public:
+  class Server
+  {
+  public:
+    Server()
+    {
+    }
+
+    Server(const char* url, const char* token, bool useTls)
+    {
+      m_url = url;
+      m_token = token;
+      m_useTls = useTls;
+
+      parseUrl(url);
+    }
+
+    Server(const rapidjson::Value &object)
+    {
+      m_url = Json::getString(object, CCClientConfig::kUrl);
+      m_token = Json::getString(object, CCClientConfig::kAccessToken);
+      m_useTls = Json::getString(object, CCClientConfig::kUseTLS);
+
+      parseUrl(m_url);
+    }
+
+    bool isValid()
+    {
+      return !m_host.isEmpty() && m_port > 0 && !m_token.isEmpty();
+    }
+
+    bool isEqual(const Server& other) const
+    {
+      return other.m_useTls == m_useTls &&
+             other.m_url == m_url &&
+             other.m_host == m_host &&
+             other.m_token == m_token &&
+             other.m_port == m_port;
+    }
+
+  private:
+    void parseUrl(const char* url)
+    {
+      const char* base = url;
+      if (base && strlen(base) && *base != '/')
+      {
+        const char* port = strchr(base, ':');
+        if (!port)
+        {
+          m_host = base;
+        }
+        else
+        {
+          const size_t size = port++ - base + 1;
+          auto* host = new char[size]();
+          memcpy(host, base, size - 1);
+
+          m_host = host;
+          m_port = static_cast<uint16_t>(strtol(port, nullptr, 10));
+        }
+      }
+    }
+
+  public:
+    bool m_useTls{false};
+    int m_port{3344};
+    String m_token;
+    String m_host;
+    String m_url;
+  };
+
 private:
-  bool parseCCUrl(const char* url);
+  std::shared_ptr<Server> getCurrentServer() const;
 
-  bool m_enabled = true;
-  bool m_useTls = false;
-  bool m_useRemoteLogging = true;
-  bool m_uploadConfigOnStartup = true;
+private:
 
-  int m_updateInterval = 10;
-  int m_port = 3344;
+  bool m_enabled{true};
+  bool m_useRemoteLogging{true};
+  bool m_uploadConfigOnStartup{true};
 
-  String m_url;
-  String m_host;
-  String m_token;
+  int m_updateInterval{10};
+  int m_retriesToFailover{5};
+  std::size_t m_currentServerIndex{0};
+
   String m_workerId;
   String m_rebootCmd;
+
+  std::vector<std::shared_ptr<Server>> m_servers;
 };
 
 

@@ -81,14 +81,19 @@
     ],
     "cc-client": {
         "enabled": true,
-        "url": "localhost:3344",
-        "access-token": "mySecret",
-        "use-tls": false,
+        "servers": [
+            {
+                "url": "localhost:3344",
+                "access-token": "mySecret",
+                "use-tls": false
+            }
+        ],
         "use-remote-logging": true,
         "upload-config-on-start": true,
         "worker-id": null,
         "reboot-cmd": null,
-        "update-interval-s": 10
+        "update-interval-s": 10,
+        "retries-to-failover": 5
     },
     "print-time": 60,
     "health-print-time": 60,

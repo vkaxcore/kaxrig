@@ -61,6 +61,7 @@ xmrig::CCClient::CCClient(Base* base)
   : m_base(base),
     m_startTime(Chrono::currentMSecsSinceEpoch()),
     m_configPublishedOnStart(false),
+    m_failedRequests(0),
     m_timer(nullptr)
 {
   base->addListener(this);
@@ -158,18 +159,32 @@ void xmrig::CCClient::publishClientStatusReport()
   std::string requestUrl = "/client/setClientStatus?clientId=" + m_clientStatus.getClientId();
   std::string requestBuffer = m_clientStatus.toJsonString();
 
-  auto config = m_base->config()->ccClient();
+  auto& config = m_base->config()->ccClient();
 
   auto res = performRequest(requestUrl, requestBuffer, "POST");
   if (!res)
   {
     LOG_ERR(CLEAR "%s" RED("error:unable to performRequest POST [http%s://%s:%d%s]"), Tags::cc(),
             config.useTLS() ? "s" : "", config.host(), config.port(), requestUrl.c_str());
+
+    if (config.hasFailover() && ++m_failedRequests >= config.retriesToFailover())
+    {
+      m_failedRequests = 0;
+      config.switchCurrentServer();
+      LOG_WARN(CLEAR "%s" YELLOW("Failover -> Switching CC Server"), Tags::cc());
+    }
   }
   else if (res->status != HTTP_OK)
   {
     LOG_ERR(CLEAR "%s" RED("error:\"%d\" [http%s://%s:%d%s]"), Tags::cc(), res->status,
             config.useTLS() ? "s" : "", config.host(), config.port(), requestUrl.c_str());
+
+    if (config.hasFailover() && ++m_failedRequests >= config.retriesToFailover())
+    {
+      m_failedRequests = 0;
+      config.switchCurrentServer();
+      LOG_WARN(CLEAR "%s" YELLOW("Failover -> Switching CC Server"), Tags::cc());
+    }
   }
   else
   {
@@ -234,7 +249,7 @@ void xmrig::CCClient::fetchConfig()
 {
   LOG_DEBUG("CCClient::fetchConfig");
 
-  auto config = m_base->config()->ccClient();
+  const auto& config = m_base->config()->ccClient();
 
   std::string requestUrl = "/client/getConfig?clientId=" + m_clientStatus.getClientId();
   std::string requestBuffer;
@@ -292,7 +307,7 @@ void xmrig::CCClient::publishConfig()
 {
   LOG_DEBUG("CCClient::publishConfig");
 
-  auto config = m_base->config()->ccClient();
+  const auto& config = m_base->config()->ccClient();
 
   std::string requestUrl = "/client/setClientConfig?clientId=" + m_clientStatus.getClientId();
 
@@ -352,7 +367,7 @@ void xmrig::CCClient::fetchUpdate()
 {
   LOG_DEBUG("CCClient::fetchUpdate");
 
-  auto config = m_base->config()->ccClient();
+  const auto& config = m_base->config()->ccClient();
   std::stringstream hostHeader;
   hostHeader << config.host()
              << ":"
@@ -416,24 +431,27 @@ std::shared_ptr<httplib::ClientImpl> xmrig::CCClient::getClient()
 {
   std::shared_ptr<httplib::ClientImpl> cli;
 
-  auto config = m_base->config()->ccClient();
+  const auto& config = m_base->config()->ccClient();
+  if (config.isValid())
+  {
 # ifdef XMRIG_FEATURE_TLS
-  if (config.useTLS())
-  {
-    cli = std::make_shared<httplib::SSLClient>(config.host(), config.port());
-    cli->enable_server_certificate_verification(false);
-  }
-  else
-  {
+    if (config.useTLS())
+    {
+      cli = std::make_shared<httplib::SSLClient>(config.host(), config.port());
+      cli->enable_server_certificate_verification(false);
+    }
+    else
+    {
 # endif
-    cli = std::make_shared<httplib::ClientImpl>(config.host(), config.port());
+      cli = std::make_shared<httplib::ClientImpl>(config.host(), config.port());
 # ifdef XMRIG_FEATURE_TLS
-  }
+    }
 #   endif
 
-  if (config.token() != nullptr)
-  {
-    cli->set_bearer_token_auth(config.token());
+    if (config.token() != nullptr)
+    {
+      cli->set_bearer_token_auth(config.token());
+    }
   }
 
   return cli;
@@ -444,34 +462,45 @@ std::shared_ptr<httplib::Response> xmrig::CCClient::performRequest(const std::st
                                                                    const std::string& requestBuffer,
                                                                    const std::string& operation)
 {
-  auto config = m_base->config()->ccClient();
-  std::stringstream hostHeader;
-  hostHeader << config.host()
-             << ":"
-             << config.port();
+  std::shared_ptr<httplib::Response> res;
 
-  LOG_DEBUG("CCClient::performRequest %s [%s%s] send: '%.2048s'", operation.c_str(), hostHeader.str().c_str(),
-            requestUrl.c_str(), requestBuffer.c_str());
+  const auto& config = m_base->config()->ccClient();
 
-  httplib::Request req;
-  req.method = operation;
-  req.path = requestUrl;
-  req.set_header("Host", hostHeader.str());
-  req.set_header("Accept", "*//*");
-  req.set_header("User-Agent", Platform::userAgent());
-  req.set_header("Accept", "application/json");
-  req.set_header("Content-Type", "application/json");
-
-  if (!requestBuffer.empty())
+  if (config.isValid())
   {
-    req.body = requestBuffer;
+    std::stringstream hostHeader;
+    hostHeader << config.host()
+               << ":"
+               << config.port();
+
+    LOG_DEBUG("CCClient::performRequest %s [%s%s] send: '%.2048s'", operation.c_str(), hostHeader.str().c_str(),
+              requestUrl.c_str(), requestBuffer.c_str());
+
+    httplib::Request req;
+    req.method = operation;
+    req.path = requestUrl;
+    req.set_header("Host", hostHeader.str());
+    req.set_header("Accept", "*//*");
+    req.set_header("User-Agent", Platform::userAgent());
+    req.set_header("Accept", "application/json");
+    req.set_header("Content-Type", "application/json");
+
+    if (!requestBuffer.empty())
+    {
+      req.body = requestBuffer;
+    }
+
+    auto err = httplib::Error::Success;
+    res = std::make_shared<httplib::Response>();
+
+    auto cli = getClient();
+    if (!cli || !cli->send(req, *res, err))
+    {
+      res.reset();
+    }
   }
 
-  auto err = httplib::Error::Success;
-  auto res = std::make_shared<httplib::Response>();
-  auto cli = getClient();
-
-  return cli->send(req, *res, err) ? res : nullptr;
+  return res;
 }
 
 void xmrig::CCClient::updateUptime()

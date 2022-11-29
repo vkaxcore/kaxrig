@@ -159,6 +159,7 @@ static const option options[] = {
     { "cc-access-token",       1, nullptr, IConfig::CCAccessToken         },
     { "cc-worker-id",          1, nullptr, IConfig::CCWorkerId            },
     { "cc-update-interval-s",  1, nullptr, IConfig::CCUpdateInterval      },
+    { "cc-retries-to-failover",1, nullptr, IConfig::CCRetriesToFailover   },
     { "cc-upload-config-on-start",    0, nullptr, IConfig::CCUploadConfigOnStartup },
     { "cpu-force-autoconfig",  0, nullptr, IConfig::ForceAutoconfigKey    },
     { "cpu-max-cpu-usage",     1, nullptr, IConfig::CPUMaxUsageKey        },
