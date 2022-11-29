@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-ZLIB_VERSION="1.2.12"
+ZLIB_VERSION="1.2.13"
 
 mkdir -p deps
 mkdir -p deps/include
