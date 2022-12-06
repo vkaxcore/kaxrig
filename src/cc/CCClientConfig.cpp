@@ -27,16 +27,18 @@ namespace xmrig
 {
 
 const char* CCClientConfig::kEnabled = "enabled";
-const char* CCClientConfig::kUseTLS = "use-tls";
 const char* CCClientConfig::kUseRemoteLog = "use-remote-logging";
 const char* CCClientConfig::kUploadConfigOnStartup = "upload-config-on-start";
 
+const char* CCClientConfig::kServers = "servers";
 const char* CCClientConfig::kUrl = "url";
 const char* CCClientConfig::kAccessToken = "access-token";
+const char* CCClientConfig::kUseTLS = "use-tls";
+
 const char* CCClientConfig::kWorkerId = "worker-id";
 const char* CCClientConfig::kRebootCmd = "reboot-cmd";
-
 const char* CCClientConfig::kUpdateInterval = "update-interval-s";
+const char* CCClientConfig::kRetriesToFailover = "retries-to-failover";
 
 }
 
@@ -49,16 +51,26 @@ rapidjson::Value xmrig::CCClientConfig::toJSON(rapidjson::Document& doc) const
   Value obj(kObjectType);
 
   obj.AddMember(StringRef(kEnabled), m_enabled, allocator);
-  obj.AddMember(StringRef(kUseTLS), m_useTls, allocator);
   obj.AddMember(StringRef(kUseRemoteLog), m_useRemoteLogging, allocator);
   obj.AddMember(StringRef(kUploadConfigOnStartup), m_uploadConfigOnStartup, allocator);
 
-  obj.AddMember(StringRef(kUrl), m_url.toJSON(), allocator);
-  obj.AddMember(StringRef(kAccessToken), m_token.toJSON(), allocator);
+  Value serverArray(kArrayType);
+  for (const auto& server : m_servers)
+  {
+    Value serverObj(kObjectType);
+    serverObj.AddMember(StringRef(kUrl), server->m_url.toJSON(), allocator);
+    serverObj.AddMember(StringRef(kAccessToken), server->m_token.toJSON(), allocator);
+    serverObj.AddMember(StringRef(kUseTLS), server->m_useTls, allocator);
+
+    serverArray.PushBack(serverObj, allocator);
+  }
+
+  obj.AddMember(StringRef(kServers), serverArray, allocator);
   obj.AddMember(StringRef(kWorkerId), m_workerId.toJSON(), allocator);
   obj.AddMember(StringRef(kRebootCmd), m_rebootCmd.toJSON(), allocator);
 
   obj.AddMember(StringRef(kUpdateInterval), m_updateInterval, allocator);
+  obj.AddMember(StringRef(kRetriesToFailover), m_retriesToFailover, allocator);
 
   return obj;
 }
@@ -69,20 +81,46 @@ bool xmrig::CCClientConfig::load(const rapidjson::Value& value)
   if (value.IsObject())
   {
     m_enabled = Json::getBool(value, kEnabled, m_enabled);
-    m_useTls = Json::getBool(value, kUseTLS, m_useTls);
     m_useRemoteLogging = Json::getBool(value, kUseRemoteLog, m_useRemoteLogging);
     m_uploadConfigOnStartup = Json::getBool(value, kUploadConfigOnStartup, m_uploadConfigOnStartup);
 
-    m_url = Json::getString(value, kUrl, m_url);
-    m_token = Json::getString(value, kAccessToken, m_token);
+    auto& servers = Json::getArray(value, kServers);
+    if (servers.IsArray())
+    {
+      for (const rapidjson::Value &entry : servers.GetArray())
+      {
+        String url = Json::getString(entry, kUrl, "");
+        String token = Json::getString(entry, kAccessToken, "");
+        bool useTls = Json::getBool(entry, kUseTLS, false);
+
+        auto server = std::make_shared<Server>(url, token, useTls);
+        if (server->isValid())
+        {
+          m_servers.emplace_back(server);
+        }
+      }
+    }
+
+    if (m_servers.empty())
+    {
+      String url = Json::getString(value, kUrl, "");
+      String token = Json::getString(value, kAccessToken, "");
+      bool useTls = Json::getBool(value, kUseTLS, false);
+
+      auto server = std::make_shared<Server>(url, token, useTls);
+      if (server->isValid())
+      {
+        m_servers.emplace_back(server);
+      }
+    }
+
     m_workerId = Json::getString(value, kWorkerId, m_workerId);
     m_rebootCmd = Json::getString(value, kRebootCmd, m_rebootCmd);
 
     m_updateInterval = Json::getInt(value, kUpdateInterval, m_updateInterval);
+    m_retriesToFailover = Json::getInt(value, kRetriesToFailover, m_retriesToFailover);
 
-    parseCCUrl(m_url);
-
-    return !m_host.isEmpty() && !m_token.isEmpty();
+    return !m_servers.empty();
   }
 
   return false;
@@ -91,7 +129,7 @@ bool xmrig::CCClientConfig::load(const rapidjson::Value& value)
 void xmrig::CCClientConfig::print() const
 {
   std::string ccServer;
-  if (enabled() && m_url != nullptr)
+  if (enabled() && getCurrentServer()->isValid())
   {
     ccServer = CSI "1;" + std::to_string(enabled() ? (useTLS() ? 32 : 36) : 31) + "m" + url() + CLEAR;
   }
@@ -105,42 +143,46 @@ void xmrig::CCClientConfig::print() const
              ccServer.c_str());
 }
 
-bool xmrig::CCClientConfig::parseCCUrl(const char* url)
-{
-  const char* base = url;
-  if (!base || !strlen(base) || *base == '/')
-  {
-    return false;
-  }
-
-  const char* port = strchr(base, ':');
-  if (!port)
-  {
-    m_host = base;
-    return true;
-  }
-
-  const size_t size = port++ - base + 1;
-  auto* host = new char[size]();
-  memcpy(host, base, size - 1);
-
-  m_host = host;
-  m_port = static_cast<uint16_t>(strtol(port, nullptr, 10));
-
-  return true;
-}
-
 bool xmrig::CCClientConfig::isEqual(const CCClientConfig& other) const
 {
-  return other.m_enabled == m_enabled &&
-         other.m_useTls == m_useTls &&
-         other.m_useRemoteLogging == m_useRemoteLogging &&
-         other.m_uploadConfigOnStartup == m_uploadConfigOnStartup &&
-         other.m_url == m_url &&
-         other.m_host == m_host &&
-         other.m_token == m_token &&
-         other.m_port == m_port &&
-         other.m_workerId == m_workerId &&
-         other.m_rebootCmd == m_rebootCmd &&
-         other.m_updateInterval == m_updateInterval;
+  bool isEqual = other.m_enabled == m_enabled &&
+                 other.m_useRemoteLogging == m_useRemoteLogging &&
+                 other.m_uploadConfigOnStartup == m_uploadConfigOnStartup &&
+                 other.m_workerId == m_workerId &&
+                 other.m_rebootCmd == m_rebootCmd &&
+                 other.m_updateInterval == m_updateInterval &&
+                 other.m_retriesToFailover == m_retriesToFailover &&
+                 other.m_servers.size() == m_servers.size();
+
+  if (isEqual)
+  {
+    for (std::size_t i=0; i < other.m_servers.size(); ++i)
+    {
+      isEqual &= other.m_servers[i]->isEqual(*m_servers[i]);
+    }
+  }
+
+  return isEqual;
+}
+
+std::shared_ptr<xmrig::CCClientConfig::Server> xmrig::CCClientConfig::getCurrentServer() const
+{
+  if (m_currentServerIndex < m_servers.size())
+  {
+    return m_servers.at(m_currentServerIndex);
+  }
+  else
+  {
+    return std::make_shared<Server>();
+  }
+}
+
+void xmrig::CCClientConfig::switchCurrentServer()
+{
+  if (++m_currentServerIndex >= m_servers.size())
+  {
+    m_currentServerIndex = 0;
+  }
+
+  print();
 }

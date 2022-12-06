@@ -231,6 +231,7 @@ CC feature:
       --cc-access-token=T           access token for CC Server
       --cc-worker-id=ID             custom worker-id for CC Server
       --cc-update-interval-s=N      status update interval in seconds (default: 10 min: 1)
+      --cc-retries-to-failover=N    retries before we failover to alternate CC Server (default: 5 min: 1)
       --cc-use-tls                  enable tls encryption for CC communication
       --cc-use-remote-logging       enable remote logging on CC Server
       --cc-upload-config-on-start   upload current miner config to CC Server on startup

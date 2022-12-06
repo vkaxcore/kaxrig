@@ -88,6 +88,7 @@ private:
   ClientStatus m_clientStatus;
 
   bool m_configPublishedOnStart;
+  int m_failedRequests;
 
   Timer* m_timer;
   std::thread m_thread;
