@@ -1,7 +1,7 @@
 # XMRigCC
 
 XMRigCC is a high performance, open source, cross platform RandomX, GhostRider, KawPow, CryptoNight
-unified CPU/GPU miner. Official binaries are available for Windows, Linux, macOS and Android.
+unified CPU/GPU miner. Official binaries are available for Windows, Linux, freebsd, macOS and Android.
 
 [![Windows Build status](https://ci.appveyor.com/api/projects/status/l8v7cuuy320a4tpd?svg=true)](https://ci.appveyor.com/project/Bendr0id/xmrigcc)
 [![Docker Pulls](https://img.shields.io/docker/pulls/bendr0id/xmrigcc.svg)](https://hub.docker.com/r/bendr0id/xmrigcc/)
