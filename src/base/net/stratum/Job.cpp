@@ -181,6 +181,7 @@ int32_t xmrig::Job::nonceOffset() const
 
    auto id = algorithm().id();
    if (id == Algorithm::RX_YADA)   return 147;
+   if (id == Algorithm::RX_XDAG)   return 60;
 
    return 39;
 }
