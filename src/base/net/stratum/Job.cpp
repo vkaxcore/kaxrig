@@ -248,6 +248,7 @@ void xmrig::Job::copy(const Job &other)
     m_minerTxExtraNonceOffset = other.m_minerTxExtraNonceOffset;
     m_minerTxExtraNonceSize = other.m_minerTxExtraNonceSize;
     m_minerTxMerkleTreeBranch = other.m_minerTxMerkleTreeBranch;
+    m_hasViewTag = other.m_hasViewTag;
 #   else
     memcpy(m_ephPublicKey, other.m_ephPublicKey, sizeof(m_ephPublicKey));
     memcpy(m_ephSecretKey, other.m_ephSecretKey, sizeof(m_ephSecretKey));
@@ -299,6 +300,7 @@ void xmrig::Job::move(Job &&other)
     m_minerTxExtraNonceOffset   = other.m_minerTxExtraNonceOffset;
     m_minerTxExtraNonceSize     = other.m_minerTxExtraNonceSize;
     m_minerTxMerkleTreeBranch   = std::move(other.m_minerTxMerkleTreeBranch);
+    m_hasViewTag                = other.m_hasViewTag;
 #   else
     memcpy(m_ephPublicKey, other.m_ephPublicKey, sizeof(m_ephPublicKey));
     memcpy(m_ephSecretKey, other.m_ephSecretKey, sizeof(m_ephSecretKey));
@@ -322,7 +324,7 @@ void xmrig::Job::setSpendSecretKey(const uint8_t *key)
 }
 
 
-void xmrig::Job::setMinerTx(const uint8_t *begin, const uint8_t *end, size_t minerTxEphPubKeyOffset, size_t minerTxPubKeyOffset, size_t minerTxExtraNonceOffset, size_t minerTxExtraNonceSize, const Buffer &minerTxMerkleTreeBranch)
+void xmrig::Job::setMinerTx(const uint8_t *begin, const uint8_t *end, size_t minerTxEphPubKeyOffset, size_t minerTxPubKeyOffset, size_t minerTxExtraNonceOffset, size_t minerTxExtraNonceSize, const Buffer &minerTxMerkleTreeBranch, bool hasViewTag)
 {
     m_minerTxPrefix.assign(begin, end);
     m_minerTxEphPubKeyOffset    = minerTxEphPubKeyOffset;
@@ -330,6 +332,13 @@ void xmrig::Job::setMinerTx(const uint8_t *begin, const uint8_t *end, size_t min
     m_minerTxExtraNonceOffset   = minerTxExtraNonceOffset;
     m_minerTxExtraNonceSize     = minerTxExtraNonceSize;
     m_minerTxMerkleTreeBranch   = minerTxMerkleTreeBranch;
+    m_hasViewTag                = hasViewTag;
+}
+
+
+void xmrig::Job::setViewTagInMinerTx(uint8_t view_tag)
+{
+    memcpy(m_minerTxPrefix.data() + m_minerTxEphPubKeyOffset + 32, &view_tag, 1);
 }
 
 
@@ -339,7 +348,7 @@ void xmrig::Job::setExtraNonceInMinerTx(uint32_t extra_nonce)
 }
 
 
-void xmrig::Job::generateSignatureData(String &signatureData) const
+void xmrig::Job::generateSignatureData(String &signatureData, uint8_t& view_tag) const
 {
     uint8_t* eph_public_key = m_minerTxPrefix.data() + m_minerTxEphPubKeyOffset;
     uint8_t* txkey_pub = m_minerTxPrefix.data() + m_minerTxPubKeyOffset;
@@ -350,14 +359,14 @@ void xmrig::Job::generateSignatureData(String &signatureData) const
 
     uint8_t derivation[32];
 
-    generate_key_derivation(m_viewPublicKey, txkey_sec, derivation);
+    generate_key_derivation(m_viewPublicKey, txkey_sec, derivation, &view_tag);
     derive_public_key(derivation, 0, m_spendPublicKey, eph_public_key);
 
     uint8_t buf[32 * 3] = {};
     memcpy(buf, txkey_pub, 32);
     memcpy(buf + 32, eph_public_key, 32);
 
-    generate_key_derivation(txkey_pub, m_viewSecretKey, derivation);
+    generate_key_derivation(txkey_pub, m_viewSecretKey, derivation, nullptr);
     derive_secret_key(derivation, 0, m_spendSecretKey, buf + 64);
 
     signatureData = Cvt::toHex(buf, sizeof(buf));
