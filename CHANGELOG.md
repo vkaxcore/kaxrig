@@ -1,3 +1,11 @@
+# 3.3.3
+ * Dashboard changes
+   * Changed sorting of column `workerId` to natural sorting
+   * Fixed `group by algo` sorting
+   * Fixed offline notification banner
+   * Added button to remove selected miner from Dashboard #396
+   * Added confirm dialog to "Reset ClientStatusList" #397
+ * Rebase latest xmrig-6.19.2 changes
 # 3.3.2
  * Integrated CC-Server failover #229
  * Rebase latest xmrig-6.18.2-dev changes
