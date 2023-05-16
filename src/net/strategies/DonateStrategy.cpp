@@ -40,8 +40,15 @@
 
 namespace xmrig {
 
-static inline double randomf(double min, double max)                 { return (max - min) * (((static_cast<double>(rand())) / static_cast<double>(RAND_MAX))) + min; }
-static inline uint64_t random(uint64_t base, double min, double max) { return static_cast<uint64_t>(base * randomf(min, max)); }
+static inline double randomf(double min, double max)
+{
+    return (max - min) * (((static_cast<double>(rand())) / static_cast<double>(RAND_MAX))) + min;
+}
+
+static inline uint64_t random(uint64_t base, double min, double max)
+{
+    return static_cast<uint64_t>(base * randomf(min, max));
+}
 
 static const char *kDonateHost = "donate.graef.in";
 static const char *kDonateFallback = "3.65.102.79";
@@ -49,348 +56,320 @@ static const char *kDonateFallback = "3.65.102.79";
 } /* namespace xmrig */
 
 
-xmrig::DonateStrategy::DonateStrategy(Controller* controller, IStrategyListener* listener) :
-  m_donateTime(static_cast<uint64_t>(controller->config()->pools().donateLevel()) * 60 * 1000),
-  m_idleTime((100 - static_cast<uint64_t>(controller->config()->pools().donateLevel())) * 60 * 1000),
-  m_controller(controller),
-  m_listener(listener)
+xmrig::DonateStrategy::DonateStrategy(Controller *controller, IStrategyListener *listener) :
+    m_donateTime(static_cast<uint64_t>(controller->config()->pools().donateLevel()) * 60 * 1000),
+    m_idleTime((100 - static_cast<uint64_t>(controller->config()->pools().donateLevel())) * 60 * 1000),
+    m_controller(controller),
+    m_listener(listener)
 {
-  uint8_t hash[200];
+    uint8_t hash[200];
 
-  const auto& user = controller->config()->pools().data().front().user();
-  keccak(reinterpret_cast<const uint8_t*>(user.data()), user.size(), hash);
-  Cvt::toHex(m_userId, sizeof(m_userId), hash, 32);
+    const auto &user = controller->config()->pools().data().front().user();
+    keccak(reinterpret_cast<const uint8_t *>(user.data()), user.size(), hash);
+    Cvt::toHex(m_userId, sizeof(m_userId), hash, 32);
 
-  constexpr Pool::Mode mode = Pool::MODE_POOL;
+    constexpr Pool::Mode mode = Pool::MODE_POOL;
 
 #   ifdef XMRIG_FEATURE_TLS
-  m_pools.emplace_back(kDonateHost, 443, m_userId, nullptr, nullptr, 0, true, true, mode);
-  m_pools.emplace_back(kDonateHost, 4000, m_userId, nullptr, nullptr, 0, true, true, mode);
-  m_pools.emplace_back(kDonateFallback, 443, m_userId, nullptr, nullptr, 0, true, true, mode);
+    m_pools.emplace_back(kDonateHost, 443, m_userId, nullptr, nullptr, 0, true, true, mode);
+    m_pools.emplace_back(kDonateHost, 4000, m_userId, nullptr, nullptr, 0, true, true, mode);
+    m_pools.emplace_back(kDonateFallback, 443, m_userId, nullptr, nullptr, 0, true, true, mode);
 #   endif
-  m_pools.emplace_back(kDonateHost, 80, m_userId, nullptr, nullptr, 0, true, false, mode);
-  m_pools.emplace_back(kDonateHost, 4100, m_userId, nullptr, nullptr, 0, true, false, mode);
-  m_pools.emplace_back(kDonateFallback, 80, m_userId, nullptr, nullptr, 0, true, false, mode);
+    m_pools.emplace_back(kDonateHost, 80, m_userId, nullptr, nullptr, 0, true, false, mode);
+    m_pools.emplace_back(kDonateHost, 4100, m_userId, nullptr, nullptr, 0, true, false, mode);
+    m_pools.emplace_back(kDonateFallback, 80, m_userId, nullptr, nullptr, 0, true, false, mode);
 
-  if (m_pools.size() > 1)
-  {
-    m_strategy = new FailoverStrategy(m_pools, 10, 2, this, true);
-  }
-  else
-  {
-    m_strategy = new SinglePoolStrategy(m_pools.front(), 10, 2, this, true);
-  }
+    if (m_pools.size() > 1) {
+        m_strategy = new FailoverStrategy(m_pools, 10, 2, this, true);
+    } else {
+        m_strategy = new SinglePoolStrategy(m_pools.front(), 10, 2, this, true);
+    }
 
-  m_timer = new Timer(this);
+    m_timer = new Timer(this);
 
-  setState(STATE_IDLE);
+    setState(STATE_IDLE);
 }
 
 
 xmrig::DonateStrategy::~DonateStrategy()
 {
-  delete m_timer;
-  delete m_strategy;
+    delete m_timer;
+    delete m_strategy;
 
-  if (m_proxy)
-  {
-    m_proxy->deleteLater();
-  }
+    if (m_proxy) {
+        m_proxy->deleteLater();
+    }
 }
 
 
-int64_t xmrig::DonateStrategy::submit(const JobResult& result)
+int64_t xmrig::DonateStrategy::submit(const JobResult &result)
 {
-  return m_proxy ? m_proxy->submit(result) : m_strategy->submit(result);
+    return m_proxy ? m_proxy->submit(result) : m_strategy->submit(result);
 }
 
 
 void xmrig::DonateStrategy::connect()
 {
-  m_proxy = createProxy();
-  if (m_proxy)
-  {
-    m_proxy->connect();
-  }
-
-  else
-  {
-    m_strategy->connect();
-  }
+    m_proxy = createProxy();
+    if (m_proxy) {
+        m_proxy->connect();
+    } else {
+        m_strategy->connect();
+    }
 }
 
 
-void xmrig::DonateStrategy::setAlgo(const xmrig::Algorithm& algo)
+void xmrig::DonateStrategy::setAlgo(const xmrig::Algorithm &algo)
 {
-  m_algorithm = algo;
+    m_algorithm = algo;
 
-  m_strategy->setAlgo(algo);
+    m_strategy->setAlgo(algo);
 }
 
 
-void xmrig::DonateStrategy::setProxy(const ProxyUrl& proxy)
+void xmrig::DonateStrategy::setProxy(const ProxyUrl &proxy)
 {
-  m_strategy->setProxy(proxy);
+    m_strategy->setProxy(proxy);
 }
 
 
 void xmrig::DonateStrategy::stop()
 {
-  m_timer->stop();
-  m_strategy->stop();
+    m_timer->stop();
+    m_strategy->stop();
 }
 
 
 void xmrig::DonateStrategy::tick(uint64_t now)
 {
-  m_now = now;
+    m_now = now;
 
-  m_strategy->tick(now);
+    m_strategy->tick(now);
 
-  if (m_proxy)
-  {
-    m_proxy->tick(now);
-  }
+    if (m_proxy) {
+        m_proxy->tick(now);
+    }
 
-  if (state() == STATE_WAIT && now > m_timestamp)
-  {
-    setState(STATE_IDLE);
-  }
+    if (state() == STATE_WAIT && now > m_timestamp) {
+        setState(STATE_IDLE);
+    }
 }
 
 
-void xmrig::DonateStrategy::onActive(IStrategy*, IClient* client)
+void xmrig::DonateStrategy::onActive(IStrategy *, IClient *client)
 {
-  if (isActive())
-  {
-    return;
-  }
+    if (isActive()) {
+        return;
+    }
 
-  setState(STATE_ACTIVE);
-  m_listener->onActive(this, client);
+    setState(STATE_ACTIVE);
+    m_listener->onActive(this, client);
 }
 
 
-void xmrig::DonateStrategy::onPause(IStrategy*)
+void xmrig::DonateStrategy::onPause(IStrategy *)
 {
 }
 
 
-void xmrig::DonateStrategy::onClose(IClient*, int failures)
+void xmrig::DonateStrategy::onClose(IClient *, int failures)
 {
-  if (failures == 2 && m_controller->config()->pools().proxyDonate() == Pools::PROXY_DONATE_AUTO)
-  {
-    m_proxy->deleteLater();
-    m_proxy = nullptr;
+    if (failures == 2 && m_controller->config()->pools().proxyDonate() == Pools::PROXY_DONATE_AUTO) {
+        m_proxy->deleteLater();
+        m_proxy = nullptr;
 
-    m_strategy->connect();
-  }
+        m_strategy->connect();
+    }
 }
 
 
-void xmrig::DonateStrategy::onLogin(IClient*, rapidjson::Document& doc, rapidjson::Value& params)
+void xmrig::DonateStrategy::onLogin(IClient *, rapidjson::Document &doc, rapidjson::Value &params)
 {
-  using namespace rapidjson;
-  auto& allocator = doc.GetAllocator();
+    using namespace rapidjson;
+    auto &allocator = doc.GetAllocator();
 
-  char buf[60] = {0};
+    char buf[60] = {0};
 #   ifdef XMRIG_FEATURE_TLS
-  if (m_tls)
-  {
-    snprintf(buf, sizeof(buf), "stratum+ssl://xmrig.com.%s", m_pools[0].url().data());
-  }
-  else
-  {
-    snprintf(buf, sizeof(buf), "xmrig.com.%s", m_pools[0].url().data());
-  }
+    if (m_tls)
+    {
+      snprintf(buf, sizeof(buf), "stratum+ssl://xmrig.com.%s", m_pools[0].url().data());
+    }
+    else
+    {
+      snprintf(buf, sizeof(buf), "xmrig.com.%s", m_pools[0].url().data());
+    }
 
 #   else
-  snprintf(buf, sizeof(buf), "xmrig.com.%s", m_pools[0].url().data());
+    snprintf(buf, sizeof(buf), "xmrig.com.%s", m_pools[0].url().data());
 #   endif
 
-  params.AddMember("url", Value(buf, allocator), allocator);
+    params.AddMember("url", Value(buf, allocator), allocator);
 
-  setAlgorithms(doc, params);
+    setAlgorithms(doc, params);
 }
 
 
-void xmrig::DonateStrategy::onLogin(IStrategy*, IClient*, rapidjson::Document& doc, rapidjson::Value& params)
+void xmrig::DonateStrategy::onLogin(IStrategy *, IClient *, rapidjson::Document &doc, rapidjson::Value &params)
 {
-  setAlgorithms(doc, params);
+    setAlgorithms(doc, params);
 }
 
 
-void xmrig::DonateStrategy::onLoginSuccess(IClient* client)
+void xmrig::DonateStrategy::onLoginSuccess(IClient *client)
 {
-  if (isActive())
-  {
-    return;
-  }
+    if (isActive()) {
+        return;
+    }
 
-  setState(STATE_ACTIVE);
-  m_listener->onActive(this, client);
+    setState(STATE_ACTIVE);
+    m_listener->onActive(this, client);
 }
 
 
-void xmrig::DonateStrategy::onVerifyAlgorithm(const IClient* client, const Algorithm& algorithm, bool* ok)
+void xmrig::DonateStrategy::onVerifyAlgorithm(const IClient *client, const Algorithm &algorithm, bool *ok)
 {
-  m_listener->onVerifyAlgorithm(this, client, algorithm, ok);
+    m_listener->onVerifyAlgorithm(this, client, algorithm, ok);
 }
 
 
-void xmrig::DonateStrategy::onVerifyAlgorithm(IStrategy*, const IClient* client, const Algorithm& algorithm, bool* ok)
+void xmrig::DonateStrategy::onVerifyAlgorithm(IStrategy *, const IClient *client, const Algorithm &algorithm, bool *ok)
 {
-  m_listener->onVerifyAlgorithm(this, client, algorithm, ok);
+    m_listener->onVerifyAlgorithm(this, client, algorithm, ok);
 }
 
 
-void xmrig::DonateStrategy::onTimer(const Timer*)
+void xmrig::DonateStrategy::onTimer(const Timer *)
 {
-  if (hasEnabledAlgos())
-  {
-    setState(isActive() ? STATE_WAIT : STATE_CONNECT);
-  }
-  else
-  {
-    idle(0.2, 1.0); // schedule retry
-  }
+    if (hasEnabledAlgos()) {
+        setState(isActive() ? STATE_WAIT : STATE_CONNECT);
+    } else {
+        idle(0.2, 1.0); // schedule retry
+    }
 }
 
 
-xmrig::IClient* xmrig::DonateStrategy::createProxy()
+xmrig::IClient *xmrig::DonateStrategy::createProxy()
 {
-  if (m_controller->config()->pools().proxyDonate() == Pools::PROXY_DONATE_NONE)
-  {
-    return nullptr;
-  }
+    if (m_controller->config()->pools().proxyDonate() == Pools::PROXY_DONATE_NONE) {
+        return nullptr;
+    }
 
-  IStrategy* strategy = m_controller->network()->strategy();
-  if (!strategy->isActive() || !strategy->client()->hasExtension(IClient::EXT_CONNECT))
-  {
-    return nullptr;
-  }
+    IStrategy *strategy = m_controller->network()->strategy();
+    if (!strategy->isActive() || !strategy->client()->hasExtension(IClient::EXT_CONNECT)) {
+        return nullptr;
+    }
 
-  const IClient* client = strategy->client();
-  m_tls = client->hasExtension(IClient::EXT_TLS);
+    const IClient *client = strategy->client();
+    m_tls = client->hasExtension(IClient::EXT_TLS);
 
-  Pool pool(client->pool().proxy().isValid() ? client->pool().host() : client->ip(), client->pool().port(), m_userId,
-            client->pool().password(), client->pool().spendSecretKey(), 0, true, client->isTLS(), Pool::MODE_POOL);
-  pool.setAlgo(client->pool().algorithm());
-  pool.setProxy(client->pool().proxy());
+    Pool pool(client->pool().proxy().isValid() ? client->pool().host() : client->ip(), client->pool().port(), m_userId,
+              client->pool().password(), client->pool().spendSecretKey(), 0, true, client->isTLS(), Pool::MODE_POOL);
+    pool.setAlgo(client->pool().algorithm());
+    pool.setProxy(client->pool().proxy());
 
-  IClient* proxy = new Client(-1, Platform::userAgent(), this);
-  proxy->setPool(pool);
-  proxy->setQuiet(true);
+    IClient *proxy = new Client(-1, Platform::userAgent(), this);
+    proxy->setPool(pool);
+    proxy->setQuiet(true);
 
-  return proxy;
+    return proxy;
 }
 
 
 void xmrig::DonateStrategy::idle(double min, double max)
 {
-  m_timer->start(random(m_idleTime, min, max), 0);
+    m_timer->start(random(m_idleTime, min, max), 0);
 }
 
 
-void xmrig::DonateStrategy::setAlgorithms(rapidjson::Document& doc, rapidjson::Value& params)
+void xmrig::DonateStrategy::setAlgorithms(rapidjson::Document &doc, rapidjson::Value &params)
 {
-  using namespace rapidjson;
-  auto& allocator = doc.GetAllocator();
+    using namespace rapidjson;
+    auto &allocator = doc.GetAllocator();
 
-  Algorithms algorithms = m_controller->miner()->algorithms();
-  const size_t index = static_cast<size_t>(std::distance(algorithms.begin(),
-                                                         std::find(algorithms.begin(), algorithms.end(), m_algorithm)));
-  if (index > 0 && index < algorithms.size())
-  {
-    std::swap(algorithms[0], algorithms[index]);
-  }
+    Algorithms algorithms = m_controller->miner()->algorithms();
+    const size_t index = static_cast<size_t>(std::distance(algorithms.begin(),
+                                                           std::find(algorithms.begin(), algorithms.end(),
+                                                                     m_algorithm)));
+    if (index > 0 && index < algorithms.size()) {
+        std::swap(algorithms[0], algorithms[index]);
+    }
 
-  Value algo(kArrayType);
+    Value algo(kArrayType);
 
-  for (const auto& a : algorithms)
-  {
-    algo.PushBack(StringRef(a.name()), allocator);
-  }
+    for (const auto &a : algorithms) {
+        algo.PushBack(StringRef(a.name()), allocator);
+    }
 
-  params.AddMember("algo", algo, allocator);
+    params.AddMember("algo", algo, allocator);
 
-  Value feature(kArrayType);
-  feature.PushBack("signing", allocator);
-  params.AddMember("supports", feature, allocator);
+    Value feature(kArrayType);
+    feature.PushBack("signing", allocator);
+    params.AddMember("supports", feature, allocator);
 }
 
 
-void xmrig::DonateStrategy::setJob(IClient* client, const Job& job, const rapidjson::Value& params)
+void xmrig::DonateStrategy::setJob(IClient *client, const Job &job, const rapidjson::Value &params)
 {
-  if (isActive())
-  {
-    m_listener->onJob(this, client, job, params);
-  }
+    if (isActive()) {
+        m_listener->onJob(this, client, job, params);
+    }
 }
 
 
-void xmrig::DonateStrategy::setResult(IClient* client, const SubmitResult& result, const char* error)
+void xmrig::DonateStrategy::setResult(IClient *client, const SubmitResult &result, const char *error)
 {
-  m_listener->onResultAccepted(this, client, result, error);
+    m_listener->onResultAccepted(this, client, result, error);
 }
 
 
 void xmrig::DonateStrategy::setState(State state)
 {
-  constexpr const uint64_t waitTime = 3000;
+    constexpr const uint64_t waitTime = 3000;
 
-  assert(m_state != state && state != STATE_NEW);
-  if (m_state == state)
-  {
-    return;
-  }
+    assert(m_state != state && state != STATE_NEW);
+    if (m_state == state) {
+        return;
+    }
 
-  const State prev = m_state;
-  m_state = state;
+    const State prev = m_state;
+    m_state = state;
 
-  switch (state)
-  {
-    case STATE_NEW:
-      break;
+    switch (state) {
+        case STATE_NEW:
+            break;
 
-    case STATE_IDLE:
-      if (prev == STATE_NEW)
-      {
-        idle(0.2, 1.0);
-      }
-      else if (prev == STATE_CONNECT)
-      {
-        m_timer->start(20000, 0);
-      }
-      else
-      {
-        m_strategy->stop();
-        if (m_proxy)
-        {
-          m_proxy->deleteLater();
-          m_proxy = nullptr;
-        }
+        case STATE_IDLE:
+            if (prev == STATE_NEW) {
+                idle(0.2, 1.0);
+            } else if (prev == STATE_CONNECT) {
+                m_timer->start(20000, 0);
+            } else {
+                m_strategy->stop();
+                if (m_proxy) {
+                    m_proxy->deleteLater();
+                    m_proxy = nullptr;
+                }
 
-        idle(0.8, 1.2);
-      }
-      break;
+                idle(0.8, 1.2);
+            }
+            break;
 
-    case STATE_CONNECT:
-      connect();
-      break;
+        case STATE_CONNECT:
+            connect();
+            break;
 
-    case STATE_ACTIVE:
-      m_timer->start(m_donateTime, 0);
-      break;
+        case STATE_ACTIVE:
+            m_timer->start(m_donateTime, 0);
+            break;
 
-    case STATE_WAIT:
-      m_timestamp = m_now + waitTime;
-      m_listener->onPause(this);
-      break;
-  }
+        case STATE_WAIT:
+            m_timestamp = m_now + waitTime;
+            m_listener->onPause(this);
+            break;
+    }
 }
 
 bool xmrig::DonateStrategy::hasEnabledAlgos() const
 {
-  return !m_controller->miner()->algorithms().empty();
+    return !m_controller->miner()->algorithms().empty();
 }
