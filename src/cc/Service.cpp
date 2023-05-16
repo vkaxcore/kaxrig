@@ -210,6 +210,10 @@ int Service::handlePOST(const httplib::Request& req, httplib::Response& res)
     {
       resultCode = deleteClientConfig(clientId);
     }
+    else if (req.path.rfind("/admin/removeClientStatus", 0) == 0)
+    {
+      resultCode = removeClientStatus(clientId);
+    }
     else
     {
       resultCode = HTTP_BAD_REQUEST;
@@ -657,6 +661,13 @@ int Service::deleteClientConfig(const std::string& clientId)
   }
 
   return resultCode;
+}
+
+int Service::removeClientStatus(const std::string clientId)
+{
+  m_clientStatus.erase(clientId);
+
+  return HTTP_OK;
 }
 
 int Service::resetClientStatusList()

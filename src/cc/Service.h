@@ -76,6 +76,7 @@ private:
   int setClientCommand(const httplib::Request& req, const std::string& clientId, httplib::Response& res);
   int setClientConfig(const httplib::Request& req, const std::string& clientId, httplib::Response& res);
   int deleteClientConfig(const std::string& clientId);
+  int removeClientStatus(const std::string clientId);
   int resetClientStatusList();
 
   std::string getClientConfigFileName(const std::string& clientId);
