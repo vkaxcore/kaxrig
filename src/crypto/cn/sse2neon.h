@@ -1760,45 +1760,6 @@ FORCE_INLINE unsigned int _MM_GET_ROUNDING_MODE()
     } else {
         return r.field.bit23 ? _MM_ROUND_DOWN : _MM_ROUND_NEAREST;
     }
-
-#define SSE2NEON_CMP_RANGES_IMPL(type, data_type, us, byte_or_word)            \
-    static int _sse2neon_cmp_##us##type##_ranges(__m128i a, int la, __m128i b, \
-                                                 int lb)                       \
-    {                                                                          \
-        __m128i mtx[16];                                                       \
-        PCMPSTR_RANGES(                                                        \
-            a, b, mtx, data_type, us, SSE2NEON_CAT(SSE2NEON_SIZE_OF_, type),   \
-            SSE2NEON_CAT(SSE2NEON_NUMBER_OF_LANES_, type), byte_or_word);      \
-        return SSE2NEON_CAT(                                                   \
-            _sse2neon_aggregate_ranges_,                                       \
-            SSE2NEON_CAT(                                                      \
-                SSE2NEON_CAT(SSE2NEON_SIZE_OF_, type),                         \
-                SSE2NEON_CAT(x, SSE2NEON_CAT(SSE2NEON_NUMBER_OF_LANES_,        \
-                                             type))))(la, lb, mtx);            \
-    }
-
-#define SSE2NEON_CMP_EQUAL_ORDERED_IMPL(type)                                  \
-    static int _sse2neon_cmp_##type##_equal_ordered(__m128i a, int la,         \
-                                                    __m128i b, int lb)         \
-    {                                                                          \
-        __m128i mtx[16];                                                       \
-        PCMPSTR_EQ(a, b, mtx, SSE2NEON_CAT(SSE2NEON_SIZE_OF_, type),           \
-                   SSE2NEON_CAT(SSE2NEON_NUMBER_OF_LANES_, type));             \
-        return SSE2NEON_CAT(                                                   \
-            _sse2neon_aggregate_equal_ordered_,                                \
-            SSE2NEON_CAT(                                                      \
-                SSE2NEON_CAT(SSE2NEON_SIZE_OF_, type),                         \
-                SSE2NEON_CAT(x,                                                \
-                             SSE2NEON_CAT(SSE2NEON_NUMBER_OF_LANES_, type))))( \
-            SSE2NEON_CAT(SSE2NEON_NUMBER_OF_LANES_, type), la, lb, mtx);       \
-    }
-
-#if !defined(__aarch64__)
-/* emulate vaddv u8 variant */
-static inline uint8_t vaddv_u8(uint8x8_t v8)
-{
-    const uint64x1_t v1 = vpaddl_u32(vpaddl_u16(vpaddl_u8(v8)));
-    return vget_lane_u8(vreinterpret_u8_u64(v1), 0);
 }
 
 // Copy a to dst, and insert the 16-bit integer i into dst at the location
