@@ -306,7 +306,6 @@ void xmrig::DonateStrategy::setParams(rapidjson::Document &doc, rapidjson::Value
     auto &allocator = doc.GetAllocator();
     auto algorithms = m_controller->miner()->algorithms();
 
-    Algorithms algorithms = m_controller->miner()->algorithms();
     const size_t index = static_cast<size_t>(std::distance(algorithms.begin(),
                                                            std::find(algorithms.begin(), algorithms.end(),
                                                                      m_algorithm)));
@@ -321,17 +320,16 @@ void xmrig::DonateStrategy::setParams(rapidjson::Document &doc, rapidjson::Value
     }
 
     params.AddMember("algo", algo, allocator);
-
-    Value feature(kArrayType);
-    feature.PushBack("signing", allocator);
-    params.AddMember("supports", feature, allocator);
-
     params.AddMember("diff",    m_diff, allocator);
     params.AddMember("height",  m_height, allocator);
 
     if (!m_seed.empty()) {
-       params.AddMember("seed_hash", Cvt::toHex(m_seed, doc), allocator);
+      params.AddMember("seed_hash", Cvt::toHex(m_seed, doc), allocator);
     }
+
+    Value feature(kArrayType);
+    feature.PushBack("signing", allocator);
+    params.AddMember("supports", feature, allocator);
 }
 
 
@@ -390,4 +388,5 @@ void xmrig::DonateStrategy::setState(State state)
 
 bool xmrig::DonateStrategy::hasEnabledAlgos() const
 {
-    return !m_controller->miner()->algorithms().empty();
+  return !m_controller->miner()->algorithms().empty();
+}
