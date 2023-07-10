@@ -97,7 +97,7 @@ xmrigServer --port=3344 --user=admin --pass=pass --token=SECRET_TOKEN_TO_ACCESS_
 
 ### Options XMRigCCServer
 ```
- -b, --bind arg                The CC Server bind ip (default: 0.0.0.0)
+  -b, --bind arg                The CC Server bind ip (default: 0.0.0.0)
   -p, --port N                  The CC Server port
   -U, --user arg                The CC Server admin user
   -P, --pass arg                The CC Server admin pass
