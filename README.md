@@ -97,7 +97,7 @@ xmrigServer --port=3344 --user=admin --pass=pass --token=SECRET_TOKEN_TO_ACCESS_
 
 ### Options XMRigCCServer
 ```
- -b, --bind arg                The CC Server bind ip (default: 0.0.0.0)
+  -b, --bind arg                The CC Server bind ip (default: 0.0.0.0)
   -p, --port N                  The CC Server port
   -U, --user arg                The CC Server admin user
   -P, --pass arg                The CC Server admin pass
@@ -281,7 +281,7 @@ Misc:
 
 
 ## Donations
-* Default donation 5% (5 minutes in 100 minutes) can be reduced to 1% via command line option `--donate-level`.
+* Minimum 1% (1 minutes in 100 minutes) can be set via config or command line option `--donate-level`.
 
 ##### BenDroid (XMRigCC):
 XMR:  `4BEn3sSa2SsHBcwa9dNdKnGvvbyHPABr2JzoY7omn7DA2hPv84pVFvwDrcwMCWgz3dQVcrkw3gE9aTC9Mi5HxzkfF9ev1eH`
