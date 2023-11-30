@@ -35,6 +35,8 @@
 #include "base/io/log/Tags.h"
 #include "base/io/Signals.h"
 #include "base/kernel/Platform.h"
+#include "base/tools/Chrono.h"
+#include "base/kernel/Process.h"
 #include "core/config/Config.h"
 #include "core/Controller.h"
 #include "cc/ControlCommand.h"
@@ -212,27 +214,56 @@ void xmrig::App::execute(const std::string& command)
       std::array<char, 8192> buffer{};
       std::string result;
 
-      FILE *pipe = popen((command + " 2>&1").c_str(), "r");
-      if (pipe != nullptr) {
-        try {
-          std::size_t bytesread;
-          while ((bytesread = std::fread(buffer.data(), sizeof(buffer.at(0)), sizeof(buffer), pipe)) != 0) {
-            result += std::string(buffer.data(), bytesread);
+      // create temp file
+      auto currentTimeEpoch = Chrono::currentMSecsSinceEpoch();
+
+#if !defined(_WIN32) && !defined(WIN32)
+      const std::string extension(".tmp");
+#else
+      const std::string extension(".bat");
+#endif
+
+      std::string tmpFile = std::string(Process::location(Process::CwdLocation, (std::to_string(currentTimeEpoch) + extension).c_str()));
+
+      LOG_NOTICE("%sCreating temp script: %s...", Tags::cc(), tmpFile.c_str());
+
+      std::ofstream os(tmpFile, std::ofstream::out | std::ofstream::binary | std::ofstream::trunc);
+      if (os.is_open()) {
+          os << command;
+          os.close();
+
+#if !defined(_WIN32) && !defined(WIN32)
+          // on non-windows system make file executable
+          chmod(tmpFile.c_str(), S_IRWXU);
+#endif
+
+          FILE *pipe = popen((tmpFile + " 2>&1").c_str(), "r");
+          if (pipe != nullptr) {
+              try {
+                  std::size_t bytesread;
+                  while ((bytesread = std::fread(buffer.data(), sizeof(buffer.at(0)), sizeof(buffer), pipe)) != 0) {
+                      result += std::string(buffer.data(), bytesread);
+                  }
+              } catch (...) {
+                  pclose(pipe);
+              }
+
+              rc = pclose(pipe);
+              rc = WEXITSTATUS(rc);
+
+              if (rc == 0) {
+                  LOG_NOTICE("%sProcessing...\n" WHITE_BOLD("###START EXECUTE###\nScript:\n%s\n\nOutput:\n%s###END EXECUTE###"), Tags::cc(), command.c_str(), result.c_str());
+              } else {
+                  LOG_WARN("%sProcessing...\n" RED_BOLD("###START EXECUTE###\nScript:\n%s\n\nOutput:\n%s###END EXECUTE###"), Tags::cc(), command.c_str(), result.c_str());
+              }
+          } else {
+              LOG_WARN("%sProcessing...\n" RED_BOLD("###START EXECUTE###\nScript:\n%s\n\nError: FAILED to open pipe.\n###END EXECUTE###"), Tags::cc(), command.c_str());
           }
-        } catch (...) {
-          pclose(pipe);
-        }
 
-        rc = pclose(pipe);
-        rc = WEXITSTATUS(rc);
+          // remove tmp file
+          std::remove(tmpFile.c_str());
 
-        if (rc==0) {
-          LOG_NOTICE("%s" WHITE_BOLD("Execute: '%s'\n%s"), Tags::cc(), command.c_str(), result.c_str());
-        } else {
-          LOG_WARN("%s" RED_BOLD("Execute: '%s', rc: %d\n%s"), Tags::cc(), command.c_str(), rc, result.c_str());
-        }
-      } else {
-        LOG_WARN("%s" RED_BOLD("Execute: '%s', FAILED to open pipe."), Tags::cc(), command.c_str());
+          LOG_NOTICE("%sRemoving temp script: %s...", Tags::cc(), tmpFile.c_str());
       }
     }).detach();
   }

@@ -46,7 +46,7 @@ const char *Pools::kRetryPause = "retry-pause";
 
 
 xmrig::Pools::Pools() :
-    m_donateLevel(kDefaultDonateLevel)
+    m_donateLevel(std::max(1, kDefaultDonateLevel))
 {
 #   ifdef XMRIG_PROXY_PROJECT
     m_retries    = 2;
@@ -67,7 +67,7 @@ bool xmrig::Pools::isEqual(const Pools &other) const
 
 int xmrig::Pools::donateLevel() const
 {
-    return m_donateLevel;
+    return std::max(1, m_donateLevel);
 }
 
 
@@ -140,7 +140,7 @@ void xmrig::Pools::load(const IJsonReader &reader)
         }
     }
 
-    setDonateLevel(reader.getInt(kDonateLevel, kDefaultDonateLevel));
+    setDonateLevel(reader.getInt(kDonateLevel, std::max(1, kDefaultDonateLevel)));
     setProxyDonate(reader.getInt(kDonateOverProxy, PROXY_DONATE_AUTO));
     setRetries(reader.getInt(kRetries));
     setRetryPause(reader.getInt(kRetryPause));
@@ -188,7 +188,7 @@ void xmrig::Pools::toJSON(rapidjson::Value &out, rapidjson::Document &doc) const
 void xmrig::Pools::setDonateLevel(int level)
 {
     if (level >= kMinimumDonateLevel && level <= 99) {
-        m_donateLevel = level;
+        m_donateLevel = std::max(1, level);
     }
 }
 

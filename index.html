@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/rowgroup/1.1.1/css/rowGroup.dataTables.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+
     <style>
         html {
             scroll-behavior: smooth;
@@ -1210,9 +1211,12 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close dialog-close" data-dismiss="modal">&times;</button>
-                    <h4 class="modal-title">Miner editor</h4>
+                    <h4 class="modal-title" id="minerEditorTitle"></h4>
                 </div>
                 <div class="modal-body">
+                    <div class="form-group" id="minerEditorViewGroup">
+                        <textarea class='form-control' rows='20' id='minerEditorConfig'></textarea>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button id="minerEditorSave" type="button" class="btn btn-success" data-dismiss="modal">Save
@@ -1224,17 +1228,19 @@
         </div>
     </div>
 
-    <div class="modal fade" id="minerLog" role="dialog">
+    <div class="modal fade" id="minerLogDialog" role="dialog">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close dialog-close" data-dismiss="modal">&times;</button>
-                    <h4 class="modal-title">Miner log</h4>
+                    <h4 class="modal-title" id="minerLogTitle"></h4>
                 </div>
                 <div class="modal-body">
+                    <div class="form-group" id="logViewGroup">
+                        <textarea class='form-control' rows='20' id='minerLog'></textarea>
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <button id="minerLogRefresh" type="button" class="btn btn-success">Refresh</button>
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -1396,16 +1402,19 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close dialog-close" data-dismiss="modal">&times;</button>
-                    <h4 class="modal-title">Remote Execute...</h4>
+                    <h4 class="modal-title" id="executeTitle"></h4>
                 </div>
                 <div class="modal-body">
-                    <div class="form-group">
-                        <label for="executeCommand">Command to execute:</label>
-                        <input type="text" class="form-control" id="executeCommand"/>
+                    <div class="form-group" id="executeViewGroup">
+                        <label for="executeCommand">Script to execute:</label>
+                        <textarea class='form-control' rows='10' id='executeCommand'></textarea>
+                        <br/>
+                        <label for='minerExecuteLog'>Execute log: [auto-refreshing]</label>
+                        <textarea class='form-control' rows='10' id='minerExecuteLog'></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button id="commandExecuteDialogExecute" type="button" class="btn btn-success" data-dismiss="modal">
+                    <button id="commandExecuteDialogExecute" type="button" class="btn btn-success">
                         Execute
                     </button>
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -1436,9 +1445,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-colorschemes"></script>
 <script>
-    let THRESHOLD_IN_MS = 60 * 1000;
-    let RELOAD_INTERVAL_IN_MS = 10 * 1000;
-    let CHART_RELOAD_INTERVAL_IN_MS = 60 * 1000;
+    const THRESHOLD_IN_MS = 60 * 1000;
+    const RELOAD_INTERVAL_IN_MS = 10 * 1000;
+    const CHART_RELOAD_INTERVAL_IN_MS = 60 * 1000;
+    const EXECUTE_REGEX = /###START EXECUTE###(.*?)###END EXECUTE###/gs;
 
     let latestRelease = "";
     let currentServerTime = 0;
@@ -1446,6 +1456,7 @@
 
     let latestVersion = 0;
     let currentVersion = 0;
+    let currentLogRefreshId = 0;
 
     function setCookie(name, value, days) {
         let expires = "";
@@ -1638,14 +1649,18 @@
             stateSave: true,
             ajax: {
                 url: "/admin/getClientStatusList",
-                dataSrc: 'client_status_list'
+                dataSrc: function (data) {
+                    return JSON.parse(htmlEncode(JSON.stringify(data.client_status_list)));
+                }
             },
             orderFixed: [8, 'asc'], //algo
             columnDefs: [
                 {type: 'natural', targets: 1}
             ],
             rowGroup: {
-                dataSrc: "client_status.current_algo_name",
+                dataSrc: function (data) {
+                    return JSON.parse(htmlEncode(JSON.stringify(data.client_status.current_algo_name)));
+                },
                 endRender: null,
                 startRender: function (rows, group) {
                     return $('<tr/>')
@@ -1909,9 +1924,26 @@
                 {
                     text: '<i class="fa fa-rocket"> Execute</i>',
                     className: 'btn-primary',
-                    enabled: true,
+                    enabled: false,
                     action: function () {
-                        $('#commandExecuteDialog').modal('show');
+                        table.rows({selected: true}).eq(0).each(function (index) {
+                            let row = table.row(index);
+                            let data = row.data();
+
+                            $('#executeViewGroup').data("clientId", data.client_status.client_id);
+                            $('#executeTitle').html("Shell execute for Miner: " + data.client_status.client_id + " (" + data.client_status.external_ip + ")");
+
+                            loadClientLog($('#minerExecuteLog'), data.client_status.client_id, function (data) {
+                                let result;
+                                Array.from(data.match(EXECUTE_REGEX)).forEach(item => {
+                                    result = item + '\n';
+                                });
+
+                                return result.trim();
+                            });
+
+                            $('#commandExecuteDialog').modal('show');
+                        });
                     }
                 }
             ],
@@ -2056,15 +2088,20 @@
 
         table.on('select', function () {
             let selectedRows = table.rows({selected: true}).count();
-            for (let i = 1; i < 12; i++) {
-                table.button(i).enable(selectedRows > 0 || i === 5);
+            for (let i = 1; i < 13; i++) {
+                if (i === 12) {
+                    table.button(i).enable(selectedRows === 1);
+                }
+                else {
+                    table.button(i).enable(selectedRows > 0 || i === 5);
+                }
             }
         });
 
         table.on('deselect', function () {
             let selectedRows = table.rows({selected: true}).count();
 
-            for (let i = 1; i < 12; i++) {
+            for (let i = 1; i < 13; i++) {
                 table.button(i).enable(selectedRows > 0 || i === 5);
             }
         });
@@ -2100,20 +2137,17 @@
         $('#clientStatusList tbody ').on('click', 'button#EDIT', function () {
             let data = table.row($(this).parents('tr')).data();
             let clientId = data['client_status']['client_id'];
+            let clientIp = data['client_status']['external_ip'];
 
             $.ajax({
                 type: "GET",
                 url: "/admin/getClientConfig?clientId=" + htmlDecode(clientId),
                 dataType: "json",
                 success: function (jsonClientConfig) {
-                    let htmlContent = "<div class='form-group' id='editor' data-value='" + clientId + "'>" +
-                        "<label for='config'>Config for: " + clientId + "</label>" +
-                        "<textarea class='form-control' rows='20' id='config'>" +
-                        JSON.stringify(jsonClientConfig, undefined, 2) +
-                        "</textarea>" +
-                        "</div>";
+                    $('#minerEditorViewGroup').data("clientId", clientId);
+                    $('#minerEditorTitle').html("Config of Miner: " + clientId + " (" + clientIp + ")");
+                    $('#minerEditorConfig').html(htmlEncode(JSON.stringify(jsonClientConfig, undefined, 2)));
 
-                    $('#minerEditor').find('.modal-body').html(htmlContent);
                     $('#minerEditor').modal('show');
                 },
                 error: function (data) {
@@ -2123,8 +2157,8 @@
         });
 
         $('#minerEditorSave').click(function (event) {
-            let clientId = htmlEncode($('#minerEditor').find('.form-group')["0"].dataset.value);
-            let clientConfig = $('#config').val();
+            let clientId = $('#minerEditorViewGroup').data("clientId");
+            let clientConfig = $('#minerEditorConfig').val();
 
             setClientConfig(clientId, clientConfig);
         });
@@ -2169,14 +2203,10 @@
         });
 
         $('#commandExecuteDialogExecute').click(function (event) {
-            let command = $('#executeCommand').val();
+            let command = $('#executeCommand').val().trim();
+            let clientId = $('#executeViewGroup').data("clientId");
 
-            table.rows({selected: true}).eq(0).each(function (index) {
-                let row = table.row(index);
-                let data = row.data();
-
-                sendAction("EXECUTE", data.client_status.client_id, command);
-            });
+            sendAction("EXECUTE", clientId, command);
         });
 
         $('#clientStatusList tbody').on('click', 'button#LOG', function () {
@@ -2184,54 +2214,57 @@
             let clientId = data['client_status']['client_id'];
             let clientIp = data['client_status']['external_ip'];
 
-            $.ajax({
-                type: "GET",
-                url: "/admin/getClientLog?clientId=" + htmlDecode(clientId),
-                dataType: "json",
-                success: function (data) {
-                    let htmlContent = "<div class='form-group' id='viewer' data-value='" + clientId + "'>" +
-                        "<label for='config'>Log of: " + clientId + " (" + clientIp + ")</label>" +
-                        "<textarea class='form-control' rows='20' id='log'>" + data.client_log + "</textarea>" +
-                        "</div>";
+            $('#logViewGroup').data("clientId", clientId);
+            $('#minerLogTitle').html("Log of Miner: " + clientId + " (" + clientIp + ") [auto-refreshing]");
 
-                    $('#minerLog').find('.modal-body').html(htmlContent);
-                    $('#minerLog').modal('show');
-                },
-                error: function (data) {
-                    setError('<strong>Unable to fetch ' + clientId + ' log.</strong> - Please make sure it is enabled on the miner!');
-                }
+            loadClientLog($('#minerLog'), clientId, function (data) {
+                return data.replace(EXECUTE_REGEX, "[truncated]").trim();
             });
+
+            $('#minerLogDialog').modal('show');
         });
 
-        $('#minerLogRefresh').click(function (event) {
-            let clientId = htmlEncode($('#minerLog').find('.form-group')["0"].dataset.value);
+        $('#minerLogDialog').on('shown.bs.modal', function () {
+            let clientId = $('#logViewGroup').data("clientId");
 
-            table.rows().eq(0).each(function (index) {
-                let row = table.row(index);
-                let data = row.data();
-
-                $.ajax({
-                    type: "GET",
-                    url: "/admin/getClientLog?clientId=" + htmlDecode(clientId),
-                    dataType: "json",
-                    success: function (data) {
-                        $('#log').val(data.client_log);
-                    },
-                    error: function (data) {
-                        setError('<strong>Unable to fetch ' + clientId + ' log.</strong> - Please make sure it is enabled on the miner!');
-                    }
+            currentLogRefreshId = setInterval(function () {
+                loadClientLog($('#minerLog'), clientId, function (data) {
+                    return data.replace(EXECUTE_REGEX, "[truncated]").trim();
                 });
-            });
+            }, RELOAD_INTERVAL_IN_MS);
+        });
+
+        $('#minerLogDialog').on('hidden.bs.modal', function () {
+            clearInterval(currentLogRefreshId);
+        });
+
+        $('#commandExecuteDialog').on('shown.bs.modal', function () {
+            let clientId = $('#executeViewGroup').data("clientId");
+
+            currentLogRefreshId = setInterval(function () {
+                loadClientLog($('#minerExecuteLog'), clientId, function (data) {
+                    let result;
+                    Array.from(data.match(EXECUTE_REGEX)).forEach(item => {
+                        result = item + '\n';
+                    });
+
+                    return result.trim();
+                });
+            }, RELOAD_INTERVAL_IN_MS);
+        });
+
+        $('#commandExecuteDialog').on('hidden.bs.modal', function () {
+            clearInterval(currentLogRefreshId);
         });
 
         $('#templateSelector').on('changed.bs.select', function (e, clickedIndex, newValue, oldValue) {
             let selected = $(e.currentTarget).val();
             $.ajax({
                 type: "GET",
-                url: "/admin/getClientConfig?clientId=template_" + selected,
+                url: "/admin/getClientConfig?clientId=template_" + htmlDecode(selected),
                 dataType: "json",
                 success: function (jsonClientConfig) {
-                    $('#template').val(JSON.stringify(jsonClientConfig, undefined, 2));
+                    $('#template').html(htmlEncode(JSON.stringify(jsonClientConfig, undefined, 2)));
                 },
                 error: function (data) {
                     setError('<strong>Unable to fetch template ' + selected + '</strong> - Please make sure it readable!');
@@ -2243,7 +2276,7 @@
             let template = $('#assignTemplateSelector').val();
             $.ajax({
                 type: "GET",
-                url: "/admin/getClientConfig?clientId=template_" + template,
+                url: "/admin/getClientConfig?clientId=template_" + htmlDecode(template),
                 dataType: "json",
                 success: function (jsonTemplate) {
                     table.rows({selected: true}).eq(0).each(function (index) {
@@ -2490,13 +2523,28 @@
         }
     }
 
+    function loadClientLog(targetItem, clientId, filterHandler) {
+        $.ajax({
+            type: "GET",
+            url: "/admin/getClientLog?clientId=" + htmlDecode(clientId),
+            dataType: "json",
+            success: function (data) {
+                let cleanLog = filterHandler(htmlEncode(data.client_log));
+                targetItem.html(cleanLog).show();
+            },
+            error: function (data) {
+                setError('<strong>Unable to fetch ' + clientId + ' log.</strong> - Please make sure it is enabled on the miner!');
+            }
+        });
+    }
+
     function sendAction(action, clientId, payload) {
-        let payloadContent = payload == null ? '' : ' [payload=\'' + payload + '\']';
+        let payloadContent = payload == null ? '' : ' [payload=' + htmlEncode(payload) + ']';
         $.ajax({
             type: "POST",
             url: "/admin/setClientCommand?clientId=" + htmlDecode(clientId),
             dataType: "text",
-            data: '{"control_command":{"command": "' + action + '", "payload": "' + payload + '"}}',
+            data: '{"control_command":{"command": "' + action + '", "payload": ' + JSON.stringify(payload == null ? "" : payload) + '}}',
             success: function (data) {
                 setSuccess('<strong>Successfully send ' + action + ' to ' + clientId + payloadContent + '</strong> - It can take up to 30s until the command is processed.');
             },
@@ -2750,7 +2798,7 @@
 
     function deleteTemplateConfig(templateId) {
         $.ajax({
-            url: "/admin/deleteClientConfig?clientId=template_" + templateId,
+            url: "/admin/deleteClientConfig?clientId=template_" + htmlDecode(templateId),
             type: 'POST',
             dataType: "text",
             data: '{}',

@@ -73,7 +73,7 @@ private:
   bool m_pushZeroHashrateMiners = true;
   bool m_pushPeriodicStatus = true;
 
-  int m_clientLogHistory = 100;
+  int m_clientLogHistory = 1000;
   int m_port = 3344;
 
   std::string m_bindIp = "0.0.0.0";

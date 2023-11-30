@@ -43,15 +43,6 @@
 
 namespace
 {
-std::string htmlEncode(const std::string& data)
-{
-  auto result = std::regex_replace(data, std::regex("&"), "&amp;");
-  result = std::regex_replace(result, std::regex("<"), "&lt;");
-  result = std::regex_replace(result, std::regex(">"), "&gt;");
-
-  return result;
-}
-
 std::string sanitize(const std::string& data)
 {
   return std::regex_replace(data, std::regex(R"(([^\x20-~]+)|([\\/:?"<>|~;]+))"), "_");
@@ -348,10 +339,8 @@ int Service::setClientStatus(const httplib::Request& req, const std::string& cli
 
   const auto remoteAddr = req.get_header_value("REMOTE_ADDR");
 
-  auto payload = htmlEncode(req.body);
-
   rapidjson::Document respDocument;
-  if (!respDocument.Parse(payload.c_str()).HasParseError())
+  if (!respDocument.Parse(req.body.c_str()).HasParseError())
   {
     ClientStatus clientStatus;
     clientStatus.parseFromJson(respDocument);

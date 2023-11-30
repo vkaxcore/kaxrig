@@ -131,7 +131,7 @@ xmrigServer --port=3344 --user=admin --pass=pass --token=SECRET_TOKEN_TO_ACCESS_
       --log-file FILE           The log file to write
       --client-log-lines-history N
                                 Maximum lines of log history kept per miner
-                                (default: 100)
+                                (default: 1000)
   -c, --config FILE             The JSON-format configuration file to use
   -h, --help                    Print this help
 ```
@@ -166,7 +166,7 @@ Network:
   -r, --retries=N               number of times to retry before switch to backup server (default: 5)
   -R, --retry-pause=N           time to pause between retries (default: 5)
       --user-agent              set custom user-agent string for pool
-      --donate-level=N          donate level, default 1%% (1 minute in 100 minutes)
+      --donate-level=N          donate level, default: 3%, minimum 1% (1 minute in 100 minutes)
 
 CPU backend:
       --no-cpu                  disable CPU mining backend
