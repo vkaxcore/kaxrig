@@ -1,3 +1,10 @@
+# 3.4.0
+ * Dashboard changes
+   * Extended remote shell execute for scripts with auto refreshing response log
+   * Automatic refresh in remote log view
+   * Fixed minor ui glitches
+ * Rebase on latest xmrig-6.21.0
+   * Fix for Zephyr solo mining
 # 3.3.3
  * Dashboard changes
    * Changed sorting of column `workerId` to natural sorting
