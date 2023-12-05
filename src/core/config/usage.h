@@ -74,7 +74,7 @@ static inline const std::string &usage()
     u += "  -r, --retries=N               number of times to retry before switch to backup server (default: 5)\n";
     u += "  -R, --retry-pause=N           time to pause between retries (default: 5)\n";
     u += "      --user-agent              set custom user-agent string for pool\n";
-    u += "      --donate-level=N          donate level, default 1%% (1 minute in 100 minutes)\n";
+    u += "      --donate-level=N          donate level, can be reduced to 1% [1 minute in 100] (minimum) (default: 3%)\n";
 
     u += "\nCPU backend:\n";
 
