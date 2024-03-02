@@ -43,6 +43,7 @@ public:
         LOZZAX,
         XDAG,
         ZEPHYR,
+        TOWNFORGE,
         MAX
     };
 
