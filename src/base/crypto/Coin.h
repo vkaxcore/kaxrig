@@ -40,7 +40,6 @@ public:
         RAVEN,
         WOWNERO,
         YADA,
-        LOZZAX,
         XDAG,
         ZEPHYR,
         TOWNFORGE,

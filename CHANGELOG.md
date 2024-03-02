@@ -1,3 +1,5 @@
+# 3.4.1
+* Removed Lozzax RandomX variant (`rx/lozz`) [DEAD]
 # 3.4.0
 * Dashboard changes
     * Extended remote shell execute for scripts with auto refreshing response log

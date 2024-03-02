@@ -31,7 +31,6 @@ List of all supported algos can be found [here](doc/ALGORITHMS.md)
 
 * **VKAX** Ghostrider variant Mike (Algo: "mike")
 * **XDagger** RX variant (Algo: "rx/xdag")
-* **Lozzax** RX variant (Algo: "rx/lozz")
 * **Conceal (CCX), Equilibria (XEQ), ...** CN variant (Algo: "cn/gpu")
 * **Ghostrider (Raptoreum)** (Algo: "gr")
 * **KawPow (Ravencoin)** (Algo: "kawpow")
