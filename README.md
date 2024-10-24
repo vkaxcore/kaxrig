@@ -26,18 +26,7 @@ PushOver or Telegram automatically so that you dont need to watch your miners al
 Full Windows/Linux/OSx/Android compatible, and you can mix all on a single XMRigCC-Server.
 
 ## Latest integrated algos in XMRigCC:
-
-List of all supported algos can be found [here](doc/ALGORITHMS.md)
-
-* **Equilibria (XEQ)** RX variant (Algo: "rx/xeq")
-* **Tuske** RX variant (Algo: "rx/tuske")
 * **VKAX** Ghostrider variant Mike (Algo: "mike")
-* **XDagger** RX variant (Algo: "rx/xdag")
-* **Conceal (CCX), RYO, ...** CN variant (Algo: "cn/gpu")
-* **Ghostrider (Raptoreum)** (Algo: "gr")
-* **KawPow (Ravencoin)** (Algo: "kawpow")
-* **Graft** RX variant (Algo: "rx/graft")
-* **Yadacoin** RX variant (Algo: "rx/yada")
 
 ## XMRigCC features:
 
